@@ -1,0 +1,22 @@
+DELETE FROM `product_categories` WHERE 1;
+ALTER TABLE `product_categories` AUTO_INCREMENT = 1;
+
+DELETE FROM `brands` WHERE 1;
+ALTER TABLE `brands` AUTO_INCREMENT = 1;
+
+DELETE FROM `purchases` WHERE 1;
+ALTER TABLE `purchases` AUTO_INCREMENT = 1;
+
+DELETE FROM `manage_stocks` WHERE 1;
+ALTER TABLE `products` AUTO_INCREMENT = 1;
+
+DELETE FROM `product_abstracts` WHERE 1;
+ALTER TABLE `product_abstracts` AUTO_INCREMENT = 1;
+
+DELETE FROM `manage_stocks` WHERE 1;
+ALTER TABLE `manage_stocks` AUTO_INCREMENT = 1;
+
+DELETE FROM `packages` WHERE 1;
+ALTER TABLE `packages` AUTO_INCREMENT = 1;
+
+

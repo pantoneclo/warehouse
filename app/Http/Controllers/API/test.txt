@@ -1,0 +1,574 @@
+
+   // dd ($deliverAddress);
+        // dd ($crendentials['username']);
+
+        // dd ($data);
+        //credential
+
+        // $requestData = [
+        //     'Username' =>  "khair@matrixapparels.com",
+        //     'Password' =>[236, 60, 201, 17, 65, 11, 89, 141, 116, 175, 136, 77, 77, 132, 247, 208, 35, 82, 83, 125, 57, 162, 64, 111, 26, 164, 175, 186, 204, 103, 180, 70, 198, 231, 107, 252, 157, 158, 129, 222, 26, 17, 167, 115,
+        //     153, 59, 43, 131, 82, 209, 203, 181, 46, 245, 38, 95, 171, 193, 196, 139, 77, 208, 203, 153],
+
+        //     'ParcelList' => [
+        //         [
+        //             'ClientNumber' => $data['ClientNumber'] ?? null,
+        //             'ClientReference' => $data['ClientReference'] ?? null,
+        //             "CODReference" => $data['CODReference'] ?? null,
+        //             'CODAmount' => $data['CODAmount'] ?? null,
+        //             "Content" => $data['Content'] ?? null,
+        //             "Count" => $data['Count'] ?? null,
+        //             "PickupDate" => "\/Date(1696204799000)\/" ,
+
+        //             'DeliveryAddress' => [
+                        // 'City' => $deliverAddress->city ?? null,
+                        // 'ContactEmail' => $deliverAddress->contactEmail ?? null,
+                        // 'ContactName' => $deliverAddress->contactName ?? null,
+                        // 'ContactPhone' => $deliverAddress->contactPhone ?? null,
+                        // 'CountryIsoCode' => $deliverAddress->countryIsoCode ?? null,
+                        // 'HouseNumber' => $deliverAddress->houseNumber ?? null,
+                        // 'HouseNumberInfo' => $deliverAddress->houseNumberInfo ?? null,
+                        // 'Street' => $deliverAddress->street ?? null,
+                        // 'ZipCode' => $deliverAddress->zipCode ?? null,
+        //             ],
+        //             'PickupAddress' => [
+                        // 'City' => $pickupAddress->city ?? null,
+                        // 'ContactEmail' => $pickupAddress->contactEmail ?? null,
+                        // 'ContactName' => $pickupAddress->contactName ?? null,
+                        // 'ContactPhone' => $pickupAddress->contactPhone ?? null,
+                        // 'CountryIsoCode' => $pickupAddress->countryIsoCode ?? null,
+                        // 'HouseNumber' => $pickupAddress->houseNumber ?? null,
+                        // 'HouseNumberInfo' => $pickupAddress->houseNumberInfo ?? null,
+                        // 'Street' => $pickupAddress->street ?? null,
+                        // 'ZipCode' => $pickupAddress->zipCode ?? null,
+
+        //             ]
+
+        //         ],
+
+        //     ],
+
+        // ];
+
+        // dd ($requestData);
+ public function performApiRequest($apiUrl, $requestData)
+    {
+
+        $response = Http::post($apiUrl, $requestData, [
+            'headers' => [
+                'Content-Type' => 'application/json',
+            ],
+        ]);
+        if ($response->successful()) {
+
+            $responseData = $response->json();
+        } else {
+            $responseData = $this->sendError('Failed to retrieve data from the API', $response->status());
+        }
+
+    }// public function saleInfo(Sale $sale)
+    // {
+    //     //   dd ( $shipments = Shipping::where('parcel_company_id', 1)
+    //     //   ->where(function ($query) {
+    //     //       $query->where('parcel_status', '!=', 'delivered')
+    //     //             ->orWhereNull('parcel_status');
+    //     //   })
+    //     //   ->pluck('parcel_number')->toArray());
+    //     // dd("\/Date(".(strtotime("2023-11-14 10:20:49") * 1000).")\/");
+    //     $sale = $sale->load('saleItems.product', 'warehouse', 'customer');
+
+    //     // $apiUrl = 'https://api.mygls.si/ParcelService.svc/json/GetParcelStatuses';
+
+    //     // $parcelNumber = $sale->parcel_number;
+
+    //     // $requestData = [
+    //     //     "Username" => $username,
+    //     //     "Password" => $password,
+    //     //     "ParcelNumber" => $parcelNumber,
+    //     //     "ReturnPOD" => false,
+    //     //     "LanguageIsoCode" => "SI",
+    //     // ];
+
+    //     // // Make the HTTP request to the target API
+    //     // $response = Http::post($apiUrl, $requestData, [
+    //     //     'headers' => [
+    //     //         'Content-Type' => 'application/json',
+    //     //     ],
+    //     // ]);
+
+    //     // if ($response->successful()) {
+    //     //     $responseData = $response->json();
+    //     // } else {
+    //     //     $responseData = $this->sendError('Failed to retrieve data from the API', $response->status());
+    //     // }
+    //     // $latestStatus = getLatestStatus($responseData['ParcelStatusList'] ?? []);
+    //     // $sale['latest_status'] = $latestStatus['StatusDescription'];
+
+    //     // $sale['parcel_info'] = $responseData;
+
+    //     return $this->sendResponse($sale, 'Sale information retrieved successfully');
+    // }
+
+    // public function createParcel(Request $request){
+
+    // $credential = ['gls_username', 'gls_password'];
+    // $credentials = Setting::whereIn('key', $credential)->pluck('value', 'key')->toArray();
+    // $pwd = $credentials['gls_password'];
+    // $username = $credentials['gls_username'];
+    // $password_converted = "[" . implode(',', unpack('C*', hash('sha512', $pwd, true))) . "]";
+    // $password = json_decode($password_converted, true);
+
+    //     $credentials = [
+    //         'username' => $username,
+    //         'password' => $password,
+    //     ];
+    //     $pickupAddressData = [
+    //         'city' => 'Pickup City',
+    //         'contactEmail' => 'pickup@example.com',
+    //         'contactPhone' => '123456789',
+    //         'contactName' => 'Jane Doe',
+    //         'countryIsoCode' => 'si',
+    //         'houseNumber' => '123',
+    //         'street' => 'Pickup Street',
+    //         'zipCode' => '12345',
+    //         'houseNumberInfo' => null,
+    //     ];
+
+    //     $deliverAddressData = [
+    //         'city' => 'Delivery City',
+    //         'contactEmail' => 'delivery@example.com',
+    //         'contactPhone' => '987654321',
+    //         'contactName' => 'Jane Doe3',
+    //         'countryIsoCode' => 'si',
+    //         'houseNumber' => '456',
+    //         'street' => 'Delivery Street',
+    //         'zipCode' => '54321x',
+    //         'houseNumberInfo' => null,
+    //     ];
+
+    //     $reference = '123456789';
+    //     // Create instances
+    //     $pickupAddress = new Address($pickupAddressData);
+    //     // dd ($pickupAddress);
+    //     $deliverAddress = new Address($deliverAddressData);
+    //     $additionalData = [
+    //         "ClientNumber"=>  492380936,
+    //         "ClientReference"=> "TEST PARCEL AGAIN3",
+    //         "CODReference"=> "COD REFERENCE",
+    //         "CODAmount"=> 0,
+    //         "Content"=>"CONTENT",
+    //         "Count"=> 1,
+    //         "PickupDate"=> "\/Date(1653742799000)\/",
+    //     ];
+    //  // Creating an instance of GlsParcel (not Parcel)
+    //     $glsParcel = new GlsParcel($credentials, $pickupAddress, $deliverAddress, $reference);
+    //     $response = $glsParcel->create($additionalData);
+    // }
+
+
+// public function createParcel(){
+    // $credential = ['gls_username', 'gls_password'];
+    // $credentials = Setting::whereIn('key', $credential)->pluck('value', 'key')->toArray();
+    // $pwd = $credentials['gls_password'];
+    // $username = $credentials['gls_username'];
+    // $password_converted = "[" . implode(',', unpack('C*', hash('sha512', $pwd, true))) . "]";
+    // $password = json_decode($password_converted, true);
+
+    // $username = "khair@matrixapparels.com";
+    // $password = [236, 60, 201, 17, 65, 11, 89, 141, 116, 175, 136, 77, 77, 132, 247, 208, 35, 82, 83, 125, 57, 162, 64, 111, 26, 164, 175, 186, 204, 103, 180, 70, 198, 231, 107, 252, 157, 158, 129, 222, 26, 17, 167, 115,
+    //     153, 59, 43, 131, 82, 209, 203, 181, 46, 245, 38, 95, 171, 193, 196, 139, 77, 208, 203, 153];
+    // $apiUrl = 'https://api.mygls.si/ParcelService.svc/json/PrintLabels';
+    // $pickupDate = "\/Date(".(strtotime("2019-12-14 23:59:59") * 1000).")\/";
+//     $parcels = '[{
+//         "ClientNumber": "'.$clientNumber.'",
+//         "ClientReference": "TEST PARCEL",
+//         "CODAmount": 0,
+//         "CODReference": "COD REFERENCE",
+//         "Content": "CONTENT",
+//         "Count": 1,
+//         "DeliveryAddress": {
+//           "City": "Alsónémedi",
+//           "ContactEmail": "something@anything.hu",
+//           "ContactName": "Contact Name",
+//           "ContactPhone": "+36701234567",
+//           "CountryIsoCode": "HU",
+//           "HouseNumber": "2",
+//           "Name": "Delivery Address",
+//           "Street": "Európa u.",
+//           "ZipCode": "2351",
+//           "HouseNumberInfo": "/b"
+//         },
+//         "PickupAddress": {
+//           "City": "Alsónémedi",
+//           "ContactEmail": "something@anything.hu",
+//           "ContactName": "Contact Name",
+//           "ContactPhone": "+36701234567",
+//           "CountryIsoCode": "HU",
+//           "HouseNumber": "2",
+//           "Name": "Pickup Address",
+//           "Street": "Európa u.",
+//           "ZipCode": "2351",
+//           "HouseNumberInfo": "/a"
+//         },
+//         "PickupDate": "'.$pickupDate.'",
+//         "ServiceList":[{
+//               "Code":"PSD",
+//               "PSDParameter":{
+//                   "StringValue":"2351-CSOMAGPONT"
+//               }
+//           }
+//         ]
+//       }]';
+//       PrintLabels($username,$password,str_replace("SERVICE_NAME",$serviceName,$url),"PrintLabels",$parcels,$isXmlFormat);
+//     // $requestData = [
+//     //         "Username" => "khair@matrixapparels.com",
+//     //         "Password" => [236, 60, 201, 17, 65, 11, 89, 141, 116, 175, 136, 77, 77, 132, 247,
+//     //         208, 35, 82, 83, 125, 57, 162, 64, 111, 26, 164, 175, 186, 204, 103, 180, 70, 198,
+//     //          231, 107, 252, 157, 158, 129, 222, 26, 17, 167, 115, 153, 59, 43, 131, 82, 209, 203,
+//     //           181, 46, 245, 38, 95, 171, 193, 196, 139, 77, 208, 203, 153],
+//     //         "ParcelList" => [
+//     //             [
+//     //                 "ClientNumber" => 492380936,
+//     //                 "ClientReference" => "TEST PARCEL AGAIN3",
+//     //                 "CODAmount" => 0,
+//     //                 "CODReference" => "COD REFERENCE",
+//     //                 "Content" => "CONTENT",
+//     //                 "Count" => 1,
+//     //                 "DeliveryAddress" => [
+//     //                     "City" => "Alsónémedi",
+//     //                     "ContactEmail" => "something@anything.hu",
+//     //                     "ContactName" => "Contact Name",
+//     //                     "ContactPhone" => "+36701234567",
+//     //                     "CountryIsoCode" => "si",
+//     //                     "HouseNumber" => null,
+//     //                     "Name" => "Delivery Address",
+//     //                     "Street" => "Európa u.20",
+//     //                     "ZipCode" => "2351",
+//     //                     "HouseNumberInfo" => null,
+//     //                 ],
+//     //                 "PickupAddress" => [
+//     //                     "City" => "Alsónémedi",
+//     //                     "ContactEmail" => "something@anything.hu",
+//     //                     "ContactName" => "Contact Name",
+//     //                     "ContactPhone" => "+36701234567",
+//     //                     "CountryIsoCode" => "si",
+//     //                     "HouseNumber" => "2",
+//     //                     "Name" => "Pickup Address",
+//     //                     "Street" => "Európa u.",
+//     //                     "ZipCode" => "2351",
+//     //                     "HouseNumberInfo" => "/a",
+//     //                 ],
+//     //                 "PickupDate" =>   $pickupDate,
+//     //                 "ServiceList" => [
+//     //                     [
+//     //                         "Code" => "PSD",
+//     //                         "PSDParameter" => [
+//     //                             "StringValue" => "2351-CSOMAGPONT",
+//     //                         ],
+//     //                     ],
+//     //                 ],
+//     //             ],
+//     //         ],
+//     //         "PrintPosition" => 1,
+//     //         "ShowPrintDialog" => 0,
+//     //         "ReturnPOD" => "false",
+//     //     ];
+
+//     // $response = Http::post($apiUrl, $requestData, [
+//     //     'headers' => [
+//     //         'Content-Type' => 'application/json',
+//     //     ],
+//     // ]);
+//     // return $response;
+
+//     // if ($response->successful()) {
+//     //     dd('hi');
+//     //     $responseData = 'something went wrong';
+//     // } else {
+//     //     $responseData = 'something went wrong';
+//     // }
+
+// }
+
+// public function createParcel(){
+//     $credential = ['gls_username', 'gls_password'];
+//     $credentials = Setting::whereIn('key', $credential)->pluck('value', 'key')->toArray();
+//     $pwd = $credentials['gls_password'];
+//     $username = $credentials['gls_username'];
+//     $password_converted = "[" . implode(',', unpack('C*', hash('sha512', $pwd, true))) . "]";
+//     $password = json_encode($password_converted, true);
+
+//     $username = "khair@matrixapparels.com";
+//     // $pwd = [236, 60, 201, 17, 65, 11, 89, 141, 116, 175, 136, 77, 77, 132, 247, 208, 35, 82, 83, 125, 57, 162, 64, 111, 26, 164, 175, 186, 204, 103, 180, 70, 198, 231, 107, 252, 157, 158, 129, 222, 26, 17, 167, 115,
+//     //     153, 59, 43, 131, 82, 209, 203, 181, 46, 245, 38, 95, 171, 193, 196, 139, 77, 208, 203, 153];
+//     $url = 'https://api.mygls.si/ParcelService.svc/json/PrintLabels';
+//     $pickupDate = "\/Date(".(strtotime("2019-12-14 23:59:59") * 1000).")\/";
+//     //The service URL:
+
+//     $serviceName = "ParcelService";
+//     $clientNumber = 492380936;
+
+//         $parcels = '[{
+//             "Username":"khair@matrixapparels.com",
+//             "Password": "'.$password.'",
+//           "ClientNumber": "492380936",
+//           "ClientReference": "TEST PARCEL",
+//           "CODAmount": 0,
+//           "CODReference": "COD REFERENCE",
+//           "Content": "CONTENT",
+//           "Count": 1,
+//           "DeliveryAddress": {
+//             "City": "Alsónémedi",
+//             "ContactEmail": "something@anything.si",
+//             "ContactName": "Contact Name",
+//             "ContactPhone": "+36701234567",
+//             "CountryIsoCode": "SI",
+//             "HouseNumber": "2",
+//             "Name": "Delivery Address",
+//             "Street": "Európa u.",
+//             "ZipCode": "2351",
+//             "HouseNumberInfo": "/b"
+//           },
+//           "PickupAddress": {
+//             "City": "Alsónémedi",
+//             "ContactEmail": "something@anything.si",
+//             "ContactName": "Contact Name",
+//             "ContactPhone": "+36701234567",
+//             "CountryIsoCode": "SI",
+//             "HouseNumber": "2",
+//             "Name": "Pickup Address",
+//             "Street": "Európa u.",
+//             "ZipCode": "2351",
+//             "HouseNumberInfo": "/a"
+//           },
+//           "PickupDate": "'.$pickupDate.'",
+//           "ServiceList":[{
+//                 "Code":"PSD",
+//                 "PSDParameter":{
+//                     "StringValue":"2351-CSOMAGPONT"
+//                 }
+//             }
+//           ]
+//         }]';
+//         $requestData = json_encode([$parcels]);
+
+//         $response = Http::post($url, $requestData, [
+//             'headers' => [
+//                 'Content-Type' => 'application/json',
+//             ],
+//         ]);
+//         return $response;
+
+//         // if ($response->successful()) {
+//         //     dd('hi');
+//         //     $responseData = 'something went wrong';
+//         // } else {
+//         //     $responseData = 'something went wrong';
+//         // }
+
+//         // $this->PrintLabels  ($username,$password,str_replace("SERVICE_NAME",$serviceName,$url),"PrintLabels",$parcels,);
+
+// }
+// public function PrintLabels($username,$password,$url,$method,$parcels)
+// {
+//     //Test request:
+//     $request = $this->GetRequestString($username,$password,$parcels,$method);
+
+//     $response = $this->GetResponse($url,$method,$request);
+
+//         if($response == true && count(json_decode($response)->PrintLabelsErrorList) == 0 &&
+//         count(json_decode($response)->Labels) > 0)
+//         {
+//             //Label(s) saving:
+//             $pdf = implode(array_map('chr', json_decode($response)->Labels));
+
+//             file_put_contents('php_rest_client_'.$method.'.pdf', $pdf);
+//         }
+
+// }
+
+// public function  GetRequestString($username,$password,$dataList,$requestObjectName)
+// {$result = "";
+//     switch ($requestObjectName) {
+//         case "PrintLabels":
+//             $result = '{"Username":"'.$username.'","Password":'.json_encode($password).
+//                 ',"ParcelList":'.$dataList.',"PrintPosition":1,"ShowPrintDialog":0}';
+
+//             break;}
+// }
+// public function GetResponse($url,$method,$request)
+// {
+//     $curl = curl_init();
+//     curl_setopt($curl, CURLOPT_POST, 1);
+//     curl_setopt($curl, CURLOPT_URL, $url.$method);
+//     curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
+//     curl_setopt($curl, CURLOPT_TIMEOUT, 600);
+//     curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, 0);
+//     curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, 0);
+//     curl_setopt($curl, CURLOPT_POSTFIELDS, $request);
+
+//         curl_setopt($curl, CURLOPT_HTTPHEADER, array(
+//             'Content-Type: application/json',
+//             'Content-Length: ' . strlen($request))
+//         );
+
+// }
+
+//rafis Code
+
+        // $parcels = [
+        //     "Username" => $username,
+        //     "Password" => $password,
+        //     "ParcelList" => [
+        //         [
+         "ClientNumber" => $clientNumber,
+                "ClientReference" => "TEST PARCEL",
+                "CODAmount" => 0,
+                "CODReference" => "COD REFERENCE",
+                "Content" => "CONTENT",
+                "Count" => 1,
+        //         "DeliveryAddress" => [
+        //             "City" => "Alsónémedi",
+        //             "ContactEmail" => "something@anything.hu",
+        //             "ContactName" => "Contact Name",
+        //             "ContactPhone" => "+36701234567",
+        //             "CountryIsoCode" => "SI",
+        //             "HouseNumber" => '',
+        //             "Name" => "Delivery Address",
+        //             "Street" => "Európa u.20",
+        //             "ZipCode" => "2351",
+        //             "HouseNumberInfo" => '',
+        //         ],
+        //         "PickupAddress" => [
+        //             "City" => "Alsónémedi",
+        //             "ContactEmail" => "something@anything.hu",
+        //             "ContactName" => "Contact Name",
+        //             "ContactPhone" => "+36701234567",
+        //             "CountryIsoCode" => "SI",
+        //             "HouseNumber" => "2",
+        //             "Name" => "Pickup Address",
+        //             "Street" => "Európa u.",
+        //             "ZipCode" => "2351",
+        //             "HouseNumberInfo" => "a",
+        //         ],
+        //         "PickupDate" => $pickupDate,
+        //         "ServiceList" => [
+        //             [
+        //                 "Code" => "PSD",
+        //                 "PSDParameter" => [
+        //                     "StringValue" => "2351-CSOMAGPONT",
+        //                 ],
+        //             ],
+        //         ]],
+        //     ]
+        // ];
+
+        // $parcels = array(
+        //     "Username" => "khair@matrixapparels.com",
+        //     "Password" => $password,
+
+        //     "ParcelList" => array(
+        //         array(
+        //             "ClientNumber" => 492380936,
+        //             "ClientReference" => "TEST PARCEL",
+        //             "CODAmount" => 0,
+        //             "CODReference" => "COD REFERENCE",
+        //             "Content" => "CONTENT",
+        //             "Count" => 1,
+        //             "ReturnPOD"=>false,
+        //             "DeliveryAddress" => array(
+        //                 "City" => "Alsónémedi",
+        //                 "ContactEmail" => "something@anything.hu",
+        //                 "ContactName" => "Contact Name",
+        //                 "ContactPhone" => "+36701234567",
+        //                 "CountryIsoCode" => "SI",
+        //                 "HouseNumber" => null,
+        //                 "Name" => "Delivery Address",
+        //                 "Street" => "Európa u.20",
+        //                 "ZipCode" => "2351",
+        //                 "HouseNumberInfo" => null,
+        //             ),
+        //             "PickupAddress" => array(
+        //                 "City" => "Alsónémedi",
+        //                 "ContactEmail" => "something@anything.hu",
+        //                 "ContactName" => "Contact Name",
+        //                 "ContactPhone" => "+36701234567",
+        //                 "CountryIsoCode" => "si",
+        //                 "HouseNumber" => "2",
+        //                 "Name" => "Pickup Address",
+        //                 "Street" => "Európa u.",
+        //                 "ZipCode" => "2351",
+        //                 "HouseNumberInfo" => "/a",
+        //             ),
+        //             "PickupDate" => "/Date(1700956799000)/",
+        //             "ServiceList" => array(
+        //                 array(
+        //                     "Code" => "PSD",
+        //                     "PSDParameter" => array(
+        //                         "StringValue" => "2351-CSOMAGPONT",
+        //                     ),
+        //                 ),
+        //             ),
+        //         ),
+        //     ),
+        // );
+
+        //$requestData = json_encode($parcels);
+        //return $requestData;
+        //dd($requestData);
+
+        // $result = Http::post($url, $parcels ,[
+        //     'headers' => [
+        //         'Content-Type' => 'application/json'
+        //     ]
+        // ]);
+
+        // $result = Http::withHeaders([
+        //     'Content-Type' => 'application/json',
+        // ])
+        // ->post($url, [
+        //     'body' => $requestData,
+        //     'bodyFormat' => 'json',
+        // ]);
+
+        // $ch = curl_init($url);
+        // curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "POST");
+        // curl_setopt($ch, CURLOPT_POSTFIELDS, $requestData);
+        // curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        // curl_setopt($ch, CURLOPT_HTTPHEADER, array(
+        //     'Content-Type: application/json',
+        //     'Content-Length: ' . strlen($requestData),
+        // ));
+
+        // $result = curl_exec($ch);
+
+        // return $result;
+
+
+         $crendentials = $this->credentials;
+
+        $username = "khair@matrixapparels.com";
+        $password = [236, 60, 201, 17, 65, 11, 89, 141, 116, 175, 136, 77, 77, 132, 247, 208, 35, 82, 83, 125, 57, 162, 64, 111, 26, 164, 175, 186, 204, 103, 180, 70, 198, 231, 107, 252, 157, 158, 129, 222, 26, 17, 167, 115,
+            153, 59, 43, 131, 82, 209, 203, 181, 46, 245, 38, 95, 171, 193, 196, 139, 77, 208, 203, 153];
+        $apiUrl = 'https://api.mygls.si/ParcelService.svc/json/GetParcelStatuses';
+        $requestData = [
+            "Username" => $username,
+            "Password" => $password,
+            "ParcelNumber" => 509475983,
+            "LanguageIsoCode" => "si",
+            "ReturnPOD" => "false",
+        ];
+
+        $response = Http::post($apiUrl, $requestData, [
+            'headers' => [
+                'Content-Type' => 'application/json',
+            ],
+        ]);
+        return $response;
+
+        if ($response->successful()) {
+            dd('hi');
+            $responseData = 'something went wrong';
+        } else {
+            $responseData = 'something went wrong';
+        }

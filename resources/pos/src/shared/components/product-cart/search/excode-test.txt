@@ -1,0 +1,182 @@
+// const onProductSearch = (code) => {
+    //     if (!values.warehouse_id) {
+    //         handleValidation();
+    //     } else {
+    //         setSearchString(code);
+
+    //         const newId = products.filter((item) => item.attributes.code === code || item.attributes.code === code.code).map((item) => item.id);
+    //         const finalIdArrays = customProducts.map((id) => id.product_id);
+    //         const finalId = finalIdArrays.filter((finalIdArray) => finalIdArray === newId[0]);
+    //         if (finalId[0] !== undefined) {
+    //             if (updateProducts.find(exitId => exitId.product_id === finalId[0])) {
+    //                 dispatch(addToast({
+    //                     text: getFormattedMessage('globally.product-already-added.validate.message'),
+    //                     type: toastType.ERROR
+    //                 }));
+    //             } else {
+    //                 searchPurchaseProduct(newId[0])
+    //                 const pushArray = [...customProducts]
+    //                 if (updateProducts.filter(product => product.code === code || product.code === code.code).length > 0) {
+    //                     setUpdateProducts(updateProducts => updateProducts.map((item) => {
+    //                         return item
+    //                     }))
+    //                 } else {
+    //                     const newProduct = pushArray.find(element => element.product_id === finalId[0]);
+
+    //                     setUpdateProducts([...updateProducts, newProduct]);
+    //                 }
+    //             }
+    //             removeSearchClass();
+    //             setSearchString("");
+    //         }
+
+    //     }
+    // }
+      // if (/^PAN[0-9A-Fa-f]{7}$/.test(code)) {
+            //     // Extract the pan_style value
+            //     const panStyleProducts = filterProducts.filter((item) => item.pan_style === code);
+            //     // console.log(panStyleProducts , 'panStyleProducts')
+
+            //     if (panStyleProducts.length > 0) {
+            //         // Create a new array to store the new products
+            //         const newProducts = [];
+
+            //         panStyleProducts.forEach((product) => {
+            //             // Check if the product ID already exists in updateProducts
+            //             if (!updateProducts.find((exitId) => exitId.product_id === product.id)) {
+            //                 const newProduct = customProducts.find(element => element.product_id === product.id);
+            //                 newProducts.push(newProduct); // Add each new product to the new array
+            //             }
+            //         });
+
+            //         if (newProducts.length > 0) {
+            //             setUpdateProducts([...updateProducts, ...newProducts]); // Spread the new products into updateProducts
+            //             console.log(updateProducts, 'updateProducts after');
+            //         } else {
+            //             // No new products found
+            //             dispatch(addToast({
+            //                 text: getFormattedMessage('globally.product-already-added.validate.message'),
+            //                 type: toastType.ERROR
+            //             }));
+            //         }
+            //     } else {
+            //         // No matching products found
+            //         dispatch(addToast({
+            //             text: getFormattedMessage('not.found.panstyle'),
+            //             type: toastType.ERROR
+            //         }));
+            //     }
+
+            //     removeSearchClass();
+            //     setSearchString("");
+            // }
+
+            //   if (/^PAN[0-9A-Fa-f]{7}$/.test(code)) {
+
+            //         // Extract the pan_style value
+
+            //         const panStyleProducts = filterProducts.filter((item) => item.pan_style === code);
+            //         // console.log(panStyleProducts , 'panStyleProducts')
+
+
+            //         if (panStyleProducts.length > 0) {
+            //             // Create a new array to store the new products
+            //             const newProducts = [];
+
+            //             panStyleProducts.forEach((product) => {
+            //                 const newProduct = customProducts.find(element => element.product_id === product.id);
+            //                 newProducts.push(newProduct); // Add each new product to the new array
+            //             });
+
+            //             setUpdateProducts([...updateProducts, ...newProducts]); // Spread the new products into updateProducts
+
+            //             console.log(updateProducts, 'updateProducts after');
+            //         } else {
+            //             // No matching products found
+            //             dispatch(addToast({
+            //                 text: getFormattedMessage('not.found.panstyle'),
+            //                 type: toastType.ERROR
+            //             }));
+            //         }
+
+            //         removeSearchClass();
+            //         setSearchString("");
+            //      }
+            //  else if (/^PK_[0-9A-Fa-f]{10}$/.test(code)) {
+            //     // Extract the package_code value
+            //     const packageCodeProducts = filterProducts.filter((item) => item.package_code.includes(code));
+            //     console.log(packageCodeProducts, 'packageCodeProducts')
+
+            //     if (packageCodeProducts.length > 0) {
+
+            //         // Create a new array to store the new products
+            //         const newProducts = [];
+
+            //         packageCodeProducts.forEach((product) => {
+            //             const newProduct = customProducts.find(element => element.product_id === product.id);
+            //             newProducts.push(newProduct); // Add each product to the new array
+            //         });
+
+            //         setUpdateProducts([...updateProducts, ...newProducts]); // Spread the new products into updateProducts
+
+            //         console.log(updateProducts, 'updateProducts after');
+
+            //     } else {
+            //         // No matching products found
+            //         dispatch(addToast({
+            //             text: getFormattedMessage('not.found.package_code'),
+            //             type: toastType.ERROR
+            //         }));
+            //     }
+
+            //     removeSearchClass();
+            //     setSearchString("");
+            //  }
+              // else {
+                //     console.log(updateProducts ,'products inside of single product updateProducts')
+                //     console.log(products, 'products inside of single product')
+                    
+
+                //     const newId = products.map((item) => item.id);
+                //     console.log(newId, 'newId')
+                //     const finalIdArrays = customProducts.map((id) => id.product_id);
+                //     console.log(finalIdArrays, 'finalIdArrays')
+                //     const finalId = finalIdArrays.filter((finalIdArray) => finalIdArray === newId[0]);
+                //     console.log(finalId, 'finalId')
+                //     if (finalId[0] !== undefined) {
+                      
+                //         if (updateProducts.find(exitId => exitId.product_id === finalId[0])) {
+                //             console.log('this is from inside of if Fnal id is not undefined')
+                //             dispatch(addToast({
+                //                 text: getFormattedMessage('globally.product-already-added.validate.message'),
+                //                 type: toastType.ERROR
+                //             }));
+                //         } else {
+                //             console.log( 'this is from inside of else Fnal id is not undefined  else')
+                //             searchPurchaseProduct(newId[0])
+                          
+                //             const pushArray = [...customProducts]
+                //             if (updateProducts.length > 0) {
+                //                 console.log('this is from inside of else Fnal id is not undefined  else if')
+                //                 setUpdateProducts(updateProducts => updateProducts.map((item) => {
+                //                     return item
+                //                 }))
+                //             } else {
+                //                 console.log('this is from inside of else Fnal id is not undefined  else else')
+                //                 const newProduct = pushArray.find(element => element.product_id === finalId[0]);
+                //                 // console.log(newProduct, 'newProduct this is newProduct');
+                //                 if(newProduct)
+                //                 {
+                //                     console.log(newProduct,'this is from inside of else Fnal id is not undefined  else else if')
+                //                     console.log(updateProducts,'this is from inside of else Fnal id is not undefined  else else if')
+                //                     // setUpdateProducts([...updateProducts, newProduct]);
+                //                 }
+    
+                //                 // setUpdateProducts([...updateProducts,newProduct]);
+                                
+                //             }
+                //         }
+                   
+                //         setSearchString("");
+                //     }
+                // }

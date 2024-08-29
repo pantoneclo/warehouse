@@ -1,0 +1,41 @@
+  {/* <Col md={4}>
+                                <h5 className='text-gray-600 bg-light p-4 mb-0 text-uppercase'>{getFormattedMessage('sale.detail.invoice.info')}</h5>
+                                <div className='p-4'>
+                                    <div className='pb-1'>
+                                        <span
+                                            className='me-2'>{getFormattedMessage('globally.detail.reference')} :</span>
+                                        <span>{saleDetails && saleDetails.reference_code}</span>
+                                    </div>
+                                    <div className='pb-1'>
+                                        <span className='me-2'>{getFormattedMessage('globally.detail.status')} :</span>
+                                        {saleDetails && saleDetails.status === 1 &&
+                                        <span className='badge bg-light-success'>
+                                        <span>Received</span>
+                                    </span> || saleDetails.status === 2 &&
+                                        <span className='badge bg-light-primary'>
+                                        <span>Pending</span>
+                                    </span> || saleDetails.status === 3 &&
+                                        <span className='badge bg-light-warning'>
+                                        <span>Ordered</span>
+                                    </span>
+                                        }
+                                    </div>
+                                    <div className='pb-1'>
+                                        <span
+                                            className='me-2'>{getFormattedMessage('globally.detail.warehouse')} :</span>
+                                        <span>{saleDetails.warehouse && saleDetails.warehouse.name}</span>
+                                    </div>
+                                    <div>
+                                        <span
+                                            className='me-2'>{getFormattedMessage('globally.detail.payment.status')} :</span>
+                                        {saleDetails && saleDetails.payment_status === 1 &&
+                                        <span className='badge bg-light-success'>
+                                        <span>Paid</span>
+                                    </span> || saleDetails.payment_status === 2 &&
+                                        <span className='badge bg-light-warning'>
+                                        <span>Unpaid</span>
+                                    </span>
+                                        }
+                                    </div>
+                                </div>
+                            </Col> */}
