@@ -1,0 +1,36 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - main # Only deploy on push to main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Set up SSH key
+      uses: webfactory/ssh-agent@v0.5.3
+      with:
+        ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+
+    - name: Deploy to Server
+      env:
+        SERVER_IP: ${{ vars.SERVER_IP }}
+        SERVER_PATH: ${{ vars.SERVER_PATH }}
+        REPO_URL: "git@github.com:${{ github.repository }}.git"
+      run: |
+        ssh -o StrictHostKeyChecking=no -o "BatchMode yes" root@$SERVER_IP "
+          mkdir -p $SERVER_PATH &&
+          cd $SERVER_PATH && 
+          # Check if this is already a git repository
+          if [ ! -d .git ]; then
+            git init
+            git remote add origin $REPO_URL
+          fi
+          git pull origin main
+        "
