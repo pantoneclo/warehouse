@@ -222,7 +222,8 @@ class InventoryAPIController extends AppBaseController
                     if ( isset($abstract->image_url['imageUrls']) && is_array($abstract->image_url['imageUrls']) ) {
                         $abstract->image_url['imageUrls'] = array_map(function ($url) {
                             // Remove the base URL and convert to public path
-                            $relativePath = str_replace('https://whms.trueclassic.eu/', '', $url);
+                            $baseUrl = config('app.url');
+                            $relativePath = str_replace($baseUrl, '', $url);
                             return public_path($relativePath);
                         }, $abstract->image_url['imageUrls']);
                     }
@@ -230,9 +231,9 @@ class InventoryAPIController extends AppBaseController
             });
         });
 
-//return $inventory;
-$customPaper = array(0, 0, 504, 360);
-// $pdf = PDF::loadView('pdf.retourlabel', compact('retour', 'barcode'))->setPaper($customPaper, 'portrait');
+
+     $customPaper = array(0, 0, 504, 360);
+     // $pdf = PDF::loadView('pdf.retourlabel', compact('retour', 'barcode'))->setPaper($customPaper, 'portrait');
 
         $pdf = PDF::loadView('pdf.inventorypdfdownload', ['inventory' => $inventory])->setPaper($customPaper, 'portrait');
         return response()->streamDownload(function () use ($pdf) {
@@ -280,12 +281,12 @@ $customPaper = array(0, 0, 504, 360);
 
 
 
-        $products = $products->take(20)->orderBy('id','desc')->get();
+        $products = $products->orderBy('id','desc')->get();
         ProductResource::usingWithCollection();
 
         return new ProductCollection($products);
     }
-    
+
         public function delete($id) {
         $inventory = Inventory::findOrFail($id);
         $inventory->combo()->delete();

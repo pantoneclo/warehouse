@@ -24,7 +24,8 @@ export const taxAmount = (cartItem) => {
         return ((+cartItem.fix_net_unit - discountAmount(cartItem)) * +cartItem.tax_value) / 100;
     }
 
-    return +cartItem.tax_amount.toFixed(2);
+    const taxAmount = cartItem.tax_amount != null ? cartItem.tax_amount : 0;
+    return +taxAmount.toFixed(2);
 }
 
 export const taxAmountMultiply = (cartItem) => {

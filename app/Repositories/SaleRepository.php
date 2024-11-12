@@ -41,6 +41,7 @@ class SaleRepository extends BaseRepository
         'tax_amount',
         'discount',
         'shipping',
+        'tax_amount',
         'grand_total',
         'received_amount',
         'paid_amount',
@@ -48,6 +49,7 @@ class SaleRepository extends BaseRepository
         'note',
         'created_at',
         'reference_code',
+        'order_no'
     ];
 
     /**
@@ -551,16 +553,16 @@ class SaleRepository extends BaseRepository
             if (isset($input['parcel_number'])) {
 
                 $parcel = Shipment::find($input['shipment_id']);
-               
+
 
                 if ($parcel != null ) {
-                 
-                    
+
+
                     $parcel->update([
                         'parcel_company_id' => $input['parcel_company_id'],
                         'parcel_number' => $input['parcel_number']]);
                     if ($input['status'] == 2 && $parcel->parcel_company_id == 1) {
-                        
+
                         $credential = ['gls_username', 'gls_password'];
                         $credentials = Setting::whereIn('key', $credential)->pluck('value', 'key')->toArray();
                         $pwd = $credentials['gls_password'];
@@ -648,12 +650,12 @@ class SaleRepository extends BaseRepository
 
                         }
                     }
-                } 
-              
-                
+                }
+
+
                 else {
-                 
-                    
+
+
                     $this->ParcelStatusCreate($input, $sale);
                 }
 
@@ -674,60 +676,37 @@ class SaleRepository extends BaseRepository
             'sale_id' => $sale->id,
             'parcel_company_id' => $input['parcel_company_id'],
             'parcel_number' => $input['parcel_number'],
-
         ]);
 
         if ($input['status'] == 2 && $parcel->parcel_company_id == 1) {
-
-            $credential = ['gls_username', 'gls_password'];
-
-            $credentials = Setting::whereIn('key', $credential)->pluck('value', 'key')->toArray();
-
-            $pwd = $credentials['gls_password'];
-            $username = $credentials['gls_username'];
-            $password = json_decode("[" . implode(',', unpack('C*', hash('sha512', $pwd, true))) . "]");
-
             $credentials = [
-                'username' => $username,
-                'password' => $password,
+                'username' => env('MYGLS_USERNAME'),
+                'password' => json_decode("[" . implode(',', unpack('C*', hash('sha512', env('MYGLS_PASSWORD'), true))) . "]"),
             ];
-            $url = 'https://api.mygls.si/ParcelService.svc/json/GetParcelStatuses';
-            $tracking_number = $parcel->parcel_number;
 
-            $glsParcel = new GlsParcel($credentials, null, null, null);
-            $response = $glsParcel->fetch($tracking_number, $url);
+            $glsParcel = new GlsParcel($credentials);
+            $tracking_number = $parcel->parcel_number;
+            $response = $glsParcel->fetch($tracking_number);
 
             if ($response) {
+                $parcel = Shipment::find($parcel->id);
+                $parcel->update(['weight' => $response['Weight']]);
 
-                $parcel = Shipment::whereId($parcel->id)->first();
-                $reponse = $response->json();
-
-                $parcel->update([
-
-                    'weight' => $reponse['Weight'],
-                ]);
-
-                $responseArray = json_decode($response, true);
-
-                if (isset($responseArray['ParcelStatusList']) && !empty($responseArray['ParcelStatusList'])) {
-                    // Sort the array based on the "StatusDate" field in descending order
-                    usort($responseArray['ParcelStatusList'], function ($a, $b) {
+                if (isset($response['ParcelStatusList']) && !empty($response['ParcelStatusList'])) {
+                    usort($response['ParcelStatusList'], function ($a, $b) {
                         return strtotime($b['StatusDate']) - strtotime($a['StatusDate']);
                     });
 
-                    $latestStatus = $responseArray['ParcelStatusList'][0];
+                    $latestStatus = $response['ParcelStatusList'][0];
                     $parcel->update([
-
                         'status_date' => $latestStatus['StatusDate'],
                         'status_description' => $latestStatus['StatusDescription'],
                         'depot_city' => $latestStatus['DepotCity'],
                     ]);
-
                 }
-                // dd($parcel);
             }
-
         }
+
         if ($input['status'] == 2 && $parcel->parcel_company_id == 2) {
 
             $username = "be70333cbce4922e";
@@ -762,7 +741,7 @@ class SaleRepository extends BaseRepository
 
                         'status_date' => $latestDate,
                         'status_description' => $latestStatusDescription,
-                       
+
                     ]);
                 }
 
@@ -838,16 +817,16 @@ class SaleRepository extends BaseRepository
                 $expedicoParcel = new Expedico($credentials);
                 $response = $expedicoParcel->fetch($tracking_number);
                 if ($response) {
-    
+
                     $parcel = Shipment::whereId($parcel->id)->first();
                     if (isset($response['data']) && is_array($response['data'])) {
                         $parcelEvents = $response['data'];
-    
+
                         // Sort the array based on 'dateTime' in descending order
                         usort($parcelEvents, function ($a, $b) {
                             return strtotime($b['attributes']['dateTime']) - strtotime($a['attributes']['dateTime']);
                         });
-    
+
                         // Get the latest 'statusDescription'
                         $latestStatusDescription = isset($parcelEvents[0]['attributes']['statusDescription'])
                         ? $parcelEvents[0]['attributes']['statusDescription']
@@ -855,15 +834,15 @@ class SaleRepository extends BaseRepository
                         $latestDate = isset($parcelEvents[0]['attributes']['dateTime'])
                         ? $parcelEvents[0]['attributes']['dateTime']
                         : null;
-    
+
                         $parcel->update([
-    
+
                             'status_date' => $latestDate,
                             'status_description' => $latestStatusDescription,
-                           
+
                         ]);
                     }
-    
+
                 }
             }
 

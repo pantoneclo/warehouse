@@ -13,28 +13,37 @@
 <table width="100%" cellspacing="0" cellpadding="10" style="margin-top: 40px;">
     <thead>
     <tr style="background-color: dodgerblue;">
-        <th style="width: 200%">{{ __('messages.pdf.product') }}</th>   
+        <th style="width: 200%">{{ __('messages.pdf.product') }}</th>
+        <th style="width: 200%">{{ __('messages.pdf.po') }}</th>
+
         <th style="width: 200%">{{ __('messages.pdf.code') }}</th>
-        <th style="width: 200%">{{ __('messages.pdf.brand') }}</th>
+        <th style="text-align: center; width: 300%">{{ __('messages.pdf.color') }}</th>
+        <th style=" text-align: center; width: 300%">{{ __('messages.pdf.size') }}</th>
+
         <th style="width: 200%">{{ __('messages.pdf.price') }}</th>
-        <th style="width: 200%">{{ __('messages.pdf.product_unit') }}</th>
         <th style="width: 200%">{{ __('messages.pdf.in_stock') }}</th>
         <th style="width: 200%">{{ __('messages.pdf.created_on') }}</th>
     </tr>
     </thead>
     <tbody>
     @foreach($products  as $product)
+        @php
+            $variant = null;
+        // Check if the product has a variant and decode the JSON
+        if ($product->variant) {
+            // Decode the JSON from the variant column
+            $decodedVariant = json_decode($product->variant);
+            $variant = $decodedVariant->variant ?? null; // Access the variant property
+        }
+        @endphp
         <tr align="center">
             <td>{{$product->name}}</td>
+            <td>{{$product->productAbstract->pan_style}}</td>
             <td>{{$product->code}}</td>
-            <td>{{$product->brand->name}}</td>
+            <td style="text-align: center;">{{$variant->color?? ''}}</td>
+            <td style="text-align: center;">{{$variant->size?? ''}}</td>
             <td>{{$product->product_price}}</td>
-            <td>
-                <?php
-                $productUnitName = App\Models\BaseUnit::where('id',$product->product_unit)->value('name');
-                ?>
-                {{$productUnitName}}
-            </td>
+
             <td>
                 <?php
                 $totalQuantity = App\Models\Managestock::where('product_id', $product->id)->sum('quantity');

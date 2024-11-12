@@ -20,3 +20,26 @@ export const productExcelAction = (setIsWarehouseValue, isLoading = true, id) =>
                 {text: response.data.message, type: toastType.ERROR}));
         });
 };
+
+
+
+export const allProductsExcelAction = (setIsWarehouseValue, isLoading = true) => async (dispatch) => {
+   
+        if (isLoading) {
+            dispatch(setLoading(true));
+        }
+
+     await apiConfig.get(`all-products-export-excel`)
+     .then((response)=>{
+        window.open(response.data.data.all_products_excel_url, '_blank');
+        setIsWarehouseValue(false);
+        if (isLoading) {
+            dispatch(setLoading(false))
+        }
+     })
+        
+     .catch(({response}) => {
+        dispatch(addToast(
+            {text: response.data.message, type: toastType.ERROR}));
+    });
+};

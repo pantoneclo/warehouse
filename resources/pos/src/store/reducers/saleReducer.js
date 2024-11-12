@@ -10,6 +10,8 @@ export default (state = {}, action) => {
             return action.payload;
         case saleActionType.EDIT_SALE:
             return state.map(item => item.id === +action.payload.id ? action.payload : item);
+        case saleActionType.EDIT_SALE_REPORT_FROM_REPORT:
+            return state.map(item => item.id === +action.payload.id ? action.payload : item);
         case saleActionType.DELETE_SALE:
             return state.filter(item => item.id !== action.payload);
         default:

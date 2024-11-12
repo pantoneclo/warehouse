@@ -120,6 +120,7 @@ class StockManagementRepository extends BaseRepository
     private function triggerStockUpdateWebhooks(array $items)
     {
         foreach ($items as $item) {
+
             // Logic to send webhook request to other marketplaces
             // Example: call an external API to update stock on Amazon, Allegro, etc.
             // You can use Guzzle or any other HTTP client to make API requests

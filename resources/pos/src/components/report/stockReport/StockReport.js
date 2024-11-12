@@ -50,8 +50,9 @@ const StockReport = (props) => {
             setIsWarehouseValue(false);
         }
     }, [isWarehouseValue])
-
+   
     const itemsValue = currencySymbol && stockReports.length >= 0 && stockReports.map(stockReport => ({
+        pan_style: stockReport.attributes?.product?.product_abstract?.pan_style,
         code: stockReport.attributes.product.code,
         name: stockReport.attributes.product.name,
         product_category_name: stockReport.attributes.product_category_name,
@@ -62,6 +63,8 @@ const StockReport = (props) => {
         id: stockReport.attributes.product_id,
         currency: currencySymbol
     }));
+
+    console.log("Stock Report",stockReports);
 
     const onChange = (filter) => {
         stockReportAction(warehouseValue.value ? warehouseValue.value : frontSetting?.value?.default_warehouse, filter)
@@ -81,6 +84,16 @@ const StockReport = (props) => {
     };
 
     const columns = [
+        {
+            name: "PO",
+            sortField: 'code',
+            sortable: true,
+            cell: row => {
+                return <span className='badge bg-light-danger'>
+                            <span>{row.pan_style}</span>
+                        </span>
+            }
+        },
         {
             name: getFormattedMessage('globally.react-table.column.code.label'),
             sortField: 'code',

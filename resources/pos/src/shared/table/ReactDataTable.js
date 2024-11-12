@@ -19,7 +19,7 @@ const ReactDataTable = (props) => {
         columns, AddButton, items, ButtonValue, to, defaultLimit = Filters.OBJ.page, onChange, totalRows,isShowPaymentModel,isCallSaleApi,isCallBrandApi,
         paginationRowsPerPageOptions = [10, 15, 25, 50, 100], isLoading, isShowDateRangeField, isShowFilterField,isWarehouseType,warehouseOptions,
         isStatus, isPaymentStatus,warehouseValue, isUnitFilter, title, isPdf, isReportPdf, isEXCEL, onExcelClick, isShowSearch, isPaymentType, subHeader = true,
-        buttonImport, goToImport, isTransferStatus, isExport, customerId, onReportPdfClick, importBtnTitle, goToImportProduct
+        buttonImport, goToImport, isTransferStatus, isExport, customerId, onReportPdfClick, importBtnTitle, goToImportProduct, isCountry
     } = props;
     const [perPage, setPerPages] = useState(defaultLimit);
     const [pageSize, setPageSize] = useState(Filters.OBJ.pageSize);
@@ -34,6 +34,7 @@ const ReactDataTable = (props) => {
     const [paymentType, setPaymentType] = useState();
     const [tableWarehouseValue, setTableWarehouseValue] = useState()
     const [status, setStatus] = useState();
+    const [country, setCountry] = useState();
     const [transferStatus, setTransferStatus] = useState();
     const [productUnit, setProductUnit] = useState();
     const [show, setShow] = useState(false);
@@ -46,7 +47,7 @@ const ReactDataTable = (props) => {
     useEffect(() => {
         onChangeDidMount(currentPage);
         setAdminName(adminName);
-    }, [currentPage, status, transferStatus, productUnit,warehouseValue, tableWarehouseValue,isShowPaymentModel,isCallSaleApi, isCallBrandApi, paymentStatus, paymentType, perPage, order_By, direction, searchText, pageSize, adminName, totalRows, selectDate]);
+    }, [currentPage, status, transferStatus, productUnit,warehouseValue, tableWarehouseValue,isShowPaymentModel,isCallSaleApi, isCallBrandApi, paymentStatus, paymentType, perPage, order_By, direction, searchText, pageSize, adminName, totalRows, selectDate, country]);
     const onStatusChange = (obj) => {
         dispatch({type: 'RESET_OPTION', payload: false})
         setStatus(obj);
@@ -103,12 +104,19 @@ const ReactDataTable = (props) => {
         setPaymentType({label: 'All', value: '0'})
         setProductUnit({label: 'All', value: '0'})
         setTableWarehouseValue({label:"All", value: "0"})
+        setCountry({label:"All", value: "0"})
         dispatch({type: 'ON_TOGGLE', payload: false})
     }
 
     const onWarehouseChange = (obj) => {
         setTableWarehouseValue(obj);
         dispatch({type: 'ON_TOGGLE', payload: false});
+    };
+
+    const onCountryChange = (obj) => {
+        dispatch({type: 'RESET_OPTION', payload: false})
+        setCountry(obj);
+        dispatch({type: 'ON_TOGGLE', payload: false})
     };
 
 
@@ -139,7 +147,12 @@ const ReactDataTable = (props) => {
                                                          onProductUnitChange={onProductUnitChange} warehouseOptions={warehouseOptions}
                                                          isUnitFilter={isUnitFilter} onResetClick={onResetClick}
                                                          onPaymentStatusChange={onPaymentStatusChange}
-                                                         onPaymentTypeChange={onPaymentTypeChange}/> : null}
+                                                         onPaymentTypeChange={onPaymentTypeChange}
+                                                         
+                                                         isCountry={isCountry}
+                                                         country={country}
+                                                         onCountryChange={onCountryChange}
+                                                         /> : null}
                     {AddButton}
                     {isPdf ?
                         <div className='text-end mb-2 '>
@@ -196,7 +209,8 @@ const ReactDataTable = (props) => {
             product_unit: productUnit ? productUnit.value : null,
             base_unit: productUnit ? productUnit.value : null,
             warehouse_id: warehouseValue ? warehouseValue.value : tableWarehouseValue ? tableWarehouseValue.value : null,
-            customer_id: customerId ? customerId : null
+            customer_id: customerId ? customerId : null,
+            country: country ? country.value : null,
         };
         onChange(filters);
     };

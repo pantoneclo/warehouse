@@ -27,7 +27,7 @@ export const editPrepareArray = (products, warehouse_id) => {
             newItem: '',
             isEdit: true,
             stocks: product.product.stocks.filter(item => item.warehouse_id === warehouse_id),
-        
+
         })
     });
     return purchaseProductRowArray;

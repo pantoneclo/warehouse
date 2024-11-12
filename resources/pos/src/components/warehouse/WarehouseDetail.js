@@ -18,7 +18,7 @@ const WarehouseDetail = () => {
     useEffect(() => {
         dispatch(fetchWarehouseDetails(id))
     }, [])
-
+ console.log(warehouseDetails);
     return (
         <MasterLayout>
             <TopProgressBar/>
@@ -30,6 +30,7 @@ const WarehouseDetail = () => {
                         <thead>
                         <tr>
                             <th>{getFormattedMessage('product.title')}</th>
+                            <th>{getFormattedMessage('dashboard.stockAlert.code.label')}/{getFormattedMessage('Style')}</th>
                             <th>{getFormattedMessage('globally.detail.quantity')}</th>
                         </tr>
                         </thead>
@@ -46,6 +47,12 @@ const WarehouseDetail = () => {
                                             <div className='d-flex flex-column'>
                                                 <span>{item.product_name}</span>
                                             </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div>
+                                            <div className='badge bg-light-info me-2'><span>Code: {item.code}</span></div>
+                                             <span className='badge bg-light-success me-2'><span>Style: {item.pan_style}</span></span>
                                         </div>
                                     </td>
                                     <td>

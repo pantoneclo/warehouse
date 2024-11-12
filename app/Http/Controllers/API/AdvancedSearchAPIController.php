@@ -4,6 +4,7 @@ namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\AppBaseController;
 use App\Http\Resources\ProductResource;
+use App\Models\Warehouse;
 use App\Models\Package;
 use App\Models\PackageVsProductVsVariant;
 use App\Models\Product;
@@ -73,6 +74,15 @@ class AdvancedSearchAPIController extends AppBaseController
         }
 
         return $result_of_search;
+    }
+
+    public function warehouseProductsSearch(Request $request){
+        $warehouse_id = $request->warehouse_id;
+        $products = Warehouse::where('id', $warehouse_id)->with('products')->get();
+
+        return response()->json([
+            'data'=>$products,
+        ]);
     }
 
 }

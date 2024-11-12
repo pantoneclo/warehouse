@@ -156,6 +156,14 @@ class Purchase extends BaseModel implements HasMedia, JsonResourceful
      */
     public function prepareAttributes(): array
     {
+        $purchaseItems = $this->purchaseItems;
+
+        // Extract unique pant_style from products_abstracts table
+        $pantStyles = $purchaseItems->map(function ($item) {
+            // Assuming each purchase item has a product and that product has a products_abstracts relationship
+            return $item->product->productAbstract;
+        });
+        $pantStyles = $pantStyles->pluck('pan_style')->filter()->unique();
         $fields = [
             'date' => $this->date,
             'supplier_id' => $this->supplier_id,
@@ -173,6 +181,7 @@ class Purchase extends BaseModel implements HasMedia, JsonResourceful
             'created_at' => $this->created_at,
             'status' => $this->status,
             'purchase_items' => $this->purchaseItems,
+            'pan_style'=>$pantStyles
         ];
 
         return $fields;

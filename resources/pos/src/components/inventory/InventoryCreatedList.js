@@ -63,6 +63,7 @@ const InventoryCreatedList = () => {
                 },
                 responseType: 'blob', // Important for handling the file download
             });
+            console.log(response.data);
             // Create a URL for the blob and download it
             const url = window.URL.createObjectURL(new Blob([response.data], {type: 'application/pdf'}));
             const link = document.createElement('a');

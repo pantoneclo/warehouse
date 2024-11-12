@@ -55,7 +55,7 @@
             margin-top:5px;
         }
 
-        
+
         .product-images {
             display: flex;
             justify-content: center;
@@ -175,12 +175,16 @@
                     </table>
 
                 </div>
+                @php
+                    $baseUrl = config('app.url'); // Get the base URL from APP_URL
+
+                @endphp
                 <div class="product-images text-center" style="text-align:center;">
                     @if ($item->combo && $item->combo[0]->product->productAbstract)
                         @if (isset($item->combo[0]->product->productAbstract->image_url) && isset($item->combo[0]->product->productAbstract->image_url['imageUrls']) && is_array($item->combo[0]->product->productAbstract->image_url['imageUrls']))
 
                             @php
-                                $cleanUrl = str_replace('https://whms.trueclassic.eu/', '', $item->combo[0]->product->productAbstract->image_url['imageUrls'][0]);
+                                $cleanUrl = str_replace($baseUrl, '', $item->combo[0]->product->productAbstract->image_url['imageUrls'][0]);
                                 $publicPath = public_path($cleanUrl);
                             @endphp
                             <img src="{{ $publicPath }}" alt="Product Image"

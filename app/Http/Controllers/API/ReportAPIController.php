@@ -165,10 +165,14 @@ class ReportAPIController extends AppBaseController
      */
     public function getSalesReportExcel(Request $request): JsonResponse
     {
+        $startDate = $request->input('start_date');
+        $endDate = $request->input('end_date');
+        $status = $request->input('status');
+
         if (Storage::exists('excel/total-sales-report-excel.xlsx')) {
             Storage::delete('excel/total-sales-report-excel.xlsx');
         }
-        Excel::store(new SaleReportExport, 'excel/total-sales-report-excel.xlsx');
+        Excel::store(new SaleReportExport($startDate, $endDate, $status), 'excel/total-sales-report-excel.xlsx');
 
         $data['total_sale_excel_url'] = Storage::url('excel/total-sales-report-excel.xlsx');
 

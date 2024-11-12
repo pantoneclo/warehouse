@@ -59,7 +59,7 @@ class Combo extends BaseModel implements HasMedia, JsonResourceful
             'name' => $this->name,
             'sku'  => $this->sku,
             'created_at'  => $this->created_at,
-           'products' => $this->getAllProducts(),
+            'products' => $this->getAllProducts(),
         
         ];
 
@@ -112,7 +112,7 @@ class Combo extends BaseModel implements HasMedia, JsonResourceful
                             "product_cost" =>$product->product_cost,
                             "product_price" => $product->product_price,
                             'variant' => $product->variant,
-                            'stock' => $product->stock,
+                            'stock' => $product->stock??0,
                             'warehouse' => $product->warehouse($product->id),
                             'images'=>$product->getImageUrlAttribute(),
                             'barcode_url'=>$product->getBarcodeImageUrlAttribute(),

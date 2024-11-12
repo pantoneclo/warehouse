@@ -9,6 +9,8 @@ use App\Http\Resources\SaleCollection;
 use App\Http\Resources\SaleResource;
 use App\Models\Customer;
 use App\Models\Hold;
+use App\Models\ManageStock;
+use App\Models\Product;
 use App\Models\Sale;
 use App\Models\Setting;
 use App\Models\Warehouse;
@@ -25,7 +27,8 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Storage;
 use Symfony\Component\HttpKernel\Exception\UnprocessableEntityHttpException;
-
+use App\Http\Controllers\API\StockManagementAPIController;
+use Illuminate\Support\Facades\Log;
 /**
  * Class SaleAPIController
  */
@@ -33,10 +36,11 @@ class SaleAPIController extends AppBaseController
 {
     /** @var saleRepository */
     private $saleRepository;
-
-    public function __construct(SaleRepository $saleRepository)
+    private $stockManagementController;
+    public function __construct(SaleRepository $saleRepository, StockManagementAPIController $stockManagementController)
     {
         $this->saleRepository = $saleRepository;
+        $this->stockManagementController = $stockManagementController;
     }
 
     /**
@@ -90,6 +94,10 @@ class SaleAPIController extends AppBaseController
             $sales->where('payment_type', $request->get('payment_type'));
         }
 
+        if ($request->get('country') && $request->get('country') != 'null') {
+            $sales->where('country', $request->get('country'));
+        }
+
         $sales = $sales->paginate($perPage);
 
         SaleResource::usingWithCollection();
@@ -103,9 +111,9 @@ class SaleAPIController extends AppBaseController
      */
     public function store(CreateSaleRequest $request)
     {
-       
-      
-  
+
+
+
         if (!Auth::user()->can('sale.create')) {
             return $this->sendError('Permission Denied');
         }
@@ -116,9 +124,26 @@ class SaleAPIController extends AppBaseController
             }
         }
         $input = $request->all();
-   
+
         $sale = $this->saleRepository->storeSale($input);
 
+        try {
+            if (isset($sale['data']['attributes']['warehouse_id']) && isset($sale['data']['attributes']['country_code'])) {
+                $warehouse_id = $sale['data']['attributes']['warehouse_id'];
+                $warehouse_code = $sale['data']['attributes']['country_code'];
+                $operation = 'sell';
+                $saleItems = $sale['data']['attributes']['sale_items'];
+
+                // Proceed with stock management
+                $this->stockManagementController->prepareStockItems($warehouse_id, $warehouse_code, $saleItems, $operation);
+            } else {
+                // You can log this error or return a message if needed
+                Log::error('Sale data is missing warehouse_id or country_code');
+            }
+        } catch (\Exception $e) {
+            // Log or handle the error gracefully
+            Log::error('Error during stock management: ' . $e->getMessage());
+        }
         return new SaleResource($sale);
     }
 
@@ -128,7 +153,7 @@ class SaleAPIController extends AppBaseController
      */
     public function show($id)
     {
-       
+
         if (!Auth::user()->can('sale.view')) {
             return $this->sendError('Permission Denied');
         }
@@ -172,6 +197,60 @@ class SaleAPIController extends AppBaseController
         return new SaleResource($sale);
     }
 
+    public  function salesReportEdit(Request $request, $id)
+    {
+        // Check permission for sale edit
+        if (!Auth::user()->can('sale.edit')) {
+            return response()->json(['success' => false, 'message' => 'Permission Denied'], 403);
+        }
+        $validatedData = $request->validate([
+            'tax_rate' => 'required|numeric|min:0',
+            'marketplace_commission' => 'required|numeric|min:0',
+            'order_process_fee' => 'required|numeric|min:0',
+            'courier_fee' => 'required|numeric|min:0',
+            'other_income' => 'nullable|numeric|min:0',
+            'other_cost' => 'nullable|numeric|min:0',
+        ]);
+
+        $input = $request->all();
+
+        try {
+            // Start transaction
+            DB::beginTransaction();
+
+            // Find the sale by ID or throw error
+            $sale = Sale::findOrFail($id);
+
+            // Calculate tax amount based on the input tax rate
+            $new_tax_rate = $input['tax_rate'];
+            $new_tax_amount = ($sale->grand_total * $new_tax_rate) / (100 + $new_tax_rate);
+
+           // Step 2: Update the sale object with the new tax rate and tax amount
+            $sale->tax_rate = $new_tax_rate;
+            $sale->tax_amount = $new_tax_amount;
+
+            // Update the sale record
+            // Save the sale
+            $sale->marketplace_commission = $input['marketplace_commission'];
+            $sale->order_process_fee = $input['order_process_fee'];
+            $sale->courier_fee = $input['courier_fee'];
+            $sale->other_income = $input['other_income'];
+            $sale->other_cost = $input['other_cost'];
+            $sale->save();
+
+            // Commit the transaction
+            DB::commit();
+
+            $sale = $this->saleRepository->find($sale->id);
+
+            return new SaleResource($sale);
+
+        } catch (Exception $e) {
+            // Rollback transaction if an error occurs
+            DB::rollBack();
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 422);
+        }
+    }
     /**
      * @param $id
      * @return JsonResponse
@@ -290,7 +369,7 @@ class SaleAPIController extends AppBaseController
         $response = $glsParcel->fetch($parcelNumber);
         // $reponse = $response->json();
 
-        
+
         // $responseArray = json_decode($response, true);
 
         // if (isset($responseArray['ParcelStatusList']) && !empty($responseArray['ParcelStatusList'])) {
@@ -298,10 +377,10 @@ class SaleAPIController extends AppBaseController
         //     usort($responseArray['ParcelStatusList'], function($a, $b) {
         //         return strtotime($b['StatusDate']) - strtotime($a['StatusDate']);
         //     });
-        
+
         //     // The first element in the sorted array is the latest status
         //     $latestStatus = $responseArray['ParcelStatusList'][0];
-        
+
         //     // Now $latestStatus contains the latest status information
         //     dd($latestStatus);
         // }

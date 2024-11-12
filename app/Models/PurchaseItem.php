@@ -127,6 +127,9 @@ class PurchaseItem extends BaseModel implements JsonResourceful
     public function prepareAttributes(): array
     {
         $fields = [
+            'product_code' => "TEST123",
+            'product_name' => "Test123",
+            'pan_style' => "MPK2024",
             'product_id' => $this->product_id,
             'product_cost' => $this->product_cost,
             'net_unit_cost' => $this->net_unit_cost,
@@ -139,8 +142,7 @@ class PurchaseItem extends BaseModel implements JsonResourceful
             'purchase_unit' => $this->purchase_unit,
             'quantity' => $this->quantity,
             'sub_total' => $this->sub_total,
-            'product_code' => $this->product->code,
-            'product_name' => $this->product->name,
+
         ];
 
         return $fields;

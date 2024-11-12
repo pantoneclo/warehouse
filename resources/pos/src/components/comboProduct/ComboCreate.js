@@ -3,6 +3,7 @@ import {Button} from 'react-bootstrap-v5';
 import MasterLayout from '../MasterLayout';
 import HeaderTitle from '../header/HeaderTitle';
 import CreateComboForm from './CreateComboForm';
+import { fetchAllProducts } from '../../store/action/productAction';
 import { fetchProducts } from '../../store/action/InventoryAction';
 import {connect} from 'react-redux';
 import {useNavigate} from 'react-router-dom';
@@ -23,6 +24,8 @@ const ComboCreate = (props) => {
     const addComboData = (formValue) => {
         addCombo(formValue, navigate);
     };
+
+    console.log("All Product From ComboCreate", products);
 
     return (
         <MasterLayout>

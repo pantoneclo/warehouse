@@ -38,12 +38,13 @@ const AdvanceSearch = (props) => {
     // })) : [];
     const filterProducts = products ? isAllProducts ?
         products.map((item) => ({
-            name: item.attributes.name, code: item.attributes.code, id: item.id, variant: item.attributes.variant
+            name: item.attributes.name, brand:item.attributes.brand_name, code: item.attributes.code, id: item.id, variant: item.attributes.variant
         }))
         : products.filter((qty) => qty && qty.attributes && qty.attributes.stock && qty.attributes.stock.quantity > 0).map((item) => ({
-            name: item.attributes.name, code: item.attributes.code, id: item.id, variant: item.attributes.variant
+            name: item.attributes.name, brand:item.attributes.brand_name, code: item.attributes.code, id: item.id, variant: item.attributes.variant
         })) : [];
 
+    console.log(products, 'After filterProducts');
     console.log(filterProducts, 'filterProducts');
 
 
@@ -53,7 +54,7 @@ const AdvanceSearch = (props) => {
     // console.log(filterProducts, 'filterProducts')
     const onProductSearch = async (code) => {
         try {
-            if (code.length >= 6) {
+            if (code.length >= 2) {
                   dispatch(fetchAdvancedSearch({ search: code }));
 
             console.log(code, 'code');

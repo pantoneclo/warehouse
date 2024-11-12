@@ -65,17 +65,17 @@ return [
 
         'pgsql' => [
             'driver' => 'pgsql',
-            'url' => env('DATABASE_URL'),
-            'host' => env('DB_HOST', '127.0.0.1'),
-            'port' => env('DB_PORT', '5432'),
-            'database' => env('DB_DATABASE', 'forge'),
-            'username' => env('DB_USERNAME', 'forge'),
-            'password' => env('DB_PASSWORD', ''),
+            'url' => env('PGSQL_DB_URL'),
+            'host' => env('ECOM_DB_HOST', '127.0.0.1'),
+            'port' => env('ECOM_DB_PORT', '5432'),
+            'database' => env('ECOM_DB_DATABASE', 'forge'),
+            'username' => env('ECOM_DB_USERNAME', 'forge'),
+            'password' => env('ECOM_DB_PASSWORD', ''),
             'charset' => 'utf8',
             'prefix' => '',
             'prefix_indexes' => true,
             'search_path' => 'public',
-            'sslmode' => 'prefer',
+            'sslmode' => env('ECOM_DB_SSL', 'prefer')
         ],
 
         'sqlsrv' => [

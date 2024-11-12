@@ -19,7 +19,7 @@ class PrintButton extends React.PureComponent {
                 indents.push(<div key={i}
                     className={`${paperSize.value === 1 ? 'print-main__print1' : '' || paperSize.value === 2 ? 'print-main__print2' : '' || paperSize.value === 3 ? 'print-main__print3' : '' || paperSize.value === 4 || paperSize.value === 6 ? 'print-main__print4' : '' || paperSize.value === 5 ? 'print-main__print5' : '' || paperSize.value === 7 ? 'print-main__print7' : '' || paperSize.value === 8 ? 'print-main__print8' : ''} barcode-main__barcode-item barcode-main__barcode-style`}
                 >
-                    <div className='fw-bolder lh-1'>{barcodeOptions.companyName && companyName}</div>
+                    <div className='fw-bolder lh-1'>{barcodeOptions.companyName && product.brand}</div>
                     <div className='text-capitalize'>{barcodeOptions.productName && product.name}</div>
                     <div className='text-capitalize'>{product && product.pan_style}</div>
 

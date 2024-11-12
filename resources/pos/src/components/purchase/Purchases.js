@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from 'react';
+ import React, {useEffect, useState} from 'react';
 import MasterLayout from '../MasterLayout';
 import {connect} from 'react-redux';
 import moment from 'moment';
@@ -19,6 +19,7 @@ import TopProgressBar from "../../shared/components/loaders/TopProgressBar";
 import {getDateFormat} from "../../frontend/shared/SharedMethod";
 import  usePermission  from '../../shared/utils/usePermission';
 import { Permissions } from '../../constants';
+import { isArray } from 'lodash';
 
 const Product = (props) => {
     const {
@@ -83,6 +84,7 @@ const Product = (props) => {
         const supplierName = supplier[0] && supplier[0].attributes && supplier[0].attributes.name
         return ({
             reference_code: purchase.attributes.reference_code,
+            pan_style: purchase.attributes.pan_style && isArray(purchase.attributes.pan_style)?purchase.attributes.pan_style.join(","):"",
             supplier: supplierName,
             warehouse: purchase.attributes.warehouse_name,
             status: purchase.attributes.status,
@@ -148,21 +150,16 @@ const Product = (props) => {
         }
     }, [purchases])
 
- 
+
 
     const columns = [
-        
-        {   
-            name: getFormattedMessage('dashboard.recentSales.reference.label'),
-            sortField: 'reference_code',
-            sortable: true,
-            cell: row => {
-                return row.reference_code === "Total" ?
-                    <span className="fw-bold fs-4">{getFormattedMessage("pos-total.title")}</span> :
-                    <span className='badge bg-light-danger'>
-                            <span>{row.reference_code}</span>
-                        </span>
-            }
+
+
+        {
+            name: getFormattedMessage('PO'),
+            selector: row => row.pan_style,
+            sortField: 'pan_style',
+            sortable: false,
         },
         {
             name: getFormattedMessage('supplier.title'),
@@ -170,7 +167,7 @@ const Product = (props) => {
             sortField: 'supplier',
             sortable: false,
         },
-        
+
         {
             name: getFormattedMessage('warehouse.title'),
             selector: row => row.warehouse,
@@ -257,8 +254,8 @@ const Product = (props) => {
                 )
             }
         },
-    
-       
+
+
         {
             name: getFormattedMessage('react-data-table.action.column.label'),
             right: true,
@@ -275,11 +272,11 @@ const Product = (props) => {
                       isDeleteMode={row.delete_permission}
                       isViewIcon={row.view_permission}
                       onClickDeleteModel={onClickDeleteModel}
-                      
+
                       onPdfClick={onPdfClick}
                       goToDetailScreen={goToDetailScreen}
                       onShowPaymentClick={onShowPaymentClick}
-                     
+
                       title={getFormattedMessage('purchase.title')}
                     />
                   );
@@ -287,11 +284,11 @@ const Product = (props) => {
                   return null; // Do not render the column if permissions are not met
                 }
               },
-            // cell: row => row.reference_code === "Total" ? null : <ActionDropDownButton 
+            // cell: row => row.reference_code === "Total" ? null : <ActionDropDownButton
             //  item={row}
-            //   goToEditProduct={goToEditProduct} 
+            //   goToEditProduct={goToEditProduct}
             //   isEditMode={row.edit_permission}
-            //   isPdfIcon={row.view_permission}            
+            //   isPdfIcon={row.view_permission}
             //   onClickDeleteModel={onClickDeleteModel}
             //   isViewIcon={row.view_permission}
             //   onPdfClick={onPdfClick}
@@ -303,8 +300,9 @@ const Product = (props) => {
             //   />
         }
     ];
- 
+
 console.log(columns)
+console.log("Items",purchases)
     return (
         <MasterLayout>
             <TopProgressBar/>

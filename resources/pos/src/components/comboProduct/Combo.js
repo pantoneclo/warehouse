@@ -12,7 +12,7 @@ import  {fetchFrontSetting}  from '../../store/action/frontSettingAction';
 import TopProgressBar from "../../shared/components/loaders/TopProgressBar";
 import usePermission from '../../shared/utils/usePermission';
 import { Permissions } from '../../constants';
-// import DeleteCombo from './DeleteCombo'; // Assuming you have a DeleteCombo component
+import DeleteCombo from './DeleteCombo'; 
 
 const Combo = (props) => {
     const { combos, fetchCombos, totalRecord, isLoading, frontSetting, fetchFrontSetting, allConfigData } = props;
@@ -38,7 +38,10 @@ const Combo = (props) => {
     const delete_permission = usePermission(Permissions.PRODUCT_DELETE);
     const create_permission = usePermission(Permissions.PRODUCT_CREATE);
 
-
+    const onClickDeleteModel = (isDelete = null) => {
+        setDeleteModel(!deleteModel);
+        setIsDelete(isDelete);
+    };
 
     const onChange = (filter) => {
         fetchCombos(filter, true);
@@ -128,6 +131,7 @@ const Combo = (props) => {
                         isEditMode={row.edit_permission}
                         item={row}
                         goToEditProduct={goToEditCombo}
+                        onClickDeleteModel={onClickDeleteModel}
                     />
                 );
 
@@ -154,7 +158,7 @@ const Combo = (props) => {
                 isUnitFilter={false}
                  />
 
-            {/* <DeleteCombo onClickDeleteModel={onClickDeleteModel} deleteModel={deleteModel} onDelete={isDelete} /> */}
+           <DeleteCombo onClickDeleteModel={onClickDeleteModel} deleteModel={deleteModel} onDelete={isDelete} />
         </MasterLayout>
     );
 };

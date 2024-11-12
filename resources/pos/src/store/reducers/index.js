@@ -99,6 +99,7 @@ import packageReducer from "./packageReducer";
 import productAbstractReducer from "./productAbstractReducer";
 import variantReducer from "./variantReducer";
 import advanceSearchReducer from "./advanceSearchReducer";
+import warehouseProductsSearchReducer from "./warehouseProductsSearchReducer";
 
 // Added By Atiqur Rahman
 import comboProductReducer from "./comboProductReducer";
@@ -125,6 +126,7 @@ export default combineReducers({
 
     //
     advanceSearch: advanceSearchReducer,
+    warehouseProducts: warehouseProductsSearchReducer,
     packages: packageReducer,
     productAbstracts: productAbstractReducer,
     variants: variantReducer,

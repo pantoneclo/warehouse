@@ -8,7 +8,7 @@ import ReactSelect from '../select/reactSelect';
 import {getFormattedMessage, getFormattedOptions} from '../sharedMethod';
 import {faFilter} from "@fortawesome/free-solid-svg-icons";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
-import {baseUnitOptions, paymentStatusOptions, paymentTypeOptions, statusOptions, transferStatusOptions} from "../../constants";
+import {baseUnitOptions, paymentStatusOptions, paymentTypeOptions, statusOptions, transferStatusOptions, countryOptions} from "../../constants";
 import {fetchAllBaseUnits} from "../../store/action/baseUnitsAction";
 
 const FilterDropdown = (props) => {
@@ -35,7 +35,10 @@ const FilterDropdown = (props) => {
         onTransferStatusChange,
         transferStatus,
         fetchAllBaseUnits,
-        base
+        base,
+        isCountry,
+        onCountryChange,
+        country
     } = props;
 
     const dispatch = useDispatch();
@@ -96,6 +99,15 @@ const FilterDropdown = (props) => {
             label: option.attributes.name
         }
     })
+
+    const countryFilterOptions = getFormattedOptions(countryOptions);
+
+    const countryDefaultValue = countryFilterOptions.map((option) => {
+        return {
+            value: option.code,
+            label: option.name
+        }
+    });
 
     const onReset = () => {
         dispatch({type: 'RESET_OPTION', payload: true})
@@ -206,6 +218,17 @@ const FilterDropdown = (props) => {
                                      value={isReset ? transferStatusDefaultValue[0] : transferStatus} isRequired
                                      defaultValue={transferStatusDefaultValue[0]}
                                      placeholder={getFormattedMessage('purchase.select.status.label')}/>
+                    </Dropdown.Header>
+                    : null}
+                     {isCountry ?
+                    <Dropdown.Header onClick={(e) => {
+                        e.stopPropagation();
+                    }} eventkey='5' className='mb-5 p-0'>
+                        <ReactSelect multiLanguageOption={countryFilterOptions} onChange={onCountryChange} name='country'
+                                     title={getFormattedMessage('globally.input.country.label')}
+                                     value={isReset ? countryDefaultValue[0] : country} isRequired
+                                     defaultValue={countryDefaultValue[0]}
+                                     placeholder={getFormattedMessage('globally.input.country.label')}/>
                     </Dropdown.Header>
                     : null}
                 <div className='btn btn-secondary me-5' onClick={onReset}>{getFormattedMessage("date-picker.filter.reset.label")}</div>

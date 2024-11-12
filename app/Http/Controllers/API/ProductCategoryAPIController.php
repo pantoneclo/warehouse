@@ -8,6 +8,7 @@ use App\Http\Requests\UpdateProductCategoryRequest;
 use App\Http\Resources\ProductCategoryCollection;
 use App\Http\Resources\ProductCategoryResource;
 use App\Models\Product;
+use App\Models\ProductAbstract;
 use App\Repositories\ProductCategoryRepository;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -106,7 +107,7 @@ class ProductCategoryAPIController extends AppBaseController
             return $this->sendError('Permission Denied');
         }
         $productModels = [
-            Product::class,
+            ProductAbstract::class,
         ];
         $result = canDelete($productModels, 'product_category_id', $id);
         if ($result) {

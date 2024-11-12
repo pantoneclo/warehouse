@@ -21,6 +21,7 @@ class Kernel extends ConsoleKernel
         // $schedule->command('Parcel:cron')
         //          ->everyMinute();
         // $schedule->command('inspire')->hourly();
+        $schedule->command('stock:update')->everyMinute();
     }
 
     /**

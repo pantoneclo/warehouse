@@ -10,6 +10,7 @@ const RecentSale = (props) => {
     useEffect(() => {
         recentSales();
     }, []);
+    console.log("Recetn Sel", recentSalesDashboard);
 
     return (
         <div className='pt-6'>
@@ -30,6 +31,7 @@ const RecentSale = (props) => {
                                     <th>{getFormattedMessage('dashboard.recentSales.paid.label')}</th>
                                     <th>{getFormattedMessage('dashboard.recentSales.due.label')}</th>
                                     <th>{getFormattedMessage('dashboard.recentSales.paymentStatus.label')}</th>
+                                    <th>{getFormattedMessage('dashboard.recentSales.marketplace')}</th>
                                 </tr>
                                 </thead>
                                 <tbody className='text-nowrap'>
@@ -67,6 +69,7 @@ const RecentSale = (props) => {
                                             <span className='badge bg-light-success'>{getFormattedMessage("payment-status.filter.paid.label")}</span> ||
                                             recentSale.attributes.payment_status === 2 &&
                                             <span className='badge bg-light-warning'>{getFormattedMessage("payment-status.filter.unpaid.label")}</span>}</td>
+                                               <td className='py-4'>{recentSale.attributes.market_place}</td>
                                         </tr>
                                     )
                                 })}

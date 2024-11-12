@@ -8,35 +8,150 @@
     <!-- Fonts -->
     <!-- General CSS Files -->
     <link href="{{ asset('assets/css/bootstrap.min.css') }}" rel="stylesheet" type="text/css"/>
+    <style>
+        /* Remove borders from the table */
+        table {
+            border-collapse: collapse; /* Prevent double borders */
+            border: none; /* No border for the table itself */
+            width: 100%; /* Ensure full width */
+        }
+        th, td {
+            border: 1px solid black; /* Borders only for cells */
+            padding: 10px; /* Padding for cell content */
+            text-align: center; /* Center-align text */
+        }
+        .header-row {
+            background-color: dodgerblue;
+            font-weight: bold;
+        }
+        .content-row {
+            background-color: white; /* Set background color for content rows */
+        }
+    </style>
 </head>
 <body>
 <table width="100%" cellspacing="0" cellpadding="10" style="margin-top: 40px;">
     <thead>
-    <tr style="background-color: dodgerblue;">
-        <th style="width: 200%">{{ __('messages.pdf.reference') }}</th>
-        <th style="width: 300%">{{ __('messages.pdf.customer') }}</th>
-        <th style="width: 200%">{{ __('messages.pdf.warehouse') }}</th>
-        <th style="width: 200%">{{ __('messages.pdf.status') }}</th>
-        <th style="width: 200%">{{ __('messages.pdf.total') }}</th>
-        <th style="width: 300%">{{ __('messages.pdf.received_amount') }}</th>
-        <th style="width: 300%">{{ __('messages.pdf.payment_status') }}</th>
+    <tr style="background-color: dodgerblue; border: 5px solid black; font-weight: bold;">
+        <th style="text-align: center;" colspan="22">RETAILS REPORT.</th>
+    </tr>
+    <tr style="background-color: dodgerblue; border: 5px solid black; font-weight: bold; height:">
+        <th style=" text-align: center; ">{{ __('messages.sl_no') }}</th>
+        <th style=" text-align: center; width: 200%">{{ __('messages.pdf.selling_country') }}</th>
+        <th style=" text-align: center; width: 200%">{{ __('messages.pdf.selling_market') }}</th>
+        <th style=" text-align: center; width: 200%">{{ __('messages.pdf.order_no') }}</th>
+        <th style=" text-align: center; width: 200%">{{ __('messages.pdf.date') }}</th>
+        <th style=" text-align: center; width: 200%">{{ __('messages.pdf.order_type') }}</th>
+        <th style=" text-align: center; width: 200%">{{ __('messages.pdf.ttl_sale_item') }}</th>
+        <th style=" text-align: center; width: 200%">{{ __('messages.pdf.currency') }}</th>
+        <th style=" text-align: center; width: 200%">{{ __('messages.pdf.selling_value') }}</th>
+        <th style=" text-align: center; width: 200%">{{ __('messages.pdf.selling_value_eur') }}</th>
+
+        <th style=" text-align: center; width: 200%">{{ __('messages.pdf.mp_comm') }}</th>
+        <th style=" text-align: center; width: 200%">{{ __('messages.pdf.op_fee') }}</th>
+        <th style=" text-align: center; width: 200%">{{ __('messages.pdf.parcel_company') }}</th>
+        <th style=" text-align: center; width: 200%">{{ __('messages.pdf.courier_fee') }}</th>
+        <th style=" text-align: center; width: 200%">{{ __('messages.pdf.vat') }}</th>
+        <th style=" text-align: center; width: 200%">{{ __('messages.pdf.received_amount') }}</th>
+        <th style=" text-align: center; width: 200%">SALES RETURN</th>
+        <th style=" text-align: center; width: 200%">{{ __('messages.pdf.other_income') }}</th>
+        <th style=" text-align: center; width: 200%">{{ __('messages.pdf.other_cost') }}</th>
+        <th style=" text-align: center; width: 200%">{{ __('messages.pdf.customer') }}</th>
+
+
+        <th style=" text-align: center; width: 200%">{{ __('messages.pdf.warehouse') }}</th>
+        <th style=" text-align: center; width: 200%">{{ __('messages.pdf.status') }}</th>
+
+        <th style=" text-align: center; width: 200%">{{ __('messages.pdf.payment_status') }}</th>
+        <th style=" text-align: center; width: 200%">{{ __('messages.pdf.payment_method') }}</th>
+
+
+
+
     </tr>
     </thead>
     <tbody>
-    @foreach($sales  as $sale)
-        <tr align="center">
-            <td>{{$sale->reference_code}}</td>
-            <td>{{$sale->customer->name}}</td>
-            <td>{{$sale->warehouse->name}}</td>
+        @php
+          $sum_grand_total = 0;
+          $sum_selling_value_euro_total = 0;
+        @endphp
+    @foreach($sales  as $key=>$sale)
+        @php
+            $sum_grand_total += $sale->grand_total;
+            $sum_selling_value_euro_total += $sale->selling_value_eur;
+        @endphp
+        <tr align="center" style="background-color: dodgerblue; border: 5px solid black; font-weight: bold;">
+            <td style="text-align: center;">{{$key+1}}</td>
+            <td style="text-align: center;">{{$sale->country}}</td>
+            <td style="text-align: center;">{{$sale->market_place}}</td>
+            <td style="text-align: center;">{{$sale->order_no}}</td>
+            <td style="text-align: center;">{{\Carbon\Carbon::parse($sale->date)->format('d-m-Y')}}</td>
+            <td style="text-align: center;">
+                @if($sale->order_type)
+                    @if($sale->order_type == 1)
+                        COD
+                    @else
+                        PREPAID
+                    @endif
+                @else
+                    ' '
+                @endif
+
+            </td>
+            @if(count($sale->saleItems) > 0)
+                <td style="text-align: center;">{{count($sale->saleItems)}}  </td>
+            @else
+                <td style="text-align: center;" >0</td>
+            @endif
+
+            <td style="text-align: center;">{{$sale->currency}}</td>
+
+
+
+            <td style="text-align: center;">{{$sale->grand_total}}</td>
+            <td style="text-align: center;">{{$sale->selling_value_eur}}</td>
+
+            <td style="text-align: center;">{{$sale->marketplace_commission}}</td>
+            <td style="text-align: center;">{{$sale->order_process_fee}}</td>
+            <td style="text-align: center;">
+                @if($sale->shipment)
+                    @if($sale->shipment->parcel_company_id == 1)
+                        GLS
+                    @elseif($sale->shipment->parcel_company_id == 2)
+                        EXPEDICO
+                    @elseif($sale->shipment->parcel_company_id == 3)
+                        REDEX
+                    @else
+                        NOT YET
+                    @endif
+                @else
+                    NOT YET
+                @endif
+            </td>
+            <td style="text-align: center;">{{$sale->courier_fee}}</td>
+            <td style="text-align: center;">{{$sale->tax_amount}}</td>
+            <td>{{number_format((float)$sale->payments->sum('amount'), 2)}}</td>
+            <td style="text-align: center;">
+                @if($sale->is_return)
+                   RETURNED
+                @else
+                    NO
+                @endif
+            </td>
+            <td style="text-align: center;">{{$sale->other_income}}</td>
+            <td style="text-align: center;">{{$sale->other_cost}}</td>
+            <td style="text-align: center;">{{$sale->customer->name}}</td>
+
+
+            <td style="text-align: center;">{{$sale->warehouse->name}}</td>
             @if($sale->status == \App\Models\Sale::COMPLETED)
-                <td>Completed</td>
+                <td>Received</td>
             @elseif($sale->status == \App\Models\Sale::PENDING)
                 <td>Pending</td>
             @elseif($sale->status == \App\Models\Sale::ORDERED)
                 <td>Ordered</td>
             @endif
-            <td style="float: left">{{number_format($sale->grand_total,2)}}</td>
-            <td>{{number_format((float)$sale->payments->sum('amount'), 2)}}</td>
+
             @if($sale->status == \App\Models\Sale::PAID)
                 <td>paid</td>
             @elseif($sale->status == \App\Models\Sale::UNPAID)
@@ -44,10 +159,48 @@
             @elseif($sale->status == \App\Models\Sale::PARTIAL_PAID)
                 <td>partial</td>
             @endif
-            <td></td>
+            <td style="text-align: center;">
+                @if($sale->payment_type)
+                    @if($sale->payment_type== 1)
+                        CASH
+                    @elseif($sale->payment_type== 2)
+                        CHEQUE
+                    @elseif($sale->payment_type== 3)
+                        BANK TRANSFER
+                    @elseif($sale->payment_type== 4)
+                        OTHER
+                    @elseif($sale->payment_type== 5)
+                        COD
+                    @elseif($sale->payment_type== 6)
+                        SSLCOMMERZ
+                    @elseif($sale->payment_type== 7)
+                        STRIPE
+                    @elseif($sale->payment_type== 0)
+                        NEED UPDATE
+                    @else
+                        NOT YET
+                    @endif
+                @else
+                    NOT YET
+                @endif
+            </td>
         </tr>
     @endforeach
     </tbody>
+    <tfoot style="border: 2px solid black;">
+    <tr class="footer-row">
+        <td colspan="2" style="text-align: center;">Total:</td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td>{{ number_format($sum_grand_total)}}</td>
+        <td>{{ number_format( $sum_selling_value_euro_total, 2) }}</td>
+        <td>{{ number_format($sales->sum('tax_amount'), 2) }}</td>
+        <td colspan="14"></td> <!-- Empty cells for the rest of the columns -->
+    </tr>
+    </tfoot>
 </table>
 </body>
 </html>

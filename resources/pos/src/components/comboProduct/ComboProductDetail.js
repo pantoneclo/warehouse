@@ -1,6 +1,6 @@
-import React, { useEffect } from 'react';
+import React, { useEffect,useState } from 'react';
 import { connect } from 'react-redux';
-import { Image, Table } from 'react-bootstrap-v5';
+import { Image, Table, Form, Button } from 'react-bootstrap-v5';
 import { json, useParams } from 'react-router-dom';
 import Carousel from 'react-elastic-carousel';
 import MasterLayout from '../MasterLayout';
@@ -12,12 +12,19 @@ import { getFormattedMessage, placeholderText, currencySymbolHendling } from '..
 import Spinner from "../../shared/components/loaders/Spinner";
 import TopProgressBar from "../../shared/components/loaders/TopProgressBar";
 import { vari } from '../../constants/index';
-import { fetchComboProduct } from '../../store/action/comboProductAction';
+import { fetchComboProduct, addProductToCombo } from '../../store/action/comboProductAction';
+import { warehouseProductsSearch } from '../../store/action/warehouseProductsSearchAction';
 
 
 const ComboProductDetail = props => {
-    const { combos, fetchComboProduct, isLoading, frontSetting, allConfigData } = props;
+    const { combos, fetchComboProduct, isLoading, frontSetting, allConfigData, warehouseProductsSearch,warehouseProducts  } = props;
     const { id } = useParams();
+    const [searchVisible, setSearchVisible] = useState(false);
+    const [searchQuery, setSearchQuery] = useState('');
+    const [selectedProduct, setSelectedProduct] = useState(null);
+    const [filteredProducts, setFilteredProducts] = useState([]);
+    
+
     const result = combos ? combos[0] && combos?.reduce((obj, cur) => ({ ...obj, [cur.type]: cur }), {})
         : false
     console.log(result, 'this is come from Combo Product Details');
@@ -29,6 +36,40 @@ const ComboProductDetail = props => {
 
         fetchComboProduct(id);
     }, []);
+
+    useEffect(() => {
+        // Ensure warehouseProducts is an array before trying to filter
+        if (warehouseProducts && Array.isArray(warehouseProducts)) {
+            setFilteredProducts(warehouseProducts.filter(product => product.name.toLowerCase().includes(searchQuery.toLowerCase())));
+        } else {
+            setFilteredProducts([]); // Handle the case when warehouseProducts is undefined or not an array
+        }
+    }, [warehouseProducts, searchQuery]);
+    
+
+
+
+     // Simulate fetching products from an API or a list.
+
+    // Handle search input change
+    const handleSearchChange = (e) => {
+        const query = e.target.value;
+        setSearchQuery(query);
+        if (query) {
+            warehouseProductsSearch(query, id); // Dispatch the action
+        }
+    }
+ console.log("Warehouse Products Come From Search",filteredProducts);
+    // Handle adding the selected product to combo
+    const handleAddProduct = (comboCode, product) => {
+        setSelectedProduct(product);
+        // Dispatch action to update combo with selected product
+        addProductToCombo(comboCode, product);
+        // Clear search after adding
+        setSearchVisible(false);
+        setSearchQuery('');
+        setFilteredProducts([]);
+    };
 
     return (
         <MasterLayout>
@@ -125,6 +166,37 @@ const ComboProductDetail = props => {
                                 })}
                             </tbody>
                         </Table>
+                         {/* Add New Product Section */}
+                         <div>
+                            <div className='bg-red-500 py-5 text-white' onClick={() => setSearchVisible(!searchVisible)}>
+                                Add New
+                            </div>
+
+                            {/* Show Search Input */}
+                            {searchVisible && (
+                                <div className='mt-2'>
+                                    <Form.Control
+                                        type='text'
+                                        placeholder='Search for a product'
+                                        value={searchQuery}
+                                        onChange={handleSearchChange}
+                                    />
+                                    {filteredProducts.length > 0 && (
+                                        <ul className='list-group mt-2'>
+                                            {filteredProducts.map(product => (
+                                                <li
+                                                    key={product.id}
+                                                    className='list-group-item'
+                                                    onClick={() => handleAddProduct(comboItem.combo_code, product)}
+                                                >
+                                                    {product.name} - {product.code} - {product.price}
+                                                </li>
+                                            ))}
+                                        </ul>
+                                    )}
+                                </div>
+                            )}
+                        </div>
                     </div>
                 ))
             ) : (
@@ -136,11 +208,11 @@ const ComboProductDetail = props => {
 
 const mapStateToProps = (state) => {
     console.log(state)
-    const { productsArray, combos, isLoading, frontSetting, allConfigData } = state;
-    return { productsArray, combos, isLoading, frontSetting, allConfigData }
+    const {warehouseProductsSearch, productsArray, combos, isLoading, frontSetting, allConfigData,   warehouseProducts} = state;
+    return {warehouseProductsSearch, productsArray, combos, isLoading, frontSetting, allConfigData,  warehouseProducts }
 };
 
-export default connect(mapStateToProps, { fetchProduct, fetchComboProduct })(ComboProductDetail);
+export default connect(mapStateToProps, { fetchProduct, fetchComboProduct, warehouseProductsSearch })(ComboProductDetail);
 
 
 

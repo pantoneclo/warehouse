@@ -1,35 +1,79 @@
-import React, {useState} from 'react';
+import React, {useEffect, useState} from 'react';
 import Form from 'react-bootstrap/Form';
 import {getFormattedMessage, placeholderText} from '../../shared/sharedMethod';
 import ReactSelectInventory from "../../shared/select/reactSelectInventory";
-
+import ReactSelect from '../../shared/select/reactSelect';
 import ModelFooter from '../../shared/components/modelFooter';
+import {fetchAllWarehouses} from '../../store/action/warehouseAction';
 import {connect, useDispatch} from 'react-redux';
 
 
 const CreateComboForm = (props) => {
-    const {products, addComboData} = props;
+    const {combos, products, warehouses, addComboData, fetchAllWarehouses} = props;
     const dispatch = useDispatch();
+    
     const [comboName, setComboName] = useState('');
 
     const handleComboNameChange = (event) => {
         setComboName(event.target.value);
     };
 
-
+    console.log('All Products', products);
+    console.log('Edit Combo', combos[0]);
     const [fields, setFields] = useState([{
         combo_name:'',
         product_id: null,
-        product: [{product: null, item_per_box: 0}],
-        carton_meas: 0,
+        product: [{product: null}],
     }]);
+    // If editing, populate the form fields with combo data
+    useEffect(() => {
+        if (combos[0]) {
+            setComboName(combos[0].attributes?.name || '');
+            
+            // Set products to edit (assuming combo structure allows this)
+            setFields(combos[0].attributes?.products.map(product => ({
+                
+                product: product.products.map(nested => ({ 
+                    product_id: nested.id,
+                    product: nested.attributes, 
+                }))
+            })) || []);
+        }
+    }, [combos[0]]);
+    
 
+    const [warehouseValue, setwarehouseValue] = useState({
+        warehouse_id: '',
+       
+    });
+
+    const [filteredProducts, setFilteredProducts] = useState([]);
+
+    const filterProductsByWarehouse = (warehouseId)=>{
+       const filtredProducts = products.filter((product)=>
+        product.attributes.warehouse.some((wh) => wh.id === warehouseId)
+        )
+        setFilteredProducts(filtredProducts) 
+    }
+
+    useEffect(() => {
+        fetchAllWarehouses();
+    }, [fetchAllWarehouses]);
+
+
+    useEffect(() => {
+        console.log('Warehouse ID changed:', warehouseValue.warehouse_id);
+    }, [warehouseValue.warehouse_id])
+   console.log("Warehouse", warehouses)
     const disabled = true;
     const handleInputChange = (index, event) => {
         const values = [...fields];
         values[index][event.target.name] = event.target.value;
         setFields(values);
     };
+
+
+    
 
     const handleSelectChange = (index, nestedIndex, selectedOption) => {
 
@@ -50,9 +94,7 @@ const CreateComboForm = (props) => {
         setFields([...fields, {
           
             product_id: null,
-            product: [{product: null, item_per_box: 0}],
-         
-            carton_meas: 0,
+            product: [{product: null}],
            
         }]);
         console.log(fields);
@@ -78,6 +120,7 @@ const CreateComboForm = (props) => {
     const prepareFormData = (data) => {
         const formData = new FormData();
         formData.append('combo_name', comboName);
+        formData.append('warehouse_id', warehouseValue.warehouse_id.value);
         data.forEach((item, index) => {
             item.product.forEach((nestedProduct, nestedIndex) => {
                 if (nestedProduct.product) {
@@ -87,10 +130,45 @@ const CreateComboForm = (props) => {
         });
         return formData;
     };
+
+    const [errors, setErrors] = useState({
+        warehouse_id: '',
+        products:''
+       
+    });
+    const onWarehouseChange = (input)=>{
+        setwarehouseValue(inputs => ({ ...inputs, warehouse_id: input }));
+        setErrors('');
+
+       
+        console.log('Updated warehouseValue:', { ...warehouseValue, warehouse_id: input });
+        console.log('Products:', products);
+    }
+
+    const handleValidation = () => {
+        let error = {};
+        let isValid = true;
+        if (!fields[0].product) {
+            error['products'] = getFormattedMessage('globally.date.validate.label');
+            isValid = false; // Set isValid to false if there's an error
+        } 
+        if (!warehouseValue.warehouse_id) {
+            error['warehouse_id'] = getFormattedMessage('product.input.warehouse.validate.label');
+            isValid = false; // Set isValid to false if there's an error
+        }
+        setErrors(error);
+        return isValid;
+    };
+
+
     const onSubmit = (event) => {
         event.preventDefault();
+        const valid = handleValidation();
         const formData = prepareFormData(fields);
-        addComboData(formData);
+        if(valid){
+            addComboData(formData);
+        }
+       
     };
 
     return (
@@ -104,8 +182,8 @@ const CreateComboForm = (props) => {
                     </div>
                     <Form>
 
-                    <div className=''>
-                        <div>
+                    <div className='row'>
+                        <div className='col-md-8'>
                             <input
                                 type='text'
                                 className='form-control'
@@ -114,6 +192,15 @@ const CreateComboForm = (props) => {
                                 value={comboName}
                                 onChange={handleComboNameChange}
                             />
+                        </div>
+
+                        <div className="col-md-4" style={{ zIndex: 500 }}>
+                        <ReactSelect name='warehouse_id' data={warehouses} onChange={onWarehouseChange}
+                            title={getFormattedMessage('warehouse.title')} errors={errors['warehouse_id']}
+                            defaultValue={warehouseValue.warehouse_id} value={warehouseValue.warehouse_id}
+                            isWarehouseDisable={true}
+                            placeholder={placeholderText('purchase.select.warehouse.placeholder.label')} />   
+
                         </div>
                     </div>
 
@@ -134,11 +221,7 @@ const CreateComboForm = (props) => {
                            
                             
                            
-                            <div className='col-md-2'>
-                                <p style={({fontSize: '12px', fontWeight: 'bold'})}>
-                                    {getFormattedMessage('inventory.form.carton_meas.label')}
-                                </p>
-                            </div>
+                            
                             <div className='col-md-1'></div>
                         </div>
                         {fields.map((field, index) => (
@@ -149,7 +232,7 @@ const CreateComboForm = (props) => {
                                        
                                                 <div>
                                                     <div className='d-flex' key={nestedIndex}>
-                                                        <ReactSelectInventory
+                                                    <ReactSelectInventory
                                                             data={products}
                                                             onChange={(selectedOption) => handleSelectChange(index, nestedIndex, selectedOption)}
                                                             placeholder={placeholderText('inventory.select.placeholder.product')}
@@ -177,21 +260,7 @@ const CreateComboForm = (props) => {
                                     </button>
 
                                 </div>
-                               
-                               
-                        
-                                <div className='col-md-2'>
-                                    <div>
-                                        <input
-                                            type='text'
-                                            className='form-control'
-                                            id='carton_meas'
-                                            name='carton_meas'
-                                            value={field.carton_meas}
-                                            onChange={(event) => handleInputChange(index, event)}
-                                        />
-                                    </div>
-                                </div>
+                              
                                 <div className="col-md-1">
                                     <button type="button" className="btn btn-danger btn-sm"
                                             onClick={() => handleRemoveFields(index)}>Del
@@ -212,8 +281,10 @@ const CreateComboForm = (props) => {
 
 const mapStateToProps = (state) => {
     return {
-        products: state.products
+        products: state.products,
+        warehouses: state.warehouses,
+        combos: state.combos
     };
 };
 
-export default connect(mapStateToProps)(CreateComboForm);
+export default connect(mapStateToProps, {fetchAllWarehouses})(CreateComboForm);

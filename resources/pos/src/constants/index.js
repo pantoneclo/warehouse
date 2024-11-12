@@ -4,6 +4,7 @@ export const apiBaseURL = {
     PARCEL_STATUS_UPDATE: 'parcelStatusUpdate',
     ADD_WAREHOUSE_TO_PACKAGE: 'warehouseAddIntoPackage',
     ADVANCED_SEARCH: '/search',
+    WAREHOUSE_PRODUCTS_SEARCH: '/warehouse-products-search',
     BRANDS: '/brands',
     CURRENCY: '/currencies',
     REGISTRATION: '/register',
@@ -30,6 +31,7 @@ export const apiBaseURL = {
     PURCHASES: '/purchases',
     TRANSFERS: '/transfers',
     SALES: '/sales',
+    SALES_REPORT: '/sales/report',
     QUOTATIONS: '/quotations',
     QUOTATIONS_DETAILS: 'quotation-info',
     ADJUSTMENTS: '/adjustments',
@@ -116,6 +118,7 @@ export const apiBaseURL = {
     COMBO_PRODUCT: "/combos",
     ADD_COMBO: "/combos",
     COMBO_PRODUCT_DETAIL: "/combo",
+    COMBO_DELETE: "/combo",
 };
 
 export const authActionType = {
@@ -214,6 +217,7 @@ export const unitsActionType = {
 
 export const advancedSearchActionType = {
     FETCH_ADVANCED_SEARCH: 'FETCH_ADVANCED_SEARCH',
+    FETCH_WAREHOUSE_PRODUCTS_SEARCH: 'FETCH_WAREHOUSE_PRODUCTS_SEARCH',
 };
 
 
@@ -367,6 +371,8 @@ export const saleActionType = {
     FETCH_SALE: 'FETCH_SALE',
     ADD_SALE: 'ADD_SALE',
     EDIT_SALE: 'EDIT_SALE',
+    EDIT_SALE_REPORT_FROM_REPORT: 'EDIT_REPORT_SALE',
+    EDIT_SALE_REPORT: 'EDIT_SALE_REPORT',
     DELETE_SALE: 'DELETE_SALE',
     SEARCH_SALE_PRODUCTS: 'SEARCH_SALE_PRODUCTS',
     PRODUCT_SALES_UNIT: 'PRODUCT_SALES_UNIT',
@@ -754,6 +760,7 @@ export const comboProductType = {
     FETCH_COMBO_PRODUCTS: 'FETCH_COMBO_PRODUCTS', 
     ADD_COMBO: 'ADD_COMBO', 
     FETCH_COMBO_PRODUCT: 'FETCH_COMBO_PRODUCT', 
+    DELETE_COMBO: 'DELETE_COMBO', 
 }
 
 
@@ -853,6 +860,9 @@ export const paymentMethodOptions = [
     { id: 2, name: 'payment-type.filter.cheque.label' },
     { id: 3, name: 'payment-type.filter.bank-transfer.label' },
     { id: 4, name: 'payment-type.filter.other.label' },
+    { id: 5, name: 'payment-type.filter.cod.label' },
+    { id: 6, name: 'payment-type.filter.ssl.label' },
+    { id: 7, name: 'payment-type.filter.stripe.label' },
 ];
 
 
@@ -922,6 +932,7 @@ export const productAbstractAttributes = [
 export const shippingCompanyNames = [
     { id: 1, label: 'GLS' },
     {id : 2, label: 'EXPEDICO' },
+    {id : 3, label: 'REDEX' },
 ]
 
 export const getLabelById = (id) => {
@@ -932,4 +943,12 @@ export const getLabelById = (id) => {
 export const eccomercePlatform = [
     { id: 1, name: 'eccomerce.label.1' },
     { id: 2, name: 'eccomerce.label.2' },
+];
+
+
+export const countryOptions = [
+    { id: 1, code:'BD', name: 'Bangladesh' },
+    { id: 2, code:'SI', name: 'Slovenia' },
+    { id: 3, code:'IT', name: 'Italy' },
+    // Add more countries as needed
 ];

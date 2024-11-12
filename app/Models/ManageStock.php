@@ -116,6 +116,8 @@ class ManageStock extends BaseModel implements JsonResourceful
             'product_unit_name' => $this->getProductUnitName(),
             'product_name' => $this->product->productAbstract->name,
             'product_image' => $this->product->image_url,
+            'pan_style' => $this->product->productAbstract->pan_style,
+            'code'=>$this->product->code,
         ];
 
         return $fields;

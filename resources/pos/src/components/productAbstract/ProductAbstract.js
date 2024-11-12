@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { connect } from 'react-redux';
+import { connect, useDispatch } from 'react-redux';
 import moment from 'moment';
 import { Button, Image } from 'react-bootstrap-v5';
 import MasterLayout from '../MasterLayout';
@@ -16,7 +16,7 @@ import { fetchFrontSetting } from '../../store/action/frontSettingAction';
 import TopProgressBar from "../../shared/components/loaders/TopProgressBar";
 import Modal from 'react-bootstrap/Modal';
 // import ImportProductModel from './ImportProductModel';
-import { productExcelAction } from '../../store/action/productExcelAction';
+import { allProductsExcelAction } from '../../store/action/productExcelAction';
 import { fetchProductAbstracts, cancelTokenSourceProductAbstract } from '../../store/action/productAbstractAction';
 import DeleteProductAbstract from './DeleteProductAbstract';
 
@@ -25,6 +25,7 @@ import { Permissions } from '../../constants';
 import axios from 'axios';
 
 const ProductAbstract = (props) => {
+    const dispatch = useDispatch();
     const { productAbstracts, fetchProductAbstracts, totalRecord, isLoading, frontSetting, fetchFrontSetting, allConfigData } = props;
     const [deleteModel, setDeleteModel] = useState(false);
     const [isDelete, setIsDelete] = useState(null);
@@ -39,14 +40,19 @@ const ProductAbstract = (props) => {
     };
 
     const [isWarehouseValue, setIsWarehouseValue] = useState(false);
+
+    // Debug: Log when `isWarehouseValue` changes
     useEffect(() => {
-        if (isWarehouseValue === true) {
-            productExcelAction(setIsWarehouseValue, true, productUnitId);
+        console.log("useEffect triggered, isWarehouseValue:", isWarehouseValue);
+        if (isWarehouseValue) {
+            console.log("I am Here"); // Should appear when `isWarehouseValue` is true
+            dispatch(allProductsExcelAction(setIsWarehouseValue, true));
         }
-    }, [isWarehouseValue])
+    }, [isWarehouseValue, dispatch]);
 
     const onExcelClick = () => {
-        setIsWarehouseValue(true);
+        console.log("onExcelClick called");
+        setIsWarehouseValue(true); // Triggers `useEffect`
     };
 
     useEffect(() => {
@@ -126,6 +132,14 @@ const ProductAbstract = (props) => {
         //     sortable: true,
         // },
         {
+            name: getFormattedMessage('Style'),
+            selector: row => <span className='badge bg-light-danger'>
+                <span>{row.code}</span>
+            </span>,
+            sortField: 'code',
+            sortable: false,
+        },
+        {
             name: getFormattedMessage('name'),
             selector: row => <span className='product-name'>
                 <span>{row.name}</span>
@@ -147,14 +161,7 @@ const ProductAbstract = (props) => {
             sortField: 'brand_name',
             sortable: false,
         },
-        {
-            name: getFormattedMessage('Style'),
-            selector: row => <span className='badge bg-light-danger'>
-                <span>{row.code}</span>
-            </span>,
-            sortField: 'code',
-            sortable: false,
-        },
+       
         
         {
             name: getFormattedMessage('quantity.lable'),
@@ -242,7 +249,7 @@ const ProductAbstract = (props) => {
 
                 goToImport={handleClose}
                 importBtnTitle={getFormattedMessage('product.import.title')}
-                isExport={false} onExcelClick={onExcelClick} />
+                isExport={false} onExcelClick={onExcelClick} isEXCEL/>
 
 
             <DeleteProductAbstract onClickDeleteModel={onClickDeleteModel} deleteModel={deleteModel} onDelete={isDelete} />

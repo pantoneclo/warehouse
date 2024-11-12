@@ -15,7 +15,7 @@ use App\Models\Product;
 use App\Models\Combo;
 use App\Models\ComboProduct;
 class ComboController extends AppBaseController
-{  
+{
 
 
     public function __construct(ComboRepository $comboRepository)
@@ -37,9 +37,13 @@ class ComboController extends AppBaseController
     public function store(Request $request){
 
         $validator = Validator::make($request->all(), [
-            'items'                       => 'required|array',
-            'combo_name'                       => 'required',
+            'items'          => 'required|array',
+            'combo_name'     => 'required',
+            'warehouse_id'   => 'required',
         ]);
+
+        $warehouse_id = (int) $request->warehouse_id;
+
 
         if ( $validator->fails() ) {
             return response()->json([
@@ -51,11 +55,12 @@ class ComboController extends AppBaseController
         try {
 
             $data = $request->input('items');
+
             DB::beginTransaction();
 
             $combo = Combo::create([
-                   'name'=> $request->combo_name,     
-                   'sku'=> generateUniqueSKU(Combo::class, 'C', '000001'),     
+                   'name'=> $request->combo_name,
+                   'sku'=> generateUniqueSKU(Combo::class, 'C', '000001'),
             ]);
 
 
@@ -70,6 +75,7 @@ class ComboController extends AppBaseController
 
                     ComboProduct::create([
                         'combo_id'    => $combo->id,
+                        'warehouse_id'=> $warehouse_id,
                         'product_id'    => $product['product_id'],
                         'code'    => $combo_Product_sku,
                     ]);
@@ -102,9 +108,32 @@ class ComboController extends AppBaseController
 
     public function show($id)
     {
-       
+
         $comboProduct = $this->comboRepository->find($id);
 
         return new ComboResource($comboProduct);
     }
+
+
+    public function destroy($id){
+       
+            // Find the combo with its related comboItems
+            $combo = Combo::with('comboItems')->find($id);
+
+            // Check if the combo exists
+            if (!$combo) {
+                return response()->json(['message' => 'Combo not found'], 404);
+            }
+
+            // Delete related comboItems first if they exist
+            if ($combo->comboItems()->exists()) {
+                $combo->comboItems()->delete();  // Deletes all related comboItems
+            }
+
+            // Delete the combo itself
+            $combo->delete();
+
+             return response()->json(['message' => 'Combo deleted successfully'], 200);
+        }
 }
+

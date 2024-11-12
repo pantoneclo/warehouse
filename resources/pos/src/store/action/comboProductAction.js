@@ -78,11 +78,41 @@ export const fetchComboProduct = (productId, singleProduct, isLoading = true) =>
                 dispatch(setLoading(false))
             }
 
-            console.log(response.data?.data, 'Come From Combo Action');
+            console.log(response.data?.data, 'Come From Combo Edit Action');
         })
         .catch(({response}) => {
             dispatch(addToast(
                 {text: response.data?.message, type: toastType.ERROR}));
+        });
+};
+
+
+export const addProductToCombo =(comboCode, product)=>{
+    console.log(comboCode)
+}
+
+
+export const deleteCombo = (comboId) => async (dispatch) => {
+    console.log(comboId);
+    apiConfig.delete(apiBaseURL.COMBO_DELETE + '/' + comboId)
+        .then((response) => {
+            console.log('Success:', response);  // Logging the success response
+
+            // Dispatch actions on success
+            dispatch(removeFromTotalRecord(1));
+            dispatch({ type: comboProductType.DELETE_COMBO, payload: comboId });
+            dispatch(addToast({ text: "Combo deleted successfully!", type: toastType.REMOVE_TOAST }));
+        })
+        .catch(({ response }) => {
+            // Log the error response for debugging
+            console.log('Error Response:', response);
+
+            // Handle the error case
+            if (response && response.data && response.data.message) {
+                dispatch(addToast({ text: response.data.message, type: toastType.ERROR }));
+            } else {
+                dispatch(addToast({ text: "An unknown error occurred!", type: toastType.ERROR }));
+            }
         });
 };
 

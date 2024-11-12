@@ -115,11 +115,12 @@ class Sale extends BaseModel implements HasMedia, JsonResourceful
         'is_return',
         'country',
         'order_no',
-        'market_place'
+        'market_place',
+        'currency',
     ];
 
     public static $rules = [
-     
+
         'customer_id' => 'required|exists:customers,id',
         'warehouse_id' => 'required|exists:warehouses,id',
         'tax_rate' => 'nullable|numeric',
@@ -217,6 +218,7 @@ class Sale extends BaseModel implements HasMedia, JsonResourceful
             'customer_name' => $this->customer->name,
             'warehouse_id' => $this->warehouse_id,
             'warehouse_name' => $this->warehouse->name,
+            'country_code' => $this->warehouse->country_code,
             'tax_rate' => $this->tax_rate,
             'tax_amount' => $this->tax_amount,
             'discount' => $this->discount,
@@ -237,6 +239,13 @@ class Sale extends BaseModel implements HasMedia, JsonResourceful
             'order_no'=>$this->order_no,
             'country'=>$this->country,
             'market_place'=>$this->market_place,
+            'currency'=>$this->currency,
+            'marketplace_commission'=>$this->marketplace_commission,
+            'order_process_fee'=>$this->order_process_fee,
+            'courier_fee'=>$this->courier_fee,
+            'other_cost'=>$this->other_cost,
+            'other_income'=>$this->other_income,
+            'selling_value_eur'=>$this->selling_value_eur,
         ];
 
         return $fields;

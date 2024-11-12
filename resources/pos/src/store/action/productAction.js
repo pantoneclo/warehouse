@@ -94,10 +94,16 @@ export const deleteProduct = (productId) => async (dispatch) => {
         });
 };
 
-export const fetchAllProducts = () => async (dispatch) => {
+export const fetchAllProducts = (isLoading = true) => async (dispatch) => {
+    if (isLoading) {
+        dispatch(setLoading(true))
+    }
     apiConfig.get(`products?page[size]=0`)
         .then((response) => {
             dispatch({type: productActionType.FETCH_ALL_PRODUCTS, payload: response.data.data});
+            if (isLoading) {
+                dispatch(setLoading(false))
+            }
         })
         .catch(({response}) => {
             dispatch(addToast(

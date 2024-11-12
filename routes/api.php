@@ -40,6 +40,9 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\API\AdvancedSearchAPIController;
 use App\Http\Controllers\API\InventoryAPIController;
 
+//Daraz
+use App\Http\Controllers\API\DarazAPIController;
+
 // Combo
 use App\Http\Controllers\API\ComboController;
 
@@ -71,6 +74,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/brands', [BrandAPIController::class, 'index']);
     // advance search controller
     Route::get ('/search', [AdvancedSearchAPIController::class, 'searchProduct']);
+    Route::get ('/warehouse-products-search', [AdvancedSearchAPIController::class, 'warehouseProductsSearch']);
 
 
     //Dashboard
@@ -150,6 +154,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('import-customers', [CustomerAPIController::class, 'importCustomers']);
 
     Route::get('products-export-excel/{id?}', [ProductAPIController::class, 'getProductExportExcel'])->name('products-export-excel');
+    Route::get('all-products-export-excel', [ProductAPIController::class, 'getAllProductsExportExcel'])->name('all-products-export-excel');
 
     Route::resource('transfers', TransferAPIController::class);
 
@@ -182,7 +187,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::resource('sales', SaleAPIController::class);
     Route::get('sale-pdf-download/{sale}', [SaleAPIController::class, 'pdfDownload'])->name('sale-pdf-download');
     Route::get('sale-info/{sale}', [SaleAPIController::class, 'saleInfo'])->name('sale-info');
-
+    Route::patch('sales/report/{sale}', [SaleAPIController::class, 'salesReportEdit'])->name('sales.report.edit');
     Route::post('parcelStatusUpdate', [SaleAPIController::class, 'parcelStatusUpdate'])->name('parcelStatusUpdate');
 
     Route::post('create-parcel', [SaleAPIController::class, 'createParcel'])->name('createParcel');
@@ -348,6 +353,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/combos', [ComboController::class, 'index']);
     Route::get('/combo/{id}', [ComboController::class, 'show'])->name('combo.show');
     Route::post('/combos', [ComboController::class, 'store']);
+    Route::delete('/combo/{id}', [ComboController::class, 'destroy']);
 
     Route::get('config', [UserAPIController::class, 'config']);
 
@@ -357,10 +363,13 @@ Route::middleware('auth:sanctum')->group(function () {
 });
 
 Route::middleware('checkApiKey')->group(function (){
-    Route::get('/product/stock/by/sku/{code}', [StockManagementAPIController::class, 'getStockByCode'])->name('product.stock.managed.sku.code');
+    Route::post('/product/stock/by/warehouse/sku', [StockManagementAPIController::class, 'getStockByCode'])->name('product.stock.managed.sku.code');
     Route::post('/product/stock/update', [StockManagementAPIController::class, 'updateStock'])->name('product.stock.update');
     Route::post('/webhook/order', [StockManagementAPIController::class, 'webHookOrder'])->name('webhook.order');
 
+    Route::post('/webhook/manageStock', [StockManagementAPIController::class, 'manageStock'])->name('webhook.order.manageStock');
+     Route::post('/webhook/order/cancel', [StockManagementAPIController::class, 'webHookOrderCancel'])->name('webhook.order');
+     Route::post('/webhook/order/return', [StockManagementAPIController::class, 'webHookOrderReturn'])->name('webhook.order.return');
 });
 
 
@@ -375,3 +384,11 @@ Route::post('/reset-password', [AuthController::class, 'resetPassword'])->name('
 Route::get('front-setting', [SettingAPIController::class, 'getFrontSettingsValue'])->name('front-settings');
 
 Route::post('validate-auth-token', [AuthController::class, 'isValidToken']);
+
+// In routes/api.php or routes/web.php
+Route::post('/daraz-callback', [DarazAPICOntroller::class, 'handleCallback']);
+
+Route::get('/stock-managed-warehouse', [StockManagementAPIController::class, 'stockManagedbyWarehouse']);
+Route::get('/stock-managed-warehouse-ten', [StockManagementAPIController::class, 'updateAllQuantitiesToTen']);
+Route::get('/stock-managed-warehouse-combo', [StockManagementAPIController::class, 'comboStockManagedBySku']);
+

@@ -22,6 +22,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Symfony\Component\HttpKernel\Exception\UnprocessableEntityHttpException;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 /**
  * Class PurchaseAPIController
  */
@@ -29,10 +30,11 @@ class PurchaseAPIController extends AppBaseController
 {
     /** @var PurchaseRepository */
     private $purchaseRepository;
-
-    public function __construct(PurchaseRepository $purchaseRepository)
+    private  $stockManagementController;
+    public function __construct(PurchaseRepository $purchaseRepository, StockManagementAPIController $stockManagementController)
     {
         $this->purchaseRepository = $purchaseRepository;
+        $this->stockManagementController = $stockManagementController;
     }
 
     /**
@@ -48,6 +50,7 @@ class PurchaseAPIController extends AppBaseController
         $search = $request->filter['search'] ?? '';
         $supplier = (Supplier::where('name', 'LIKE', "%$search%")->get()->count() != 0);
         $warehouse = (Warehouse::where('name', 'LIKE', "%$search%")->get()->count() != 0);
+
         $purchases = $this->purchaseRepository;
         if ($supplier || $warehouse) {
             $purchases->whereHas('supplier', function (Builder $q) use ($search, $supplier) {
@@ -60,6 +63,12 @@ class PurchaseAPIController extends AppBaseController
                 }
             });
         }
+
+
+            $purchases->whereHas('purchaseItems.product.productAbstract', function ($q) use ($search) {
+                $q->where('pan_style', 'LIKE', "%$search%");
+            });
+
 
         if ($request->get('start_date') && $request->get('end_date')) {
             $purchases->whereBetween('date', [$request->get('start_date'), $request->get('end_date')]);
@@ -92,6 +101,34 @@ class PurchaseAPIController extends AppBaseController
         $input = $request->all();
         $purchase = $this->purchaseRepository->storePurchase($input);
 
+
+        // Use PurchaseResource to format the incoming data
+
+
+        try {
+            // Check if the necessary fields exist in the formatted purchase data
+            if (isset($purchase['warehouse_id'])) {
+                // Extract the necessary fields from the formatted data
+                $warehouse_id = $purchase['warehouse_id'];
+                $warehouse = Warehouse::whereId($warehouse_id)->first();
+                $warehouse_code = $warehouse->country_code;
+                $operation = 'inventory'; // Define the operation type
+                $saleItems = $purchase->purchaseItems->toArray();
+                if (empty($saleItems)) {
+                    dd("Sale items are empty or not an array", $saleItems);
+                }
+                // Call stock management controller to handle inventory
+                $this->stockManagementController->prepareStockItems($warehouse_id, $warehouse_code, $saleItems, $operation);
+            } else {
+                // If required data is missing, debug or log the issue
+                dd($purchase);
+            }
+        } catch (\Exception $e) {
+            // Handle any errors that occur during the stock management process
+            dd('Error during stock management: ' . $e->getMessage());
+        }
+
+        // Optionally return the formatted purchase data
         return new PurchaseResource($purchase);
     }
 
@@ -105,7 +142,7 @@ class PurchaseAPIController extends AppBaseController
             return $this->sendError('Permission Denied');
         }
         $purchase = $this->purchaseRepository->find($id);
- 
+
 
         return new PurchaseResource($purchase);
     }
@@ -119,9 +156,9 @@ class PurchaseAPIController extends AppBaseController
         if (!Auth::user()->can('purchase.edit')) {
             return $this->sendError('Permission Denied');
         }
-        $purchase = $purchase->load(['purchaseItems.product.stocks', 
+        $purchase = $purchase->load(['purchaseItems.product.stocks',
         'warehouse','purchaseItems.product' => function ($query) {
-          
+
             $query->with(['variant','productAbstract:id,pan_style',]);
         },]);
 
@@ -140,6 +177,29 @@ class PurchaseAPIController extends AppBaseController
         }
         $input = $request->all();
         $purchase = $this->purchaseRepository->updatePurchase($input, $id);
+
+        try {
+            // Check if the necessary fields exist in the formatted purchase data
+            if (isset($purchase['warehouse_id'])) {
+                // Extract the necessary fields from the formatted data
+                $warehouse_id = $purchase['warehouse_id'];
+                $warehouse = Warehouse::whereId($warehouse_id)->first();
+                $warehouse_code = $warehouse->country_code;
+                $operation = 'inventory'; // Define the operation type
+                $saleItems = $purchase->purchaseItems->toArray();
+                if (empty($saleItems)) {
+                    dd("Sale items are empty or not an array", $saleItems);
+                }
+                // Call stock management controller to handle inventory
+                $this->stockManagementController->prepareStockItems($warehouse_id, $warehouse_code, $saleItems, $operation);
+            } else {
+                // If required data is missing, debug or log the issue
+                dd($purchase);
+            }
+        } catch (\Exception $e) {
+            // Handle any errors that occur during the stock management process
+            dd('Error during stock management: ' . $e->getMessage());
+        }
 
         return new PurchaseResource($purchase);
     }
@@ -182,6 +242,43 @@ class PurchaseAPIController extends AppBaseController
         }
     }
 
+
+    // public function destroy($id)
+    // {
+    //     if (!Auth::user()->can('purchase.delete')) {
+    //         return $this->sendError('Permission Denied');
+    //     }
+    //     try {
+    //         DB::beginTransaction();
+
+    //     // Get all purchases
+    //     $purchases = $this->purchaseRepository->with('purchaseItems')->get();
+
+    //     foreach ($purchases as $purchase) {
+    //         foreach ($purchase->purchaseItems as $purchaseItem) {
+    //             $product = ManageStock::whereWarehouseId($purchase->warehouse_id)
+    //                 ->whereProductId($purchaseItem['product_id'])
+    //                 ->first();
+    //             if ($product) {
+
+    //                     $product->update([
+    //                         'quantity' => 0,
+    //                     ]);
+
+    //             }
+    //         }
+    //         // Delete the individual purchase
+    //         $this->purchaseRepository->delete($purchase->id);
+    //     }
+
+    //     DB::commit();
+    //     return $this->sendSuccess('All Purchases Deleted successfully');
+    //     } catch (Exception $e) {
+    //         DB::rollBack();
+    //         throw new UnprocessableEntityHttpException($e->getMessage());
+    //     }
+    // }
+
     /**
      * @param  Purchase  $purchase
      * @return JsonResponse
@@ -215,12 +312,12 @@ class PurchaseAPIController extends AppBaseController
     public function purchaseInfo(Purchase $purchase)
     {
         $purchase = $purchase->load(['purchaseItems.product' => function ($query) {
-          
+
             $query->with(['variant','productAbstract:id,pan_style',]);
         },
-        
+
         'warehouse', 'supplier']);
-      
+
 
         $keyName = [
             'email', 'company_name', 'phone', 'address',

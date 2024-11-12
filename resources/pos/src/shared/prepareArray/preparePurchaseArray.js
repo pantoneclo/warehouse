@@ -3,6 +3,7 @@ export const preparePurchaseProductArray = (products, isBarcode) => {
     products.forEach(product => {
         purchaseProductRowArray.push({
             name: product.attributes.name,
+            brand:product.attributes.brand_name,
             code: product.attributes.code,
             pan_style: product.attributes.pan_style,
             barcode_url: product.attributes.barcode_url,

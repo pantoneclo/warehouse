@@ -44,6 +44,7 @@ class Warehouse extends BaseModel
     protected $fillable = [
         'name',
         'phone',
+        'country_code',
         'country',
         'city',
         'email',
@@ -53,6 +54,7 @@ class Warehouse extends BaseModel
     public static $rules = [
         'name' => 'required|unique:warehouses',
         'phone' => 'required|numeric',
+        'country_code' => 'required',
         'country' => 'required',
         'city' => 'required',
         'email' => 'nullable|email|unique:warehouses',
@@ -78,6 +80,7 @@ class Warehouse extends BaseModel
             'name' => $this->name,
             'phone' => $this->phone,
             'country' => $this->country,
+            'country_code' => $this->country_code,
             'city' => $this->city,
             'email' => $this->email,
             'zip_code' => $this->zip_code,

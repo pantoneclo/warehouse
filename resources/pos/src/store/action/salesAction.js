@@ -15,7 +15,7 @@ export const fetchSales = (filter = {}, isLoading = true) => async (dispatch) =>
     }
     const admin = true;
     let url = apiBaseURL.SALES;
-    if (!_.isEmpty(filter) && (filter.page || filter.pageSize || filter.search || filter.order_By || filter.created_at || filter.customer_id)) {
+    if (!_.isEmpty(filter) && (filter.page || filter.pageSize || filter.search || filter.order_By || filter.created_at || filter.customer_id || filter.country)) {
         url += requestParam(filter, admin);
     }
     await apiConfig.get(url)
@@ -75,6 +75,29 @@ export const editSale = (saleId, sale, navigate) => async (dispatch) => {
             navigate('/app/sales');
             dispatch({type: saleActionType.EDIT_SALE, payload: response.data.data});
             dispatch(setSavingButton(false))
+        })
+        .catch(({ response }) => {
+            dispatch(setSavingButton(false))
+            dispatch(addToast(
+                {text: response.data.message, type: toastType.ERROR}));
+        });
+};
+
+export const editSaleReport = (saleId, sale, navigate, isLoading=true) => async (dispatch) => {
+    dispatch(setSavingButton(true))
+    if (isLoading) {
+        dispatch(setLoading(true))
+    }
+    await apiConfig.patch(apiBaseURL.SALES_REPORT + '/' + saleId, sale)
+        .then((response) => {
+            dispatch(addToast({text: getFormattedMessage('sale.report.success.edit.message')}));
+            console.log('API Response:', response); 
+            navigate('/app/report/report-sale');
+            dispatch({type: saleActionType.EDIT_SALE_REPORT_FROM_REPORT, payload: response.data.data});
+            dispatch(setSavingButton(false))
+            if (isLoading) {
+                dispatch(setLoading(false));
+            }
         })
         .catch(({ response }) => {
             dispatch(setSavingButton(false))

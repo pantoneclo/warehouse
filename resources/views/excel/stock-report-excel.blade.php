@@ -13,23 +13,34 @@
 <table width="100%" cellspacing="0" cellpadding="10" style="margin-top: 40px;">
     <thead>
     <tr style="background-color: dodgerblue;">
+        <th style="width: 200%">{{ __('messages.pdf.po') }}</th>
         <th style="width: 200%">{{ __('messages.pdf.warehouse') }}</th>
         <th style="width: 200%">{{ __('messages.pdf.code') }}</th>
         <th style="width: 300%">{{ __('messages.pdf.name') }}</th>
-        <th style="width: 200%">{{ __('messages.pdf.cost') }}</th>
-        <th style="width: 200%">{{ __('messages.pdf.price') }}</th>
+        <th style="text-align: center; width: 300%">{{ __('messages.pdf.color') }}</th>
+        <th style=" text-align: center; width: 300%">{{ __('messages.pdf.size') }}</th>
         <th style="width: 250%">{{ __('messages.pdf.current_stock') }}</th>
     </tr>
     </thead>
     <tbody>
     @foreach($stocks  as $stock)
+        @php
+            $product = null;
+        // Check if the product has a variant and decode the JSON
+        if ($stock->product->variant) {
+            // Decode the JSON from the variant column
+            $decodedVariant = json_decode($stock->product->variant);
+            $product = $decodedVariant->variant ?? null; // Access the variant property
+        }
+        @endphp
         <tr align="center">
+            <td>{{$stock->product->productAbstract->pan_style}}</td>
             <td>{{$stock->warehouse->name}}</td>
             <td>{{$stock->product->code}}</td>
             <td>{{$stock->product->name}}</td>
-            <td>{{number_format($stock->product->product_cost,2)}}</td>
-            <td>{{number_format($stock->product->product_price,2)}}</td>
-            <td>{{ $stock->quantity }}</td>
+            <td style="text-align: center;">{{$product->color?? ''}}</td>
+            <td style="text-align: center;">{{$product->size?? ''}}</td>
+            <td>{{$stock->quantity}}</td>
         </tr>
     @endforeach
     </tbody>

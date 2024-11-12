@@ -17,6 +17,7 @@ import { callSaleApi } from "../../store/action/saleApiAction";
 import TopProgressBar from "../../shared/components/loaders/TopProgressBar";
 import usePermission from '../../shared/utils/usePermission';
 import { Permissions } from '../../constants';
+import {fetchCurrencies} from '../../store/action/currencyAction';
 const Sales = (props) => {
     const {
         sales,
@@ -25,6 +26,8 @@ const Sales = (props) => {
         isLoading,
         salePdfAction,
         fetchFrontSetting,
+        currencies,
+        fetchCurrencies,
         frontSetting,
         isCallSaleApi,
         allConfigData
@@ -38,6 +41,7 @@ const Sales = (props) => {
     const [tableArray, setTableArray] = useState([])
     useEffect(() => {
         fetchFrontSetting();
+        fetchCurrencies();
     }, []);
 
     const currencySymbol = frontSetting && frontSetting.value && frontSetting.value.currency_symbol
@@ -111,6 +115,7 @@ const Sales = (props) => {
         paid_amount: sale.attributes.paid_amount ? sale.attributes.paid_amount : 0.00.toFixed(2),
         id: sale.id,
         currency: currencySymbol,
+        country:sale.attributes.country,
         is_return: sale.attributes.is_return,
         view_permission: view_permission,
         edit_permission: edit_permission,
@@ -267,6 +272,18 @@ const Sales = (props) => {
                     row.payment_type === 4 &&
                     <span className='badge bg-light-primary'>
                         <span>{getFormattedMessage('payment-type.filter.other.label')}</span>
+                    </span>||
+                    row.payment_type === 5 &&
+                    <span className='badge bg-light-primary'>
+                        <span>{getFormattedMessage('payment-type.filter.cod.label')}</span>
+                    </span>||
+                    row.payment_type === 6 &&
+                    <span className='badge bg-light-primary'>
+                        <span>{getFormattedMessage('payment-type.filter.ssl.label')}</span>
+                    </span>||
+                    row.payment_type === 7 &&
+                    <span className='badge bg-light-primary'>
+                        <span>{getFormattedMessage('payment-type.filter.stripe.label')}</span>
                     </span>
                 )
             }
@@ -317,8 +334,14 @@ const Sales = (props) => {
                 return <p className='badge text-warning'>{getFormattedMessage('no.permission.message')}</p>; // or any other fallback UI if none of the permissions are true
               }
             }
-          }
+          },
           
+          {
+            name: getFormattedMessage('globally.input.country.label'),
+            sortField: 'country',
+            selector: row => row.country,
+            sortable: false,
+        },
                 
         
     ];
@@ -358,8 +381,8 @@ const Sales = (props) => {
 };
 
 const mapStateToProps = (state) => {
-    const { sales, totalRecord, isLoading, frontSetting, isCallSaleApi, allConfigData } = state;
-    return { sales, totalRecord, isLoading, frontSetting, isCallSaleApi, allConfigData };
+    const { sales,currencies, totalRecord, isLoading, frontSetting, isCallSaleApi, allConfigData } = state;
+    return { sales,currencies, totalRecord, isLoading, frontSetting, isCallSaleApi, allConfigData };
 };
 
-export default connect(mapStateToProps, { fetchSales, salePdfAction, fetchFrontSetting })(Sales);
+export default connect(mapStateToProps, { fetchSales, salePdfAction, fetchCurrencies, fetchFrontSetting })(Sales);

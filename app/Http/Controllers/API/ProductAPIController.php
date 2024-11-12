@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\API;
 
 use App\Exports\ProductExcelExport;
+use App\Exports\AllProductExcelExport;
 use App\Http\Controllers\AppBaseController;
 use App\Http\Requests\CreateProductRequest;
 use App\Http\Requests\UpdateProductRequest;
@@ -34,7 +35,7 @@ class ProductAPIController extends AppBaseController
     //     dd (Auth::user());
     //   if (!auth()->user()->can('manage.product') ) {
     //   return   $this->sendError('Permission Denied');
-    //   } 
+    //   }
     }
 
     /**
@@ -189,6 +190,19 @@ class ProductAPIController extends AppBaseController
         Excel::store(new ProductExcelExport, 'excel/product-excel-export.xlsx');
 
         $data['product_excel_url'] = Storage::url('excel/product-excel-export.xlsx');
+
+        return $this->sendResponse($data, 'Product retrieved successfully');
+    }
+
+
+    public function  getAllProductsExportExcel(Request $request): JsonResponse
+    {
+        if (Storage::exists('excel/all-products-excel-export.xlsx')) {
+            Storage::delete('excel/all-products-excel-export.xlsx');
+        }
+        Excel::store(new AllProductExcelExport, 'excel/all-products-excel-export.xlsx');
+
+        $data['all_products_excel_url'] = Storage::url('excel/all-products-excel-export.xlsx');
 
         return $this->sendResponse($data, 'Product retrieved successfully');
     }
