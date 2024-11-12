@@ -33,5 +33,6 @@ jobs:
             git remote add origin $REPO_URL
           fi
           git reset --hard &&
+          git clean -df &&
           git pull origin main
         "
