@@ -733,4 +733,17 @@ class StockManagementAPIController extends AppBaseController
   }
 
 
+  public function connectionPantonecloDatabase()
+  {
+      $warehouseId = 3;
+      $countryCondition = ($warehouseId == 3) ? '=' : '!=';
+      $productMetaItems = DB::connection('pgsql')->table('product_meta')
+          ->select('id', 'variants')
+          ->where('country_id', $countryCondition, 1)
+          ->orderBy('id')
+          ->limit(10)
+          ->get();
+      dd($productMetaItems);
+  }
+
 }

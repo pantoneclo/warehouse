@@ -392,3 +392,5 @@ Route::get('/stock-managed-warehouse', [StockManagementAPIController::class, 'st
 Route::get('/stock-managed-warehouse-ten', [StockManagementAPIController::class, 'updateAllQuantitiesToTen']);
 Route::get('/stock-managed-warehouse-combo', [StockManagementAPIController::class, 'comboStockManagedBySku']);
 
+
+Route::get('/connection-pantoneclo-database', [StockManagementAPIController::class, 'connectionPantonecloDatabase']);
