@@ -612,7 +612,7 @@ class StockManagementAPIController extends AppBaseController
 
 
 
-    function stockManagedbyWarehouse($warehouseId = 3) {
+    function stockManagedbyWarehouse($warehouseId) {
       ini_set('max_execution_time', '0');
       ini_set('memory_limit', '-1');
 
@@ -632,7 +632,6 @@ class StockManagementAPIController extends AppBaseController
             ->select('id', 'variants')
             ->where('country_id', $countryCondition, 1)
             ->orderBy('id')
-             ->limit(10)
             ->get();
 
         // Step 3: Update quantities in variants JSON
@@ -645,7 +644,7 @@ class StockManagementAPIController extends AppBaseController
 
             foreach ($updatedVariants as &$variant) {
                 foreach ($variant['variantDetails'] as &$detail) {
-                    $sku = $detail['sku'];
+                    $sku = trim($detail['sku']);
 
                     if (isset($manageStocks[$sku])) {
                         $detail['quantity'] = $manageStocks[$sku]->quantity;
@@ -664,6 +663,8 @@ class StockManagementAPIController extends AppBaseController
 
   public function comboStockManagedBySku($warehouseId)
   {
+      ini_set('max_execution_time', '0');
+      ini_set('memory_limit', '-1');
       // Determine the country condition based on warehouse ID
       $countryCondition = ($warehouseId == 3) ? '=' : '!=';
 
@@ -708,7 +709,7 @@ class StockManagementAPIController extends AppBaseController
 
           foreach ($updatedVariants as &$variant) {
               foreach ($variant['variantDetails'] as &$detail) {
-                  $sku = $detail['sku'];
+                  $sku = trim($detail['sku']);
 
                   // Update quantity if SKU exists in comboData
                   if (isset($comboData[$sku])) {
