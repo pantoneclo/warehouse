@@ -648,6 +648,8 @@ class StockManagementAPIController extends AppBaseController
 
                     if (isset($manageStocks[$sku])) {
                         $detail['quantity'] = $manageStocks[$sku]->quantity;
+                    }else{
+                        $detail['quantity'] = 0;
                     }
                 }
             }
