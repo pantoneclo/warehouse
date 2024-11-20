@@ -58,13 +58,14 @@ const Combo = (props) => {
         window.location.href = '#/app/combo-products/edit/' + id;
     };
 
-
+console.log(combos, 'Combo Items ')
     const itemsValue = combos.length >= 0 && combos.map((combo) => {
 
         return (
-            {
+            {  
                 id: combo?.id,
                 name: combo?.attributes.name,
+                warehouse_id: combo?.attributes?.products[0]?.warehouse_id,
                 sku:  combo?.attributes.sku,
                 date: getFormattedDate(combo?.attributes.created_at, allConfigData && allConfigData),
                 time: moment(combo?.attributes.created_at).format('LT'),
@@ -96,6 +97,12 @@ const Combo = (props) => {
             name: getFormattedMessage("combo.table.sku.column.label"),
             selector: row => <span>{row.sku}</span>,
             sortField: 'sku',
+            sortable: true,
+        },
+        {
+            name: "Warehouse",
+            selector: row => <span>{row.warehouse_id === 3 ? 'BD' : 'EU'}</span>,
+            sortField: 'warehouse_id',
             sortable: true,
         },
         {

@@ -100,6 +100,7 @@ class Combo extends BaseModel implements HasMedia, JsonResourceful
         $groupedProducts = $comboProducts->groupBy('code')->map(function ($comboProducts, $comboCode) use ($products) {
             return [
                 'combo_code' => $comboCode,
+                'warehouse_id' => $comboProducts->first()->warehouse_id,
                 'products' => $comboProducts->map(function ($comboProduct) use ($products) {
                     $product = $products->firstWhere('id', $comboProduct->product_id);
                     return [
