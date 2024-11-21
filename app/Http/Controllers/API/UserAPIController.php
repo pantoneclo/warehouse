@@ -169,9 +169,7 @@ class UserAPIController extends AppBaseController
     public function config(Request $request)
     {
         $user = Auth::user();
-
         $userPermissions = $user->getAllPermissions()->pluck('name')->toArray();
-
         $composerFile = file_get_contents('../composer.json');
         $composerData = json_decode($composerFile, true);
         $currentVersion = isset($composerData['version']) ? $composerData['version'] : '';
