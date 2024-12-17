@@ -832,9 +832,12 @@ export const statusOptions = [
 ];
 
 export const saleStatusOptions = [
-    { id: 1, name: 'status.filter.received.label' },
-    { id: 2, name: 'status.filter.pending.label' },
+    { id: 1, name: 'status.filter.pending.label' },
+    { id: 2, name: 'status.filter.received.label' },
     { id: 3, name: 'status.filter.ordered.label' },
+    { id: 4, name: 'status.filter.ontheway.label' },
+    { id: 5, name: 'status.filter.delivered.label' },
+    { id: 6, name: 'status.filter.cancelled.label' },
 ];
 
 export const salePaymentStatusOptions = [
