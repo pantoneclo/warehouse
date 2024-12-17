@@ -757,10 +757,10 @@ export const packageActionType = {
 // Added by Atiqur Rahman
 
 export const comboProductType = {
-    FETCH_COMBO_PRODUCTS: 'FETCH_COMBO_PRODUCTS', 
-    ADD_COMBO: 'ADD_COMBO', 
-    FETCH_COMBO_PRODUCT: 'FETCH_COMBO_PRODUCT', 
-    DELETE_COMBO: 'DELETE_COMBO', 
+    FETCH_COMBO_PRODUCTS: 'FETCH_COMBO_PRODUCTS',
+    ADD_COMBO: 'ADD_COMBO',
+    FETCH_COMBO_PRODUCT: 'FETCH_COMBO_PRODUCT',
+    DELETE_COMBO: 'DELETE_COMBO',
 }
 
 
@@ -943,6 +943,8 @@ export const getLabelById = (id) => {
 export const eccomercePlatform = [
     { id: 1, name: 'eccomerce.label.1' },
     { id: 2, name: 'eccomerce.label.2' },
+    { id: 3, name: 'eccomerce.label.3' },
+    { id: 4, name: 'eccomerce.label.4' },
 ];
 
 

@@ -625,6 +625,8 @@
     "payment-status.filter.unpaid.label": "Unpaid",
     "eccomerce.label.1":"AMAZON",
     "eccomerce.label.2":"E-Bay",
+    "eccomerce.label.3":"DARAZ",
+    "eccomerce.label.4":"PANTONECLO",
     "excel.btn.label": "EXCEL",
     "cash.label": "Cash",
     "no-option.label": "No options",

@@ -751,4 +751,19 @@ class StockManagementAPIController extends AppBaseController
       dd($productMetaItems);
   }
 
+
+  public function webHookUpdateSellStatus()
+  {
+      $data = [
+          'status' => 'success',
+          'message' => 'Data retrieved successfully',
+          'data' => [
+              'name' => 'John Doe',
+              'email' => 'john.doe@example.com',
+          ],
+      ];
+
+      return response()->json($data, 200);
+  }
+
 }

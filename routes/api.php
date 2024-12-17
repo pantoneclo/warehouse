@@ -394,3 +394,4 @@ Route::get('/stock-managed-warehouse-combo', [StockManagementAPIController::clas
 
 
 Route::get('/connection-pantoneclo-database', [StockManagementAPIController::class, 'connectionPantonecloDatabase']);
+Route::get('/webhook-update-sell-status', [StockManagementAPIController::class, 'webHookUpdateSellStatus']);
