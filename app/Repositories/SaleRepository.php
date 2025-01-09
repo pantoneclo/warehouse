@@ -98,7 +98,7 @@ class SaleRepository extends BaseRepository
             $QuotationId = $input['quotation_id'] ?? false;
             $saleInputArray = Arr::only($input, [
                 'customer_id', 'warehouse_id', 'tax_rate', 'tax_amount', 'discount', 'shipping', 'grand_total',
-                'received_amount', 'paid_amount', 'payment_type', 'note', 'date', 'status', 'payment_status','market_place','order_no','country'
+                'received_amount', 'paid_amount', 'payment_type', 'note', 'date', 'status', 'payment_status','market_place','order_no','country', 'currency'
             ]);
 
             /** @var Sale $sale */
@@ -482,7 +482,7 @@ class SaleRepository extends BaseRepository
      */
     public function updateSale($input, $id)
     {
-        // dd ($input);
+
         try {
             DB::beginTransaction();
             $sale = Sale::findOrFail($id);

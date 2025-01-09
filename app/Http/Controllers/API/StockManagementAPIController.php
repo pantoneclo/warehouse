@@ -740,15 +740,58 @@ class StockManagementAPIController extends AppBaseController
 
   public function connectionPantonecloDatabase()
   {
+//      $warehouseId = 3;
+//      $countryCondition = ($warehouseId == 3) ? '=' : '!=';
+//      $productMetaItems = DB::connection('pgsql')->table('product_meta')
+//          ->select('id', 'variants')
+//          ->where('country_id', $countryCondition, 1)
+//          ->orderBy('id')
+//          ->limit(10)
+//          ->get();
+//      dd($productMetaItems);
+
+
+      $code = "PR_002A90007F";
       $warehouseId = 3;
       $countryCondition = ($warehouseId == 3) ? '=' : '!=';
+
       $productMetaItems = DB::connection('pgsql')->table('product_meta')
           ->select('id', 'variants')
           ->where('country_id', $countryCondition, 1)
+          ->whereRaw("
+        variants::jsonb @> ?
+    ", [json_encode([['variantDetails' => [['sku' => $code]]]])])
           ->orderBy('id')
-          ->limit(10)
           ->get();
-      dd($productMetaItems);
+
+ dd($productMetaItems);
+//
+//      // Decode JSON string into an array
+//      foreach ($productMetaItems as $item) {
+//          $variants = json_decode($item->variants, true);
+//          if (!is_array($variants)) {
+//              continue;
+//          }
+//
+//          // Loop through variants and update the quantity for the specific SKU
+//          foreach ($variants as &$variant) {
+//              foreach ($variant['variantDetails'] as &$variantDetail) {
+//                  if ($variantDetail['sku'] == $code) {  // Change this SKU as needed
+//                      $variantDetail['quantity'] = 80;  // Set the new quantity
+//                  }
+//              }
+//
+//
+//          }
+//
+//
+//          DB::connection('pgsql')->table('product_meta')
+//              ->where('id', $item->id)
+//              ->update(['variants' => json_encode($variants)]);
+//      }
+//
+//dd($productMetaItems);
+//      dd("Successfully Quantities updated.");
   }
 
 
@@ -766,4 +809,201 @@ class StockManagementAPIController extends AppBaseController
       return response()->json($data, 200);
   }
 
+
+
+
+
+
+
+//Stock Manager New System For All Adjust, Inbound and Sell From Warehouse
+
+//    public function manageStockForCodeAndWarehouse($code, $warehouseId, $visitedCodes = [])
+//    {
+//        ini_set('max_execution_time', '0');
+//        ini_set('memory_limit', '-1');
+//
+//        // Prevent infinite recursion by tracking visited codes
+//        if (in_array($code, $visitedCodes)) {
+//            return "Code $code has already been processed. Skipping to prevent recursion.";
+//        }
+//
+//        // Add the current code to the visited list
+//        $visitedCodes[] = $code;
+//
+//        // Step 1: Determine if the code is a combo product
+//        if (strpos($code, 'COMBO') === 0) {
+//            // Handle combo product
+//            $comboProducts = ComboProduct::where('code', $code)
+//                ->where('warehouse_id', $warehouseId)
+//                ->get();
+//
+//            $minQuantity = INF; // Start with a large value
+//            foreach ($comboProducts as $combo) {
+//                $quantity = ManageStock::where('product_id', $combo->product_id)
+//                    ->where('warehouse_id', $warehouseId)
+//                    ->value('quantity');
+//                $minQuantity = min($minQuantity, $quantity ?? 0);
+//            }
+//
+//            // Update the stock for the combo product in product_meta
+//            $this->updateProductMetaQuantity($code, $minQuantity, $warehouseId);
+//        } else {
+//            // Handle regular product
+//            $productId = Product::where('code', $code)->value('id');
+//            $productCode = Product::where('code', $code)->value('code');
+//
+//            if (!$productId) {
+//                return "Product not found for code: $code";
+//            }
+//
+//            $quantity = ManageStock::where('product_id', $productId)
+//                ->where('warehouse_id', $warehouseId)
+//                ->value('quantity') ?? 0;
+//
+//            // Check if this product is part of any combo products
+//            $comboCodes = ComboProduct::where('product_id', $productId)
+//                ->where('warehouse_id', $warehouseId)
+//                ->pluck('code');
+//
+//            foreach ($comboCodes as $comboCode) {
+//                // Pass the visited codes to the recursive call
+//                $this->manageStockForCodeAndWarehouse($comboCode, $warehouseId, $visitedCodes);
+//            }
+//
+//            // Update the stock for the regular product in product_meta
+//            $this->updateProductMetaQuantity($productCode, $quantity, $warehouseId);
+//        }
+//
+//        return "Stock quantities updated successfully for code: $code";
+//    }
+
+
+    public function manageStockForCodeAndWarehouse($code, $warehouseId, &$visitedCodes = [])
+    {
+        ini_set('max_execution_time', '0');
+        ini_set('memory_limit', '-1');
+
+        // Prevent infinite recursion by tracking visited codes
+        if (in_array($code, $visitedCodes)) {
+            \Log::info("Code $code has already been processed. Skipping to prevent recursion.");
+            return;
+        }
+
+        // Add the current code to the visited list
+        $visitedCodes[] = $code;
+
+        // Step 1: Determine if the code is a combo product
+        if (strpos($code, 'COMBO') === 0) {
+            // Handle combo product
+            $comboProducts = ComboProduct::where('code', $code)
+                ->where('warehouse_id', $warehouseId)
+                ->get();
+
+            $minQuantity = INF; // Start with a large value
+            foreach ($comboProducts as $combo) {
+                $quantity = ManageStock::where('product_id', $combo->product_id)
+                    ->where('warehouse_id', $warehouseId)
+                    ->value('quantity');
+                $minQuantity = min($minQuantity, $quantity ?? INF);
+            }
+
+            // If no valid quantities are found, default to 0
+            if ($minQuantity === INF) {
+                $minQuantity = 0;
+            }
+
+            // Update the stock for the combo product in product_meta
+            $this->updateProductMetaQuantity($code, $minQuantity, $warehouseId);
+        } else {
+            // Handle regular product
+            $productId = Product::where('code', $code)->value('id');
+
+            if (!$productId) {
+                \Log::error("Product not found for code: $code");
+                return;
+            }
+
+            $quantity = ManageStock::where('product_id', $productId)
+                ->where('warehouse_id', $warehouseId)
+                ->value('quantity') ?? 0;
+
+            // Check if this product is part of any combo products
+            $comboCodes = ComboProduct::where('product_id', $productId)
+                ->where('warehouse_id', $warehouseId)
+                ->pluck('code');
+
+            foreach ($comboCodes as $comboCode) {
+                // Pass the visited codes to the recursive call
+                $this->manageStockForCodeAndWarehouse($comboCode, $warehouseId, $visitedCodes);
+            }
+
+            // Update the stock for the regular product in product_meta
+            $this->updateProductMetaQuantity($code, $quantity, $warehouseId);
+        }
+
+        \Log::info("Stock quantities updated successfully for code: $code");
+    }
+
+
+
+    private function updateProductMetaQuantity($code, $quantity, $warehouseId)
+    {
+        ini_set('max_execution_time', '0');
+        ini_set('memory_limit', '-1');
+
+        $countryCondition = ($warehouseId == 3) ? '=' : '!=';
+
+        $productMetaItems = DB::connection('pgsql')->table('product_meta')
+            ->select('id', 'variants')
+            ->where('country_id', $countryCondition, 1)
+            ->whereRaw("
+        variants::jsonb @> ?
+    ", [json_encode([['variantDetails' => [['sku' => $code]]]])])
+            ->orderBy('id')
+            ->get();
+
+
+
+        // Decode JSON string into an array
+        foreach ($productMetaItems as $item) {
+            $variants = json_decode($item->variants, true);
+            if (!is_array($variants)) {
+                continue;
+            }
+
+            // Loop through variants and update the quantity for the specific SKU
+            foreach ($variants as &$variant) {
+                foreach ($variant['variantDetails'] as &$variantDetail) {
+                    if ($variantDetail['sku'] == $code) {  // Change this SKU as needed
+                        $variantDetail['quantity'] = $quantity;  // Set the new quantity
+                    }
+                }
+
+
+            }
+
+
+            DB::connection('pgsql')->table('product_meta')
+                ->where('id', $item->id)
+                ->update(['variants' => json_encode($variants)]);
+        }
+    }
+
+
+
+
+
 }
+
+
+
+
+
+
+
+
+
+
+
+
+

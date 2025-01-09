@@ -120,7 +120,7 @@ const Sales = (props) => {
         view_permission: view_permission,
         edit_permission: edit_permission,
         delete_permission: delete_permission,
-        create_sale_return_permission:create_sale_return_permission,  
+        create_sale_return_permission:create_sale_return_permission,
         create_payment_permission:create_payment_permission
     }));
 
@@ -195,15 +195,27 @@ const Sales = (props) => {
                 return (
                     row.status === 1 &&
                     <span className='badge bg-light-success'>
-                        <span>{getFormattedMessage("status.filter.received.label")}</span>
+                        <span>{getFormattedMessage("status.filter.pending.label")}</span>
                     </span> ||
                     row.status === 2 &&
                     <span className='badge bg-light-primary'>
-                        <span>{getFormattedMessage("status.filter.pending.label")}</span>
+                        <span>{getFormattedMessage("status.filter.received.label")}</span>
                     </span> ||
                     row.status === 3 &&
                     <span className='badge bg-light-warning'>
                         <span>{getFormattedMessage("status.filter.ordered.label")}</span>
+                    </span>||
+                    row.status === 4 &&
+                    <span className='badge bg-light-warning'>
+                        <span>{getFormattedMessage("status.filter.ontheway.label")}</span>
+                    </span>||
+                    row.status === 5 &&
+                    <span className='badge bg-light-warning'>
+                        <span>{getFormattedMessage("status.filter.delivered.label")}</span>
+                    </span>||
+                    row.status === 6 &&
+                    <span className='badge bg-light-warning'>
+                        <span>{getFormattedMessage("status.filter.cancelled.labell")}</span>
                     </span>
                 )
             }
@@ -313,7 +325,7 @@ const Sales = (props) => {
                 return (
                   <ActionDropDownButton
                     item={row}
-                    goToEditProduct={goToEdit}                 
+                    goToEditProduct={goToEdit}
                     onClickDeleteModel={onClickDeleteModel}
                     onPdfClick={onPdfClick}
                     title={getFormattedMessage('sale.title')}
@@ -335,15 +347,15 @@ const Sales = (props) => {
               }
             }
           },
-          
+
           {
             name: getFormattedMessage('globally.input.country.label'),
             sortField: 'country',
             selector: row => row.country,
             sortable: false,
         },
-                
-        
+
+
     ];
 
     return (

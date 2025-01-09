@@ -17,7 +17,7 @@ import { calculateCartTotalAmount, calculateCartTotalTaxAmount } from '../../sha
 import { prepareSaleProductArray } from '../../shared/prepareArray/prepareSaleArray';
 import ModelFooter from '../../shared/components/modelFooter';
 import { addToast } from '../../store/action/toastAction';
-import { paymentMethodOptions, salePaymentStatusOptions, saleStatusOptions, statusOptions, toastType, eccomercePlatform} from '../../constants';
+import { paymentMethodOptions, salePaymentStatusOptions, saleStatusOptions, statusOptions, toastType, eccomercePlatform, countryOptions} from '../../constants';
 import { fetchFrontSetting } from '../../store/action/frontSettingAction';
 import ReactSelect from '../../shared/select/reactSelect';
 import AdvanceSearch from '../../shared/components/product-cart/search/AdvanceSearch';
@@ -25,6 +25,7 @@ import { fetchAdvancedSearch } from '../../store/action/advancedSearchAction';
 import { preparePurchaseProductArray } from '../../shared/prepareArray/preparePurchaseArray';
 import { shippingCompanyNames ,getLabelById} from '../../constants'
 import { get } from 'lodash';
+import {fetchCurrencies} from "../../store/action/currencyAction";
 const SalesForm = (props) => {
     const {
         addSaleData,
@@ -38,6 +39,8 @@ const SalesForm = (props) => {
         advanceSearch,
         fetchProductsByWarehouse,
         fetchFrontSetting,
+        currencies,
+        fetchCurrencies,
         frontSetting,
         isQuotation, allConfigData
     } = props;
@@ -73,7 +76,8 @@ const SalesForm = (props) => {
         shipment_id: '',
         order_no:'',
         country:'',
-        market_place:''
+        market_place:'',
+        currency:''
     });
     const [errors, setErrors] = useState({
         date: '',
@@ -94,8 +98,9 @@ const SalesForm = (props) => {
 
     useEffect(() => {
         fetchFrontSetting();
+        fetchCurrencies();
     }, []);
-
+console.log("Currencies", currencies);
     useEffect(() => {
         if (singleSale && !isQuotation) {
             setSaleValue({
@@ -116,8 +121,8 @@ const SalesForm = (props) => {
                 shipment_id: singleSale ? singleSale.shipment_id : '',
                 country:singleSale?singleSale.country:'',
                 order_no:singleSale?singleSale.order_no:'',
-                market_place:singleSale?singleSale.market_place:''
-
+                market_place:singleSale?singleSale.market_place:'',
+                currency:singleSale?singleSale.currency:'',
             })
         }
         if (singleSale && isQuotation) {
@@ -139,8 +144,8 @@ const SalesForm = (props) => {
                 shipment_id: singleSale ? singleSale.shipment_id : '',
                 country:singleSale?singleSale.country:'',
                 order_no:singleSale?singleSale.order_no:'',
-                market_place:singleSale?singleSale.market_place:''
-                
+                market_place:singleSale?singleSale.market_place:'',
+                currency:singleSale?singleSale.currency:'',
             })
         }
     }, [singleSale]);
@@ -193,6 +198,11 @@ const SalesForm = (props) => {
     };
     const onParcelCompanyChange = (obj) => {
         setSaleValue(inputs => ({ ...inputs, parcel_company_id: obj }));
+        setErrors('');
+    };
+
+    const onCurrencyChange = (obj) => {
+        setSaleValue(inputs => ({ ...inputs, currency: obj }));
         setErrors('');
     };
 
@@ -264,7 +274,13 @@ const SalesForm = (props) => {
     const handleMarketplaceChange = (obj) => {
         setSaleValue(inputs => ({ ...inputs, market_place: obj }));
     };
-    
+
+    handleCountryChange
+
+    const handleCountryChange = (obj) => {
+        setSaleValue(inputs => ({ ...inputs, country: obj }));
+    };
+
     console.log('saleValue',saleValue)
 
 
@@ -292,6 +308,15 @@ const SalesForm = (props) => {
 
     })
 
+    const countryFilterOption =getFormattedOptions(countryOptions)
+    const countryNamesDefault = countryFilterOption.map((option)=>{
+        return {
+            value:option.code,
+            label:option.name
+        }
+
+    })
+
     const paymentMethodOption = getFormattedOptions(paymentMethodOptions)
     const paymentTypeDefaultValue = paymentMethodOption.map((option) => {
         return {
@@ -300,11 +325,17 @@ const SalesForm = (props) => {
         }
     })
 
+    const currencyNameDefault = currencies.map((option)=> {
+        return{
+            value: option.attributes.code,
+            label:option.attributes.code
+        }
+    })
 
-
+console.log("Defalut Currency Option", currencyNameDefault)
     const prepareFormData = (prepareData) => {
         const formValue = {
-            
+
             date: moment(prepareData.date).toDate(),
             is_sale_created: "true",
             quotation_id: prepareData ? prepareData.quotation_id : '',
@@ -325,12 +356,11 @@ const SalesForm = (props) => {
             parcel_company_id: prepareData.parcel_company_id.value ? prepareData.parcel_company_id.value : prepareData.parcel_company_id,
             parcel_number: prepareData.parcel_number,
             shipment_id: prepareData.shipment_id ? prepareData.shipment_id : '',
-            country:prepareData.country,
+            country:prepareData.country.value,
             order_no:prepareData.order_no,
-            market_place:prepareData.market_place.value
+            market_place:prepareData.market_place.label,
+            currency:prepareData.currency.value,
 
-          
-            
         }
         return formValue
     };
@@ -376,24 +406,26 @@ console.log(singleSale,'this is from singlesale value')
                         <label className='form-label'>
                             {getFormattedMessage('react-data-table.date.column.label')}:
                         </label>
-                        <span className='required' />
+                        <span className='required'/>
                         <div className='position-relative'>
-                            <ReactDatePicker onChangeDate={handleCallback} newStartDate={saleValue.date} />
+                            <ReactDatePicker onChangeDate={handleCallback} newStartDate={saleValue.date}/>
                         </div>
-                        <span className='text-danger d-block fw-400 fs-small mt-2'>{errors['date'] ? errors['date'] : null}</span>
+                        <span
+                            className='text-danger d-block fw-400 fs-small mt-2'>{errors['date'] ? errors['date'] : null}</span>
                     </div>
-                    <div className='col-md-4' style={{ zIndex: 500 }}>
+                    <div className='col-md-4' style={{zIndex: 500}}>
                         <ReactSelect name='warehouse_id' data={warehouses} onChange={onWarehouseChange}
-                            title={getFormattedMessage('warehouse.title')} errors={errors['warehouse_id']}
-                            defaultValue={saleValue.warehouse_id} value={saleValue.warehouse_id} addSearchItems={singleSale}
-                            isWarehouseDisable={true}
-                            placeholder={placeholderText('purchase.select.warehouse.placeholder.label')} />
+                                     title={getFormattedMessage('warehouse.title')} errors={errors['warehouse_id']}
+                                     defaultValue={saleValue.warehouse_id} value={saleValue.warehouse_id}
+                                     addSearchItems={singleSale}
+                                     isWarehouseDisable={true}
+                                     placeholder={placeholderText('purchase.select.warehouse.placeholder.label')}/>
                     </div>
-                    <div className='col-md-4' style={{ zIndex: 500 }}>
+                    <div className='col-md-4' style={{zIndex: 500}}>
                         <ReactSelect name='customer_id' data={customers} onChange={onCustomerChange}
-                            title={getFormattedMessage('customer.title')} errors={errors['customer_id']}
-                            defaultValue={saleValue.customer_id} value={saleValue.customer_id}
-                            placeholder={placeholderText('sale.select.customer.placeholder.label')} />
+                                     title={getFormattedMessage('customer.title')} errors={errors['customer_id']}
+                                     defaultValue={saleValue.customer_id} value={saleValue.customer_id}
+                                     placeholder={placeholderText('sale.select.customer.placeholder.label')}/>
                     </div>
                     <div className='mb-5'>
                         <label className='form-label'>
@@ -413,29 +445,30 @@ console.log(singleSale,'this is from singlesale value')
                         <label className='form-label'>
                             {getFormattedMessage('purchase.order-item.table.label')}:
                         </label>
-                        <span className='required' />
+                        <span className='required'/>
                         <ProductRowTable updateProducts={updateProducts} setUpdateProducts={setUpdateProducts}
-                            updatedQty={updatedQty} frontSetting={frontSetting}
-                            updateCost={updateCost} updateDiscount={updateDiscount}
-                            updateTax={updateTax} updateSubTotal={updateSubTotal}
-                            updateSaleUnit={updateSaleUnit}
+                                         updatedQty={updatedQty} frontSetting={frontSetting}
+                                         updateCost={updateCost} updateDiscount={updateDiscount}
+                                         updateTax={updateTax} updateSubTotal={updateSubTotal}
+                                         updateSaleUnit={updateSaleUnit}
                         />
                     </div>
                     <div className='col-12'>
-                        <ProductMainCalculation inputValues={saleValue} allConfigData={allConfigData} updateProducts={updateProducts} frontSetting={frontSetting} />
+                        <ProductMainCalculation inputValues={saleValue} allConfigData={allConfigData}
+                                                updateProducts={updateProducts} frontSetting={frontSetting}/>
                     </div>
                     <div className='col-md-4 mb-3'>
                         <label
                             className='form-label'>{getFormattedMessage('purchase.input.order-tax.label')}: </label>
                         <InputGroup>
                             <input aria-label='Dollar amount (with dot and two decimal places)'
-                                className='form-control'
-                                type='text' name='tax_rate' value={saleValue.tax_rate}
-                                onBlur={(event) => onBlurInput(event)} onFocus={(event) => onFocusInput(event)}
-                                onKeyPress={(event) => decimalValidate(event)}
-                                onChange={(e) => {
-                                    onChangeInput(e)
-                                }} />
+                                   className='form-control'
+                                   type='text' name='tax_rate' value={saleValue.tax_rate}
+                                   onBlur={(event) => onBlurInput(event)} onFocus={(event) => onFocusInput(event)}
+                                   onKeyPress={(event) => decimalValidate(event)}
+                                   onChange={(e) => {
+                                       onChangeInput(e)
+                                   }}/>
                             <InputGroup.Text>%</InputGroup.Text>
                         </InputGroup>
                     </div>
@@ -444,11 +477,11 @@ console.log(singleSale,'this is from singlesale value')
                             className='form-label'>{getFormattedMessage('purchase.order-item.table.discount.column.label')}: </Form.Label>
                         <InputGroup>
                             <input aria-label='Dollar amount (with dot and two decimal places)'
-                                className='form-control'
-                                type='text' name='discount' value={saleValue.discount}
-                                onBlur={(event) => onBlurInput(event)} onFocus={(event) => onFocusInput(event)}
-                                onKeyPress={(event) => decimalValidate(event)}
-                                onChange={(e) => onChangeInput(e)}
+                                   className='form-control'
+                                   type='text' name='discount' value={saleValue.discount}
+                                   onBlur={(event) => onBlurInput(event)} onFocus={(event) => onFocusInput(event)}
+                                   onKeyPress={(event) => decimalValidate(event)}
+                                   onChange={(e) => onChangeInput(e)}
                             />
                             <InputGroup.Text>{frontSetting.value && frontSetting.value.currency_symbol}</InputGroup.Text>
                         </InputGroup>
@@ -458,40 +491,35 @@ console.log(singleSale,'this is from singlesale value')
                             className='form-label'>{getFormattedMessage('purchase.input.shipping.label')}: </label>
                         <InputGroup>
                             <input aria-label='Dollar amount (with dot and two decimal places)' type='text'
-                                className='form-control'
-                                name='shipping' value={saleValue.shipping}
-                                onBlur={(event) => onBlurInput(event)} onFocus={(event) => onFocusInput(event)}
-                                onKeyPress={(event) => decimalValidate(event)}
-                                onChange={(e) => onChangeInput(e)}
+                                   className='form-control'
+                                   name='shipping' value={saleValue.shipping}
+                                   onBlur={(event) => onBlurInput(event)} onFocus={(event) => onFocusInput(event)}
+                                   onKeyPress={(event) => decimalValidate(event)}
+                                   onChange={(e) => onChangeInput(e)}
                             />
                             <InputGroup.Text>{frontSetting.value && frontSetting.value.currency_symbol}</InputGroup.Text>
                         </InputGroup>
                     </div>
                     <div className='col-md-4'>
                         <ReactSelect multiLanguageOption={statusFilterOptions}
-                            onChange={onStatusChange} name='status_id'
-                            title={getFormattedMessage('purchase.select.status.label')}
-                            value={saleValue.status_id} errors={errors['status_id']}
-                            defaultValue={statusDefaultValue[0]}
-                            placeholder={getFormattedMessage('purchase.select.status.label')} />
+                                     onChange={onStatusChange} name='status_id'
+                                     title={getFormattedMessage('purchase.select.status.label')}
+                                     value={saleValue.status_id} errors={errors['status_id']}
+                                     defaultValue={statusDefaultValue[0]}
+                                     placeholder={getFormattedMessage('purchase.select.status.label')}/>
                     </div>
                     {/* parcel start */}
-
-
 
 
                     <div className='col-md-4'>
 
                         <ReactSelect title={getFormattedMessage('pacel.company.label.name')}
-                            data={shippingCompanyNames}
-                            onChange={onParcelCompanyChange}
-                            placeholder={placeholderText('pacel.company.select.label')}
-                            defaultValue={parcel_company_id}
-                           
-                            name='parcel_company_id'
+                                     data={shippingCompanyNames}
+                                     onChange={onParcelCompanyChange}
+                                     placeholder={placeholderText('pacel.company.select.label')}
+                                     defaultValue={parcel_company_id}
 
-
-
+                                     name='parcel_company_id'
                         />
                     </div>
 
@@ -505,27 +533,25 @@ console.log(singleSale,'this is from singlesale value')
                                 name='parcel_number'
                                 placeholder={placeholderText('parcel.number.placeholder.label')}
 
-                                value={saleValue.parcel_number }
+                                value={saleValue.parcel_number}
                                 onChange={(e) => onChangeInput(e)}
                             />
 
                         </InputGroup>
                     </div>
-                    <div className='col-md-4 mb-3'>
-                        <label
-                            className='form-label'>{getFormattedMessage('globally.input.country.label')}: </label>
-                        <InputGroup>
-                            <input
-                                type='text'
-                                className='form-control'
-                                name='country'
-                                placeholder={placeholderText('globally.input.country.placeholder.label')}
-                                value={saleValue.country }
-                                onChange={(e) => onChangeInput(e)}
-                            />
 
-                        </InputGroup>
+                    <div className='col-md-4'>
+                        <ReactSelect
+                            data={countryNamesDefault}
+                            onChange={handleCountryChange}
+                            name='country'
+                            title={getFormattedMessage('globally.input.country.label')}
+                            value={saleValue.country}
+                            // errors={errors['payment_status']}
+                            defaultValue={countryNamesDefault[0]}
+                            placeholder={placeholderText('globally.input.country.placeholder.label')}/>
                     </div>
+
                     <div className='col-md-4 mb-3'>
                         <label
                             className='form-label'>{getFormattedMessage('order.no')}: </label>
@@ -536,71 +562,83 @@ console.log(singleSale,'this is from singlesale value')
                                 name='order_no'
                                 placeholder={placeholderText('globally.input.order.no.label')}
 
-                                value={saleValue.order_no }
+                                value={saleValue.order_no}
                                 onChange={(e) => onChangeInput(e)}
                             />
 
                         </InputGroup>
                     </div>
                     <div className='col-md-4'>
-                        <ReactSelect 
-                          multiLanguageOption={marketplaceFilterOption}
-                          onChange={handleMarketplaceChange}
-                          name='market_place'
-                           title={getFormattedMessage('marketplace.label')}
-                            value={saleValue.market_place} 
+                        <ReactSelect
+                            multiLanguageOption={marketplaceFilterOption}
+                            onChange={handleMarketplaceChange}
+                            name='market_place'
+                            title={getFormattedMessage('marketplace.label')}
+                            value={saleValue.market_place}
                             // errors={errors['payment_status']}
                             defaultValue={marketplaceNamesDefault[0]}
-                            placeholder={placeholderText('globally.input.marketplace.label')} />
+                            placeholder={placeholderText('globally.input.marketplace.label')}/>
                     </div>
 
 
-
                     {/* parcel end */}
-                    <br />
-                    {!singleSale && <div className='col-md-4'>
-                        <ReactSelect multiLanguageOption={paymentStatusFilterOptions} onChange={onPaymentStatusChange} name='payment_status'
-                            title={getFormattedMessage('dashboard.recentSales.paymentStatus.label')}
-                            value={saleValue.payment_status} errors={errors['payment_status']}
-                            defaultValue={paymentStatusDefaultValue[0]}
-                            placeholder={placeholderText('sale.select.payment-status.placeholder')} />
+                    <br/>
+                    {singleSale && <div className='col-md-4'>
+                        <ReactSelect multiLanguageOption={paymentStatusFilterOptions} onChange={onPaymentStatusChange}
+                                     name='payment_status'
+                                     title={getFormattedMessage('dashboard.recentSales.paymentStatus.label')}
+                                     value={saleValue.payment_status} errors={errors['payment_status']}
+                                     defaultValue={paymentStatusDefaultValue[0]}
+                                     placeholder={placeholderText('sale.select.payment-status.placeholder')}/>
                     </div>}
-                    {!singleSale && saleValue.payment_status.value !== 2 && <div className='col-md-4'>
+                    {singleSale && saleValue.payment_status.value !== 2 && <div className='col-md-4'>
                         <ReactSelect title={getFormattedMessage('select.payment-type.label')}
-                            name='payment_type'
-                            value={saleValue.payment_type} errors={errors['payment_type']}
-                            placeholder={placeholderText('sale.select.payment-type.placeholder')}
-                            defaultValue={paymentTypeDefaultValue[0]}
-                            multiLanguageOption={paymentMethodOption}
-                            onChange={onPaymentTypeChange}
+                                     name='payment_type'
+                                     value={saleValue.payment_type} errors={errors['payment_type']}
+                                     placeholder={placeholderText('sale.select.payment-type.placeholder')}
+                                     defaultValue={paymentTypeDefaultValue[0]}
+                                     multiLanguageOption={paymentMethodOption}
+                                     onChange={onPaymentTypeChange}
                         />
                     </div>}
                     {isQuotation && <div className='col-md-4'>
-                        <ReactSelect multiLanguageOption={paymentStatusFilterOptions} onChange={onPaymentStatusChange} name='payment_status'
-                            title={getFormattedMessage('dashboard.recentSales.paymentStatus.label')}
-                            value={saleValue.payment_status} errors={errors['payment_status']}
-                            defaultValue={paymentStatusDefaultValue[0]}
-                            placeholder={placeholderText('sale.select.payment-status.placeholder')} />
+                        <ReactSelect multiLanguageOption={paymentStatusFilterOptions} onChange={onPaymentStatusChange}
+                                     name='payment_status'
+                                     title={getFormattedMessage('dashboard.recentSales.paymentStatus.label')}
+                                     value={saleValue.payment_status} errors={errors['payment_status']}
+                                     defaultValue={paymentStatusDefaultValue[0]}
+                                     placeholder={placeholderText('sale.select.payment-status.placeholder')}/>
                     </div>}
                     {isQuotation && isPaymentType && <div className='col-md-4'>
                         <ReactSelect title={getFormattedMessage('select.payment-type.label')}
-                            name='payment_type'
-                            value={saleValue.payment_type} errors={errors['payment_type']}
-                            placeholder={placeholderText('sale.select.payment-type.placeholder')}
-                            defaultValue={paymentTypeDefaultValue[0]}
-                            multiLanguageOption={paymentMethodOption}
-                            onChange={onPaymentTypeChange}
+                                     name='payment_type'
+                                     value={saleValue.payment_type} errors={errors['payment_type']}
+                                     placeholder={placeholderText('sale.select.payment-type.placeholder')}
+                                     defaultValue={paymentTypeDefaultValue[0]}
+                                     multiLanguageOption={paymentMethodOption}
+                                     onChange={onPaymentTypeChange}
                         />
                     </div>}
+                    <div className='col-md-4'>
+
+                        <ReactSelect title={getFormattedMessage('currency.label.name')}
+                                     data={currencyNameDefault}
+                                     onChange={onCurrencyChange}
+                                     placeholder={placeholderText('currency.select.label')}
+                                     defaultValue={currencyNameDefault[0]}
+
+                                     name='currency'
+                        />
+                    </div>
                     <div className='mb-3'>
                         <label className='form-label'>
                             {getFormattedMessage('globally.input.notes.label')}: </label>
                         <textarea name='notes' className='form-control' value={saleValue.notes}
-                            placeholder={placeholderText('globally.input.notes.placeholder.label')}
-                            onChange={(e) => onNotesChangeInput(e)}
+                                  placeholder={placeholderText('globally.input.notes.placeholder.label')}
+                                  onChange={(e) => onNotesChangeInput(e)}
                         />
                     </div>
-                    <ModelFooter onEditRecord={singleSale} onSubmit={onSubmit} link='/app/sales' />
+                    <ModelFooter onEditRecord={singleSale} onSubmit={onSubmit} link='/app/sales'/>
                 </div>
                 {/*</Form>*/}
             </div>
@@ -610,9 +648,23 @@ console.log(singleSale,'this is from singlesale value')
 
 const mapStateToProps = (state) => {
     console.log(state, 'state from sales form')
-    const { purchaseProducts, products, advanceSearch, frontSetting, allConfigData } = state;
-    return { customProducts: preparePurchaseProductArray(advanceSearch), purchaseProducts, products, advanceSearch, frontSetting, allConfigData }
+    const {purchaseProducts, products, advanceSearch, currencies, frontSetting, allConfigData} = state;
+    return {
+        customProducts: preparePurchaseProductArray(advanceSearch),
+        purchaseProducts,
+        products,
+        advanceSearch,
+        currencies,
+        frontSetting,
+        allConfigData
+    }
 }
 
-export default connect(mapStateToProps, { editSale, fetchProductsByWarehouse, fetchFrontSetting, fetchAdvancedSearch })(SalesForm)
+export default connect(mapStateToProps, {
+    editSale,
+    fetchCurrencies,
+    fetchProductsByWarehouse,
+    fetchFrontSetting,
+    fetchAdvancedSearch
+})(SalesForm)
 

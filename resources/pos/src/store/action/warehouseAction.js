@@ -120,3 +120,9 @@ export const fetchWarehouseDetails = (WarehouseId, isLoading = true) => async (d
                 {text: response.data.message, type: toastType.ERROR}));
         });
 };
+
+
+export const setWarehouseId = (warehouse_id) => ({
+    type: 'SET_WAREHOUSE_ID',
+    payload: warehouse_id,
+});

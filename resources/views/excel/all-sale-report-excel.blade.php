@@ -145,18 +145,24 @@
 
             <td style="text-align: center;">{{$sale->warehouse->name}}</td>
             @if($sale->status == \App\Models\Sale::COMPLETED)
-                <td>Received</td>
+                <td>Confirmed</td>
             @elseif($sale->status == \App\Models\Sale::PENDING)
                 <td>Pending</td>
             @elseif($sale->status == \App\Models\Sale::ORDERED)
-                <td>Ordered</td>
+                <td>Picked Up</td>
+            @elseif($sale->status == \App\Models\Sale::ONTHEWAY)
+                <td>On The Way</td>
+            @elseif($sale->status == \App\Models\Sale::DELIVERED)
+                <td>Delivered</td>
+            @elseif($sale->status == \App\Models\Sale::CANCLED)
+                <td>Cancled</td>
             @endif
 
-            @if($sale->status == \App\Models\Sale::PAID)
+            @if($sale->payment_status == \App\Models\Sale::PAID)
                 <td>paid</td>
-            @elseif($sale->status == \App\Models\Sale::UNPAID)
+            @elseif($sale->payment_status == \App\Models\Sale::UNPAID)
                 <td>unpaid</td>
-            @elseif($sale->status == \App\Models\Sale::PARTIAL_PAID)
+            @elseif($sale->payment_status == \App\Models\Sale::PARTIAL_PAID)
                 <td>partial</td>
             @endif
             <td style="text-align: center;">
@@ -187,20 +193,21 @@
         </tr>
     @endforeach
     </tbody>
-    <tfoot style="border: 2px solid black;">
-    <tr class="footer-row">
-        <td colspan="2" style="text-align: center;">Total:</td>
-        <td></td>
-        <td></td>
-        <td></td>
-        <td></td>
-        <td></td>
-        <td>{{ number_format($sum_grand_total)}}</td>
-        <td>{{ number_format( $sum_selling_value_euro_total, 2) }}</td>
-        <td>{{ number_format($sales->sum('tax_amount'), 2) }}</td>
-        <td colspan="14"></td> <!-- Empty cells for the rest of the columns -->
-    </tr>
-    </tfoot>
+{{--    <tfoot style="border: 2px solid black;">--}}
+{{--    <tr class="footer-row">--}}
+{{--        <td colspan="2" style="text-align: center;">Total:</td>--}}
+{{--        <td></td>--}}
+{{--        <td></td>--}}
+{{--        <td></td>--}}
+{{--        <td></td>--}}
+{{--        <td></td>--}}
+{{--        <td></td>--}}
+{{--        <td>{{ number_format($sum_grand_total)}}</td>--}}
+{{--        <td>{{ number_format( $sum_selling_value_euro_total, 2) }}</td>--}}
+{{--        <td>{{ number_format($sales->sum('tax_amount'), 2) }}</td>--}}
+{{--        <td colspan="14"></td> <!-- Empty cells for the rest of the columns -->--}}
+{{--    </tr>--}}
+{{--    </tfoot>--}}
 </table>
 </body>
 </html>

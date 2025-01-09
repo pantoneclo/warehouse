@@ -8,6 +8,7 @@ import productCategoryReducers from "./productCategoryReducers";
 import roleReducer from "./roleReducer";
 import permissionReducer from "./permissionReducer";
 import warehouseReducer from "./warehouseReducrs";
+import warehouseIdReducer  from "./warehouseIdReducer";
 import unitsReducers from "./unitsReducres";
 import supplierReducer from "./supplierReducer";
 import customerReducer from "./customerReducer";
@@ -113,6 +114,7 @@ export default combineReducers({
     roles: roleReducer,
     permissions: permissionReducer,
     warehouses: warehouseReducer,
+    warehouse_id: warehouseIdReducer,
     productCategories: productCategoryReducers,
     units: unitsReducers,
     suppliers: supplierReducer,

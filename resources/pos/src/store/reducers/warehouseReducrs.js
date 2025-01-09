@@ -1,5 +1,6 @@
 import {warehouseActionType} from '../../constants';
 
+
 export default (state = [], action) => {
     switch (action.type) {
         case warehouseActionType.FETCH_WAREHOUSES:
@@ -14,6 +15,7 @@ export default (state = [], action) => {
             return state.filter(item => item.id !== action.payload);
         case warehouseActionType.FETCH_ALL_WAREHOUSES:
             return action.payload;
+
         default:
             return state;
     }

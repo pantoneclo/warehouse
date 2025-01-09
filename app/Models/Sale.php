@@ -172,11 +172,12 @@ class Sale extends BaseModel implements HasMedia, JsonResourceful
     const OTHER = 4;
 
     // Order status
-    const COMPLETED = 1;
-
-    const PENDING = 2;
-
+    const PENDING = 1;
+    const COMPLETED = 2;
     const ORDERED = 3;
+    const ONTHEWAY = 4;
+    const DELIVERED = 5;
+    const CANCLED = 6;
 
     // payment status
     const PAID = 1;

@@ -15,14 +15,19 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Symfony\Component\HttpKernel\Exception\UnprocessableEntityHttpException;
 use Illuminate\Support\Facades\Auth;
+use App\Models\Product;
+
+use App\Http\Controllers\API\StockManagementAPIController;
+use App\Jobs\ProcessAdjustmentItems;
 class AdjustmentAPIController extends AppBaseController
 {
     /** @var AdjustmentRepository */
     private $adjustmentRepository;
 
-    public function __construct(AdjustmentRepository $adjustmentRepository)
+    public function __construct(AdjustmentRepository $adjustmentRepository, StockManagementAPIController $stockmanagement )
     {
         $this->adjustmentRepository = $adjustmentRepository;
+        $this->stockmanagement = $stockmanagement;
     }
 
     /**
@@ -31,10 +36,10 @@ class AdjustmentAPIController extends AppBaseController
      */
     public function index(Request $request)
     {
-        
+
         if(!Auth::user()->can ('manage.adjustments')) {
             return $this->sendError('Permission Denied');
-        } 
+        }
         $perPage = getPageSize($request);
 
         $adjustments = $this->adjustmentRepository;
@@ -44,7 +49,7 @@ class AdjustmentAPIController extends AppBaseController
         }
 
         $adjustments = $adjustments->paginate($perPage);
-        
+
 
         AdjustmentResource::usingWithCollection();
 
@@ -61,9 +66,24 @@ class AdjustmentAPIController extends AppBaseController
             return $this->sendError('Permission Denied');
         }
         $input = $request->all();
+        // Store the adjustment
         $adjustment = $this->adjustmentRepository->storeAdjustment($input);
 
-        return new AdjustmentResource($adjustment);
+        // Dispatch the background job for processing adjustment items
+        try {
+            // Validate adjustment items
+            if (!isset($input['adjustment_items']) || !is_array($input['adjustment_items'])) {
+                return $this->sendError('Adjustment items are invalid or missing.');
+            }
+
+            // Dispatch the job to process the adjustment items in the background
+            ProcessAdjustmentItems::dispatch($input['adjustment_items'], $input['warehouse_id']);
+
+            // Return response immediately
+            return new AdjustmentResource($adjustment);
+        } catch (\Exception $e) {
+            return $this->sendError('An error occurred: ' . $e->getMessage());
+        }
     }
 
     /**
@@ -77,7 +97,7 @@ class AdjustmentAPIController extends AppBaseController
         }
 
         $adjustment = $adjustment->load(['adjustmentItems.product','adjustmentItems.product' => function ($query) {
-          
+
             $query->with(['variant','productAbstract:id,pan_style',]);
         }]);
 
@@ -93,7 +113,7 @@ class AdjustmentAPIController extends AppBaseController
             return $this->sendError('Permission Denied');
         }
         $adjustment = $adjustment->load(['adjustmentItems.product.stocks', 'warehouse','adjustmentItems.product' => function ($query) {
-          
+
             $query->with(['variant','productAbstract:id,pan_style',]);
         }]);
 

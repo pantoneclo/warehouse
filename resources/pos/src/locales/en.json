@@ -202,7 +202,8 @@
     "pacel.company.select.label": "Select Parcel company",
     "parcel.number.label": "Parcel Number",
     "parcel.number.placeholder.label": "Enter Parcel Number",
-
+    "currency.label.name": "Currency",
+    "currency.select.label": "Select Currency",
     "variant.name": "Variants Name",
     "variant.title": "Variants",
     "variant.edit.title": "Edit Variant",

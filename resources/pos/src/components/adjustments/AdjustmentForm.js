@@ -16,6 +16,7 @@ import {fetchFrontSetting} from '../../store/action/frontSettingAction';
 import ReactSelect from '../../shared/select/reactSelect';
 import AdvanceSearch from '../../shared/components/product-cart/search/AdvanceSearch';
 import {fetchAdvancedSearch} from '../../store/action/advancedSearchAction';
+import {setWarehouseId} from "../../store/action/warehouseAction";
 
 const AdjustmentForm = (props) => {
     const {
@@ -102,6 +103,7 @@ const AdjustmentForm = (props) => {
     const onWarehouseChange = (obj) => {
         setAdjustMentValue(inputs => ({...inputs, warehouse_id: obj}));
         setErrors('');
+        dispatch(setWarehouseId(obj.value));
     };
 
     const onChangeInput = (e) => {
@@ -207,9 +209,10 @@ const AdjustmentForm = (props) => {
     )
 }
 
-const mapStateToProps = (state) => {
+const mapStateToProps = (state, ownProps) => {
+    const warehouse_id = state.warehouse_id || ownProps.adjustMentValue?.warehouse_id?.value || '';
     const {purchaseProducts, products,advanceSearch, frontSetting} = state;
-    return {customProducts: prepareSaleProductArray(advanceSearch), purchaseProducts, advanceSearch,products, frontSetting}
+    return {customProducts: prepareSaleProductArray(advanceSearch,  warehouse_id), purchaseProducts, advanceSearch,products, frontSetting}
 }
 
 export default connect(mapStateToProps, {editAdjustment, fetchProductsByWarehouse, fetchFrontSetting,fetchAdvancedSearch})(AdjustmentForm)

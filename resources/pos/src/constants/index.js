@@ -188,7 +188,8 @@ export const warehouseActionType = {
     DELETE_WAREHOUSE: 'DELETE_WAREHOUSE',
     FETCH_ALL_WAREHOUSES: 'FETCH_ALL_WAREHOUSES',
     FETCH_WAREHOUSE_REPORT: 'FETCH_WAREHOUSE_REPORT',
-    FETCH_WAREHOUSE_DETAILS: 'FETCH_WAREHOUSE_DETAILS'
+    FETCH_WAREHOUSE_DETAILS: 'FETCH_WAREHOUSE_DETAILS',
+    SET_WAREHOUSE_ID: 'SET_WAREHOUSE_ID'
 };
 
 export const supplierActionType = {
@@ -832,12 +833,12 @@ export const statusOptions = [
 ];
 
 export const saleStatusOptions = [
-    { id: 1, name: 'status.filter.pending.label' },
-    { id: 2, name: 'status.filter.received.label' },
-    { id: 3, name: 'status.filter.ordered.label' },
-    { id: 4, name: 'status.filter.ontheway.label' },
-    { id: 5, name: 'status.filter.delivered.label' },
-    { id: 6, name: 'status.filter.cancelled.label' },
+    { id: 1, name: 'status.filter.pending.label' },  //pending
+    { id: 2, name: 'status.filter.received.label' }, //confirmed
+    { id: 3, name: 'status.filter.ordered.label' },  //picked up
+    { id: 4, name: 'status.filter.ontheway.label' }, //On The Way
+    { id: 5, name: 'status.filter.delivered.label' },  //Delivered
+    { id: 6, name: 'status.filter.cancelled.label' },  //Cancelled
 ];
 
 export const salePaymentStatusOptions = [
@@ -955,5 +956,18 @@ export const countryOptions = [
     { id: 1, code:'BD', name: 'Bangladesh' },
     { id: 2, code:'SI', name: 'Slovenia' },
     { id: 3, code:'IT', name: 'Italy' },
+    { id: 3, code:'SK', name: 'Slovakia' },
+    { id: 3, code:'PL', name: 'Poland' },
+    { id: 3, code:'GR', name: 'Greece' },
+    { id: 3, code:'RO', name: 'Romania' },
+    { id: 3, code:'LT', name: 'Lithuania' },
+    { id: 3, code:'BG', name: 'Bulgaria' },
+    { id: 3, code:'AT', name: 'Austria' },
+    { id: 3, code:'ES', name: 'Spain' },
+    { id: 3, code:'PT', name: 'Portugal' },
+    { id: 3, code:'DE', name: 'Germany' },
+    { id: 3, code:'HR', name: 'Croatia' },
+    { id: 3, code:'CZ', name: 'Czech Republic' },
+    { id: 3, code:'IN', name: 'India' },
     // Add more countries as needed
 ];

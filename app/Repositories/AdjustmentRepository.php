@@ -71,7 +71,6 @@ class AdjustmentRepository extends BaseRepository
             $adjustment = $this->storeAdjustmentItems($adjustment, $input);
 
             DB::commit();
-
             return $adjustment;
         } catch (Exception $e) {
             DB::rollBack();

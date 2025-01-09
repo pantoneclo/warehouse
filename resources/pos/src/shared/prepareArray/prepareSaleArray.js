@@ -1,6 +1,7 @@
-export const prepareSaleProductArray = (products) => {
+export const prepareSaleProductArray = (products, warehouseId) => {
     let saleProductRowArray = [];
     products.forEach(product => {
+        const stockData = product.attributes.stocks?.find(stock => stock.warehouse_id === warehouseId);
         saleProductRowArray.push({
             name: product.attributes.name,
             pan_style: product.attributes.pan_style,
@@ -8,6 +9,7 @@ export const prepareSaleProductArray = (products) => {
             variant_id: product.attributes.variant_id ? product.attributes.variant_id : "",
             code: product.attributes.code,
             stock: product.attributes.stock ? product.attributes.stock.quantity : "",
+            qty: stockData ? stockData.quantity : 0,
             short_name: product.attributes.sale_unit_name.short_name,
             product_unit: product.attributes.product_unit,
             product_id: product.id,

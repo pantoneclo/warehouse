@@ -4,9 +4,13 @@ namespace App\Http\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
+
 
 class CheckApiKey
 {
+
+
     /**
      * Handle an incoming request.
      *
@@ -16,6 +20,14 @@ class CheckApiKey
      */
     public function handle(Request $request, Closure $next)
     {
+        Log::info('Incoming request:', [
+            'url' => $request->fullUrl(),
+            'headers' => $request->headers->all(),
+            'body' => $request->all(),
+        ]);
+
+
+
         $apiKey = $request->header('x-api-key');
 
         if ($apiKey !== env('WAREHOUSE_API_KEY') && $apiKey !== env('ECOMMERCE_API_KEY')) {

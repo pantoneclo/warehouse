@@ -163,15 +163,16 @@ class Product extends BaseModel implements HasMedia, JsonResourceful
             'purchase_unit_name' => $this->productAbstract->getPurchaseUnitName(),
             'sale_unit_name' => $this->productAbstract->getSaleUnitName(),
             'stock' => $this->stock,
+            'stocks' => $this->stocks,
             'warehouse' => $this->warehouse($this->id) ?? '',
             'barcode_url' => Storage::url('product_barcode/barcode-' . $this->generateProductCode() . '.png'),
             'in_stock' => $this->inStock($this->id),
-        
+
         ];
 
         return $fields;
     }
-   
+
 
     /**
      * @return string[]
@@ -184,7 +185,7 @@ class Product extends BaseModel implements HasMedia, JsonResourceful
             'brand_id' => Brand::class,
         ];
     }
-    
+
     /**
      * @return array|string
      */
@@ -198,7 +199,7 @@ class Product extends BaseModel implements HasMedia, JsonResourceful
         return '';
     }
 
-  
+
 
     /**
      * @return array|string
@@ -240,7 +241,7 @@ class Product extends BaseModel implements HasMedia, JsonResourceful
         return $this->belongsTo(ProductAbstract::class, 'product_abstract_id', 'id');
     }
 
-    public function PackageCode() 
+    public function PackageCode()
     {
         $packages_id = PackageVsProductVsVariant::where('product_id', $this->id)->pluck('package_id');
         $packages = Package::whereIn('id', $packages_id)->get();
@@ -250,7 +251,7 @@ class Product extends BaseModel implements HasMedia, JsonResourceful
         }
         else {
             return '';
-        }    
+        }
     }
 
 
@@ -277,6 +278,8 @@ class Product extends BaseModel implements HasMedia, JsonResourceful
     {
         return $this->hasOne(ManageStock::class, 'product_id', 'id');
     }
+
+
 
     /**
      * @return HasMany
