@@ -895,22 +895,27 @@ class StockManagementAPIController extends AppBaseController
         // Step 1: Determine if the code is a combo product
         if (strpos($code, 'COMBO') === 0) {
             // Handle combo product
-            $comboProducts = ComboProduct::where('code', $code)
-                ->where('warehouse_id', $warehouseId)
-                ->get();
+            $result = ComboProduct::select(
+                'combo_products.warehouse_id',
+                'combo_products.code AS combo_code',
+                DB::raw('MIN(manage_stocks.quantity) AS min_quantity')
+            )
+                ->join('manage_stocks', function ($join) {
+                    $join->on('combo_products.product_id', '=', 'manage_stocks.product_id')
+                        ->on('combo_products.warehouse_id', '=', 'manage_stocks.warehouse_id');
+                })
+                ->where('combo_products.code', $code) // Apply the current combo code
+                ->where('combo_products.warehouse_id', $warehouseId) // Apply warehouse ID condition
+                ->groupBy('combo_products.warehouse_id', 'combo_products.code')
+                ->first();
 
-            $minQuantity = INF; // Start with a large value
-            foreach ($comboProducts as $combo) {
-                $quantity = ManageStock::where('product_id', $combo->product_id)
-                    ->where('warehouse_id', $warehouseId)
-                    ->value('quantity');
-                $minQuantity = min($minQuantity, $quantity ?? INF);
+            if (!$result) {
+                \Log::warning("No combo products found for code: $code in warehouse: $warehouseId");
+                return;
             }
 
-            // If no valid quantities are found, default to 0
-            if ($minQuantity === INF) {
-                $minQuantity = 0;
-            }
+            // Use the calculated minimum quantity
+            $minQuantity = $result->min_quantity ?? 0;
 
             // Update the stock for the combo product in product_meta
             $this->updateProductMetaQuantity($code, $minQuantity, $warehouseId);
@@ -933,7 +938,7 @@ class StockManagementAPIController extends AppBaseController
                 ->pluck('code');
 
             foreach ($comboCodes as $comboCode) {
-                // Pass the visited codes to the recursive call
+                \Log::info("Processing combo code: $comboCode");
                 $this->manageStockForCodeAndWarehouse($comboCode, $warehouseId, $visitedCodes);
             }
 
@@ -988,10 +993,6 @@ class StockManagementAPIController extends AppBaseController
                 ->update(['variants' => json_encode($variants)]);
         }
     }
-
-
-
-
 
 }
 
