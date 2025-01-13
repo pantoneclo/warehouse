@@ -914,9 +914,10 @@ class StockManagementAPIController extends AppBaseController
                 return;
             }
 
+            \Log::info("Combo Products are: $result");
             // Use the calculated minimum quantity
             $minQuantity = $result->min_quantity ?? 0;
-
+            \Log::info("Minimum Quantity is: $minQuantity");
             // Update the stock for the combo product in product_meta
             $this->updateProductMetaQuantity($code, $minQuantity, $warehouseId);
         } else {
