@@ -33,17 +33,17 @@ const PrintTable = (props) => {
     return (
         <tbody>
         {printBarcodeValue && updateProducts && updateProducts.length >= 1 ? updateProducts.map((singleProduct, index) => {
-        
+
          return(
             <tr key={index} className='align-middle'>
             <td className='ps-3'>
 
             <div className='d-flex align-items-center'>
-                   
+
                         <h6>{singleProduct.name}</h6>
-                 
+
                 </div>
-             
+
             {
                          singleProduct && singleProduct.variant
                             ? Object.entries(singleProduct.variant).map(([label, value]) => (
@@ -54,10 +54,10 @@ const PrintTable = (props) => {
                             : ''
                     }
                 <h4 className='fs-6 mb-1 badge bg-light-danger'>{singleProduct.code}</h4>
-               
+
             </td>
             <td>
-               
+
                 <div className='d-flex align-items-center'>
                     <span className='badge bg-light-danger'>
                         <span>{singleProduct.pan_style}</span>
@@ -66,14 +66,14 @@ const PrintTable = (props) => {
             </td>
             <td>
             <div className='d-flex align-items-center'>
-                   
+
                    <h6>{singleProduct.stock?singleProduct.stock :'0'}</h6>
-            
+
            </div>
             </td>
             <td>
                 <input  aria-label='Product Quantity' className='form-control width-320'
-                       onKeyUp={(event) => decimalValidate(event)} value={singleProduct.quantity}
+                       onKeyUp={(event) => decimalValidate(event)} value={1}
                        onChange={(e) => handleChange(e, singleProduct.id)}
                 />
             </td>
