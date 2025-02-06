@@ -6,15 +6,26 @@ import {faTrash} from "@fortawesome/free-solid-svg-icons";
 
 const PrintTable = (props) => {
     const {setUpdateProducts, updateProducts, printBarcodeValue, updatedQty} = props;
-    const [qty, setQty] = useState(10)
+    const [qty, setQty] = useState(1)
     const dispatch = useDispatch()
     const [productId, setProductId] = useState(0)
 
-    const handleChange = (e, singleProduct) => {
-        setQty(e.target.value );
-        setProductId(singleProduct)
-        dispatch({type: "UPDATE_PRINT_QTY", payload: e.target.value })
+    const handleChange = (e, productId) => {
+        const newQty = e.target.value ? Number(e.target.value) : 1; // Ensure minimum 1
+        setQty(newQty);
+        setProductId(productId);
+
+        // Dispatch updated quantity to store
+        dispatch({ type: "UPDATE_PRINT_QTY", payload: { id: productId, quantity: newQty } });
+
+        // Update quantity in local state
+        setUpdateProducts(prevProducts =>
+            prevProducts.map(item =>
+                item.id === productId ? { ...item, quantity: newQty } : item
+            )
+        );
     };
+
 
     const onDeleteCartItem = (id) => {
         setUpdateProducts(updateProducts => updateProducts.filter((item) => item.id !== id));
@@ -73,7 +84,7 @@ const PrintTable = (props) => {
             </td>
             <td>
                 <input  aria-label='Product Quantity' className='form-control width-320'
-                       onKeyUp={(event) => decimalValidate(event)} value={1}
+                       onKeyUp={(event) => decimalValidate(event)} value={singleProduct.quantity || 0}
                        onChange={(e) => handleChange(e, singleProduct.id)}
                 />
             </td>
