@@ -140,8 +140,10 @@ class StockManagementAPIController extends AppBaseController
                 ]);
             }
 
+            $warehouse_id = $request->warehouse == "BD" ? "BD" : "SI";
+
             // Fetch the warehouse by country code
-            $warehouse = Warehouse::where('country_code', $request->warehouse)->first();
+            $warehouse = Warehouse::where('country_code', $warehouse_id)->first();
 
             if (!$warehouse) {
                 return response()->json([
