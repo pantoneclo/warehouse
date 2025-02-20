@@ -625,6 +625,7 @@
     "status.filter.ontheway.label": "On The Way",
     "status.filter.delivered.label": "Delivered",
     "status.filter.cancelled.label": "Cancelled",
+    "status.filter.order_failed.label": "Failed Order",
     "payment-status.filter.paid.label": "Paid",
     "payment-status.filter.unpaid.label": "Unpaid",
     "eccomerce.label.1":"AMAZON",

@@ -215,7 +215,12 @@ const Sales = (props) => {
                     </span>||
                     row.status === 6 &&
                     <span className='badge bg-light-warning'>
-                        <span>{getFormattedMessage("status.filter.cancelled.labell")}</span>
+                        <span>{getFormattedMessage("status.filter.cancelled.label")}</span>
+                    </span>||
+
+                row.status === 7 &&
+                <span className='badge bg-light-warning'>
+                        <span>{getFormattedMessage("status.filter.order_failed.label")}</span>
                     </span>
                 )
             }

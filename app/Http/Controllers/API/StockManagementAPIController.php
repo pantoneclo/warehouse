@@ -238,7 +238,7 @@ class StockManagementAPIController extends AppBaseController
                             'quantity' => min($smallestQuantity), // Smallest quantity among the related products
                         ];
                     }
-
+                    $this->manageStockForCodeAndWarehouse($item['code'],$warehouse->id);
                 } else {
 
                     // Handle regular products
@@ -310,6 +310,8 @@ class StockManagementAPIController extends AppBaseController
 
 
                     }
+
+                    $this->manageStockForCodeAndWarehouse($item['code'],$warehouse->id);
                 }
             }
 
@@ -740,31 +742,31 @@ class StockManagementAPIController extends AppBaseController
 
   public function connectionPantonecloDatabase()
   {
-//      $warehouseId = 3;
-//      $countryCondition = ($warehouseId == 3) ? '=' : '!=';
-//      $productMetaItems = DB::connection('pgsql')->table('product_meta')
-//          ->select('id', 'variants')
-//          ->where('country_id', $countryCondition, 1)
-//          ->orderBy('id')
-//          ->limit(10)
-//          ->get();
-//      dd($productMetaItems);
-
-
-      $code = "PR_002A90007F";
       $warehouseId = 3;
       $countryCondition = ($warehouseId == 3) ? '=' : '!=';
-
       $productMetaItems = DB::connection('pgsql')->table('product_meta')
           ->select('id', 'variants')
           ->where('country_id', $countryCondition, 1)
-          ->whereRaw("
-        variants::jsonb @> ?
-    ", [json_encode([['variantDetails' => [['sku' => $code]]]])])
           ->orderBy('id')
+          ->limit(10)
           ->get();
+      dd($productMetaItems);
 
- dd($productMetaItems);
+
+//      $code = "PR_002A90007F";
+//      $warehouseId = 3;
+//      $countryCondition = ($warehouseId == 3) ? '=' : '!=';
+//
+//      $productMetaItems = DB::connection('pgsql')->table('product_meta')
+//          ->select('id', 'variants')
+//          ->where('country_id', $countryCondition, 1)
+//          ->whereRaw("
+//        variants::jsonb @> ?
+//    ", [json_encode([['variantDetails' => [['sku' => $code]]]])])
+//          ->orderBy('id')
+//          ->get();
+//
+// dd($productMetaItems);
 //
 //      // Decode JSON string into an array
 //      foreach ($productMetaItems as $item) {
