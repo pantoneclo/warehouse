@@ -937,6 +937,8 @@ export const shippingCompanyNames = [
     { id: 1, label: 'GLS' },
     {id : 2, label: 'EXPEDICO' },
     {id : 3, label: 'REDEX' },
+    {id : 4, label: 'PACTIC' },
+    {id : 5, label: 'PACKETA' },
 ]
 
 export const getLabelById = (id) => {
@@ -949,6 +951,8 @@ export const eccomercePlatform = [
     { id: 2, name: 'eccomerce.label.2' },
     { id: 3, name: 'eccomerce.label.3' },
     { id: 4, name: 'eccomerce.label.4' },
+    { id: 5, name: 'eccomerce.label.5' },
+    { id: 6, name: 'eccomerce.label.6' },
 ];
 
 
@@ -956,18 +960,18 @@ export const countryOptions = [
     { id: 1, code:'BD', name: 'Bangladesh' },
     { id: 2, code:'SI', name: 'Slovenia' },
     { id: 3, code:'IT', name: 'Italy' },
-    { id: 3, code:'SK', name: 'Slovakia' },
-    { id: 3, code:'PL', name: 'Poland' },
-    { id: 3, code:'GR', name: 'Greece' },
-    { id: 3, code:'RO', name: 'Romania' },
-    { id: 3, code:'LT', name: 'Lithuania' },
-    { id: 3, code:'BG', name: 'Bulgaria' },
-    { id: 3, code:'AT', name: 'Austria' },
-    { id: 3, code:'ES', name: 'Spain' },
-    { id: 3, code:'PT', name: 'Portugal' },
-    { id: 3, code:'DE', name: 'Germany' },
-    { id: 3, code:'HR', name: 'Croatia' },
-    { id: 3, code:'CZ', name: 'Czech Republic' },
-    { id: 3, code:'IN', name: 'India' },
+    { id: 4, code:'SK', name: 'Slovakia' },
+    { id: 5, code:'PL', name: 'Poland' },
+    { id: 6, code:'GR', name: 'Greece' },
+    { id: 7, code:'RO', name: 'Romania' },
+    { id: 8, code:'LT', name: 'Lithuania' },
+    { id: 9, code:'BG', name: 'Bulgaria' },
+    { id: 10, code:'AT', name: 'Austria' },
+    { id: 11, code:'ES', name: 'Spain' },
+    { id: 12, code:'PT', name: 'Portugal' },
+    { id: 13, code:'DE', name: 'Germany' },
+    { id: 14, code:'HR', name: 'Croatia' },
+    { id: 15, code:'CZ', name: 'Czech Republic' },
+    { id: 16, code:'IN', name: 'India' },
     // Add more countries as needed
 ];

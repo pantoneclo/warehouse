@@ -84,7 +84,7 @@ const AdjustmentForm = (props) => {
     const handleValidation = () => {
         let error = {};
         let isValid = false;
-        const qtyCart = updateProducts.filter((a) => a.quantity === 0);
+        const qtyCart = updateProducts.filter((a) => a.quantity < 0);
         if (!adjustMentValue.date) {
             error['date'] = getFormattedMessage('globally.date.validate.label');
         } else if (!adjustMentValue.warehouse_id) {

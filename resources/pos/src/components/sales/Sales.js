@@ -121,7 +121,8 @@ const Sales = (props) => {
         edit_permission: edit_permission,
         delete_permission: delete_permission,
         create_sale_return_permission:create_sale_return_permission,
-        create_payment_permission:create_payment_permission
+        create_payment_permission:create_payment_permission,
+        order_no:sale.attributes.order_no
     }));
 
     useEffect(() => {
@@ -164,15 +165,16 @@ const Sales = (props) => {
 
     const columns = [
         {
-            name: getFormattedMessage('dashboard.recentSales.reference.label'),
-            sortField: 'reference_code',
+            name: "Order NO",
+            sortField: 'order_no',
             sortable: false,
             cell: row => {
-                return row.reference_code === "Total" ?
-                    <span className="fw-bold fs-4">{getFormattedMessage("pos-total.title")}</span> :
+                return (
+
                     <span className='badge bg-light-danger'>
-                        <span>{row.reference_code}</span>
+                        <span>{row.order_no}</span>
                     </span>
+                );
             }
         },
         {
@@ -193,11 +195,11 @@ const Sales = (props) => {
             sortable: false,
             cell: row => {
                 return (
-                    row.status === 1 &&
-                    <span className='badge bg-light-success'>
+                    row.status === 2 &&
+                    <span className='badge bg-primary'>
                         <span>{getFormattedMessage("status.filter.pending.label")}</span>
                     </span> ||
-                    row.status === 2 &&
+                    row.status === 1 &&
                     <span className='badge bg-light-primary'>
                         <span>{getFormattedMessage("status.filter.received.label")}</span>
                     </span> ||
@@ -206,21 +208,27 @@ const Sales = (props) => {
                         <span>{getFormattedMessage("status.filter.ordered.label")}</span>
                     </span>||
                     row.status === 4 &&
-                    <span className='badge bg-light-warning'>
+                    <span className='badge bg-light-info'>
                         <span>{getFormattedMessage("status.filter.ontheway.label")}</span>
                     </span>||
                     row.status === 5 &&
-                    <span className='badge bg-light-warning'>
+                    <span className='badge bg-light-success'>
                         <span>{getFormattedMessage("status.filter.delivered.label")}</span>
                     </span>||
                     row.status === 6 &&
-                    <span className='badge bg-light-warning'>
+                    <span className='badge bg-light-danger'>
                         <span>{getFormattedMessage("status.filter.cancelled.label")}</span>
                     </span>||
 
                 row.status === 7 &&
-                <span className='badge bg-light-warning'>
+                <span className='badge bg-light-danger'>
                         <span>{getFormattedMessage("status.filter.order_failed.label")}</span>
+                    </span>
+                    ||
+
+                    row.status === 8 &&
+                    <span className='badge bg-light-warning'>
+                        <span>{getFormattedMessage("status.filter.returned.label")}</span>
                     </span>
                 )
             }

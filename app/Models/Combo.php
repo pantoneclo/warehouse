@@ -10,7 +10,7 @@ use App\Models\Contracts\JsonResourceful;
 use Spatie\MediaLibrary\HasMedia;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use App\Http\Resources\ProductResource;
-
+use Illuminate\Support\Facades\Log;
 class Combo extends BaseModel implements HasMedia, JsonResourceful
 {
     use HasFactory, InteractsWithMedia, HasJsonResourcefulData;
@@ -29,15 +29,25 @@ class Combo extends BaseModel implements HasMedia, JsonResourceful
         ];
     }
 
-  
+
     public function prepareAttributes(): array
-    {  
+    {
         // Get and format products in the desired JSON structure
         $groupedProducts = $this->comboItems->groupBy('code')->map(function ($comboProducts, $comboCode) {
             return [
                 'combo_code' => $comboCode,
-                'products' => $comboProducts->map(function ($comboProduct) {
+                'products' => $comboProducts->map(function ($comboProduct) use ($comboCode){
                     $product = $comboProduct->product; // Assuming the ComboProduct model has a 'product' relationship
+                    if (!$product) {
+                        Log::error('Missing product for combo', [
+                            'combo_code' => $comboCode,  // ✅ Now this variable is available
+                            'combo_product_id' => $comboProduct->id,
+                        ]);
+
+                        return $comboCode;
+                    }
+
+
                     return [
                         'type' => 'products',
                         'id' => $product->id,
@@ -60,7 +70,7 @@ class Combo extends BaseModel implements HasMedia, JsonResourceful
             'sku'  => $this->sku,
             'created_at'  => $this->created_at,
             'products' => $this->getAllProducts(),
-        
+
         ];
 
         return $fields;
@@ -89,13 +99,13 @@ class Combo extends BaseModel implements HasMedia, JsonResourceful
     {
         // Fetch ComboProducts related to this Combo
         $comboProducts = ComboProduct::where('combo_id', $this->id)->get();
-        
+
         // Get the product IDs from ComboProducts
         $productIds = $comboProducts->pluck('product_id');
-        
+
         // Fetch products by these IDs
         $products = Product::whereIn('id', $productIds)->get();
-        
+
         // Group products by their code
         $groupedProducts = $comboProducts->groupBy('code')->map(function ($comboProducts, $comboCode) use ($products) {
             return [
@@ -123,10 +133,10 @@ class Combo extends BaseModel implements HasMedia, JsonResourceful
                 })->values()->toArray()
             ];
         })->values()->toArray();
-        
+
         return $groupedProducts;
     }
-    
 
-    
+
+
 }

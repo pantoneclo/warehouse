@@ -116,7 +116,7 @@ class ComboController extends AppBaseController
 
 
     public function destroy($id){
-       
+
             // Find the combo with its related comboItems
             $combo = Combo::with('comboItems')->find($id);
 

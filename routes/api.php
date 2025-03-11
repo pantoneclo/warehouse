@@ -371,6 +371,7 @@ Route::middleware('checkApiKey')->group(function (){
      Route::post('/webhook/order/cancel', [StockManagementAPIController::class, 'webHookOrderCancel'])->name('webhook.order');
      Route::post('/webhook/order/return', [StockManagementAPIController::class, 'webHookOrderReturn'])->name('webhook.order.return');
     Route::post('/webhook/manage-status', [StockManagementAPIController::class, 'webHookUpdateSellStatus']);
+    Route::post('/webhook/order/statuschanged', [StockManagementAPIController::class, 'webHookOrderStatusUpdate']);
 });
 
 
