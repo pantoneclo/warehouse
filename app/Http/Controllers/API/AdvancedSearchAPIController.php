@@ -4,6 +4,7 @@ namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\AppBaseController;
 use App\Http\Resources\ProductResource;
+use App\Models\ComboProduct;
 use App\Models\ManageStock;
 use App\Models\Warehouse;
 use App\Models\Package;
@@ -56,6 +57,22 @@ class AdvancedSearchAPIController extends AppBaseController
             } else {
                 return $this->sendError('Product not found');
             }
+        }elseif (substr($search_data, 0, 5) === 'COMBO'){
+           $combo_products_ids = ComboProduct::where('code', $search_data)->pluck('product_id')->toArray();
+
+            if (!empty($combo_products_ids)) {
+                $products = Product::whereIn('id', $combo_products_ids)->get();
+
+
+                if ($products->isNotEmpty()) {
+                    ProductResource::usingWithCollection();
+
+                    return new ProductCollection($products);
+                } else {
+                    return $this->sendError('Products not found');
+                }
+            }
+
         } else {
             $abstracts_id = ProductAbstract::where('pan_style', $search_data)->pluck('id')->toArray();
 

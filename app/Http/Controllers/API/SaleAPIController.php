@@ -29,6 +29,7 @@ use Illuminate\Support\Facades\Storage;
 use Symfony\Component\HttpKernel\Exception\UnprocessableEntityHttpException;
 use App\Http\Controllers\API\StockManagementAPIController;
 use Illuminate\Support\Facades\Log;
+
 /**
  * Class SaleAPIController
  */
@@ -37,6 +38,7 @@ class SaleAPIController extends AppBaseController
     /** @var saleRepository */
     private $saleRepository;
     private $stockManagementController;
+
     public function __construct(SaleRepository $saleRepository, StockManagementAPIController $stockManagementController)
     {
         $this->saleRepository = $saleRepository;
@@ -44,7 +46,7 @@ class SaleAPIController extends AppBaseController
     }
 
     /**
-     * @param  Request  $request
+     * @param Request $request
      * @return SaleCollection
      */
     public function index(Request $request)
@@ -106,12 +108,11 @@ class SaleAPIController extends AppBaseController
     }
 
     /**
-     * @param  CreateSaleRequest  $request
+     * @param CreateSaleRequest $request
      * @return SaleResource
      */
     public function store(CreateSaleRequest $request)
     {
-
 
 
         if (!Auth::user()->can('sale.create')) {
@@ -127,24 +128,6 @@ class SaleAPIController extends AppBaseController
 
 
         $sale = $this->saleRepository->storeSale($input);
-
-        try {
-            if (isset($sale['data']['attributes']['warehouse_id']) && isset($sale['data']['attributes']['country_code'])) {
-                $warehouse_id = $sale['data']['attributes']['warehouse_id'];
-                $warehouse_code = $sale['data']['attributes']['country_code'];
-                $operation = 'sell';
-                $saleItems = $sale['data']['attributes']['sale_items'];
-
-                // Proceed with stock management
-                $this->stockManagementController->prepareStockItems($warehouse_id, $warehouse_code, $saleItems, $operation);
-            } else {
-                // You can log this error or return a message if needed
-                Log::error('Sale data is missing warehouse_id or country_code');
-            }
-        } catch (\Exception $e) {
-            // Log or handle the error gracefully
-            Log::error('Error during stock management: ' . $e->getMessage());
-        }
         return new SaleResource($sale);
     }
 
@@ -164,7 +147,7 @@ class SaleAPIController extends AppBaseController
     }
 
     /**
-     * @param  Sale  $sale
+     * @param Sale $sale
      * @return SaleResource
      */
     public function edit(Sale $sale)
@@ -183,7 +166,7 @@ class SaleAPIController extends AppBaseController
     }
 
     /**
-     * @param  UpdateSaleRequest  $request
+     * @param UpdateSaleRequest $request
      * @param $id
      * @return SaleResource
      */
@@ -198,7 +181,7 @@ class SaleAPIController extends AppBaseController
         return new SaleResource($sale);
     }
 
-    public  function salesReportEdit(Request $request, $id)
+    public function salesReportEdit(Request $request, $id)
     {
         // Check permission for sale edit
         if (!Auth::user()->can('sale.edit')) {
@@ -226,7 +209,7 @@ class SaleAPIController extends AppBaseController
             $new_tax_rate = $input['tax_rate'];
             $new_tax_amount = ($sale->grand_total * $new_tax_rate) / (100 + $new_tax_rate);
 
-           // Step 2: Update the sale object with the new tax rate and tax amount
+            // Step 2: Update the sale object with the new tax rate and tax amount
             $sale->tax_rate = $new_tax_rate;
             $sale->tax_amount = $new_tax_amount;
 
@@ -252,6 +235,7 @@ class SaleAPIController extends AppBaseController
             return response()->json(['success' => false, 'message' => $e->getMessage()], 422);
         }
     }
+
     /**
      * @param $id
      * @return JsonResponse
@@ -281,7 +265,7 @@ class SaleAPIController extends AppBaseController
     }
 
     /**
-     * @param  Sale  $sale
+     * @param Sale $sale
      * @return JsonResponse
      *
      * @throws \Spatie\MediaLibrary\MediaCollections\Exceptions\FileDoesNotExist
@@ -306,12 +290,12 @@ class SaleAPIController extends AppBaseController
     }
 
     /**
-     * @param  Sale  $sale
+     * @param Sale $sale
      * @return JsonResponse
      */
     public function saleInfo(Sale $sale)
     {
-        $sale = $sale->load(['saleItems.product', 'warehouse', 'customer','shipment',
+        $sale = $sale->load(['saleItems.product', 'warehouse', 'customer', 'shipment',
 
             'saleItems.product' => function ($query) {
 
@@ -325,7 +309,7 @@ class SaleAPIController extends AppBaseController
         return $this->sendResponse($sale, 'Sale information retrieved successfully');
     }
 
-    public function parcelStatusUpdate (Request $request)
+    public function parcelStatusUpdate(Request $request)
     {
         $input = $request->all();
         // dd ($input);
@@ -333,7 +317,7 @@ class SaleAPIController extends AppBaseController
     }
 
     /**
-     * @param  Request  $request
+     * @param Request $request
      * @return SaleCollection
      */
     public function getSaleProductReport(Request $request): SaleCollection

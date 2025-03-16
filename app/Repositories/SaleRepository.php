@@ -26,6 +26,8 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use Picqer\Barcode\BarcodeGeneratorPNG;
 use Symfony\Component\HttpKernel\Exception\UnprocessableEntityHttpException;
+use App\Http\Controllers\API\StockManagementAPIController;
+use App\Helpers\StockHelper;
 
 /**
  * Class SaleRepository
@@ -35,6 +37,8 @@ class SaleRepository extends BaseRepository
     /**
      * @var array
      */
+
+
     protected $fieldSearchable = [
         'date',
         'tax_rate',
@@ -90,19 +94,46 @@ class SaleRepository extends BaseRepository
      */
     public function storeSale($input): Sale
     {
+
         try {
             DB::beginTransaction();
 
             $input['date'] = $input['date'] ?? date('Y/m/d');
             $input['is_sale_created'] = $input['is_sale_created'] ?? false;
             $QuotationId = $input['quotation_id'] ?? false;
+
+            // Step 1: Create the customer
+            $customerData = [
+                'name' => $input['name'],
+                'email' => $input['email'],
+                'phone' => $input['phone'],
+                'address' => $input['address'],
+                'city' => $input['city'],
+                'country' => $input['country'],
+            ];
+            $customer = Customer::where('email', $input['email'])->first();
+            if ($customer) {
+                $customerId = $customer->id;
+            } else {
+                $customer = Customer::create($customerData);
+                $customerId = $customer->id;
+            }
+
+
+            // Step 2: Prepare sale input array
             $saleInputArray = Arr::only($input, [
-                'customer_id', 'warehouse_id', 'tax_rate', 'tax_amount', 'discount', 'shipping', 'grand_total',
-                'received_amount', 'paid_amount', 'payment_type', 'note', 'date', 'status', 'payment_status','market_place','order_no','country', 'currency'
+                'warehouse_id', 'tax_rate', 'tax_amount', 'discount', 'shipping', 'grand_total',
+                'received_amount', 'paid_amount', 'payment_type', 'note', 'date', 'status',
+                'payment_status', 'market_place', 'order_no', 'country', 'currency'
             ]);
 
+            // Step 3: Add customer_id to the sale input array
+            $saleInputArray['customer_id'] = $customerId; // Use the customer_id
+
+            // Step 4: Create the sale
             /** @var Sale $sale */
             $sale = Sale::create($saleInputArray);
+
             if ($input['is_sale_created'] && $QuotationId) {
                 $quotation = Quotation::find($QuotationId);
                 $quotation->update([
@@ -121,6 +152,7 @@ class SaleRepository extends BaseRepository
                     $product->update([
                         'quantity' => $totalQuantity,
                     ]);
+                    StockHelper::manageStockForCodeAndWarehouse($saleItem['code'], $input['warehouse_id']);
                 } else {
                     throw new UnprocessableEntityHttpException('Quantity must be less than Available quantity.');
                 }
@@ -555,7 +587,7 @@ class SaleRepository extends BaseRepository
                 $parcel = Shipment::find($input['shipment_id']);
 
 
-                if ($parcel != null ) {
+                if ($parcel != null) {
 
 
                     $parcel->update([
@@ -610,8 +642,7 @@ class SaleRepository extends BaseRepository
                             // dd($parcel);
                         }
 
-                    }
-                    elseif($input['status'] == 2 && $parcel->parcel_company_id == 2){
+                    } elseif ($input['status'] == 2 && $parcel->parcel_company_id == 2) {
                         $username = "be70333cbce4922e";
                         $password = "be70333cbce4922ebf9644b963a7184a";
                         $credentials = [
@@ -634,11 +665,11 @@ class SaleRepository extends BaseRepository
 
                                 // Get the latest 'statusDescription'
                                 $latestStatusDescription = isset($parcelEvents[0]['attributes']['statusDescription'])
-                                ? $parcelEvents[0]['attributes']['statusDescription']
-                                : null;
+                                    ? $parcelEvents[0]['attributes']['statusDescription']
+                                    : null;
                                 $latestDate = isset($parcelEvents[0]['attributes']['dateTime'])
-                                ? $parcelEvents[0]['attributes']['dateTime']
-                                : null;
+                                    ? $parcelEvents[0]['attributes']['dateTime']
+                                    : null;
 
                                 $parcel->update([
 
@@ -650,10 +681,7 @@ class SaleRepository extends BaseRepository
 
                         }
                     }
-                }
-
-
-                else {
+                } else {
 
 
                     $this->ParcelStatusCreate($input, $sale);
@@ -731,11 +759,11 @@ class SaleRepository extends BaseRepository
 
                     // Get the latest 'statusDescription'
                     $latestStatusDescription = isset($parcelEvents[0]['attributes']['statusDescription'])
-                    ? $parcelEvents[0]['attributes']['statusDescription']
-                    : null;
+                        ? $parcelEvents[0]['attributes']['statusDescription']
+                        : null;
                     $latestDate = isset($parcelEvents[0]['attributes']['dateTime'])
-                    ? $parcelEvents[0]['attributes']['dateTime']
-                    : null;
+                        ? $parcelEvents[0]['attributes']['dateTime']
+                        : null;
 
                     $parcel->update([
 
@@ -829,11 +857,11 @@ class SaleRepository extends BaseRepository
 
                         // Get the latest 'statusDescription'
                         $latestStatusDescription = isset($parcelEvents[0]['attributes']['statusDescription'])
-                        ? $parcelEvents[0]['attributes']['statusDescription']
-                        : null;
+                            ? $parcelEvents[0]['attributes']['statusDescription']
+                            : null;
                         $latestDate = isset($parcelEvents[0]['attributes']['dateTime'])
-                        ? $parcelEvents[0]['attributes']['dateTime']
-                        : null;
+                            ? $parcelEvents[0]['attributes']['dateTime']
+                            : null;
 
                         $parcel->update([
 
@@ -933,7 +961,7 @@ class SaleRepository extends BaseRepository
         $saleInputArray = Arr::only($input, [
             'customer_id', 'warehouse_id', 'tax_rate', 'tax_amount', 'discount', 'shipping', 'grand_total',
             'received_amount', 'paid_amount', 'payment_type', 'note', 'date', 'status', 'payment_status'
-            ,'market_place','order_no','country'
+            , 'market_place', 'order_no', 'country'
         ]);
         $sale->update($saleInputArray);
 

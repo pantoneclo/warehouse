@@ -7,7 +7,14 @@ import { fetchProductsByWarehouse } from '../../store/action/productAction';
 import { editSale } from '../../store/action/salesAction';
 import ProductSearch from '../../shared/components/product-cart/search/ProductSearch';
 import ProductRowTable from '../../shared/components/sales/ProductRowTable';
-import { placeholderText, getFormattedMessage, decimalValidate, onFocusInput, getFormattedOptions } from '../../shared/sharedMethod';
+import {
+    placeholderText,
+    getFormattedMessage,
+    decimalValidate,
+    onFocusInput,
+    getFormattedOptions,
+    numValidate
+} from '../../shared/sharedMethod';
 import status from '../../shared/option-lists/status.json';
 import paymentStatus from '../../shared/option-lists/paymentStatus.json'
 import paymentType from '../../shared/option-lists/paymentType.json'
@@ -58,7 +65,6 @@ const SalesForm = (props) => {
 
     const [saleValue, setSaleValue] = useState({
         date: new Date(),
-        customer_id: '',
         warehouse_id: '',
         tax_rate: "0.00",
         tax_amount: 0.00,
@@ -77,11 +83,15 @@ const SalesForm = (props) => {
         order_no:'',
         country:'',
         market_place:'',
-        currency:''
+        currency:'',
+        name:'',
+        email:'',
+        phone:'',
+        address:'',
+        city:'',
     });
     const [errors, setErrors] = useState({
         date: '',
-        customer_id: '',
         warehouse_id: '',
         status_id: '',
         payment_status: '',
@@ -105,7 +115,6 @@ console.log("Currencies", currencies);
         if (singleSale && !isQuotation) {
             setSaleValue({
                 date: singleSale ? moment(singleSale.date).toDate() : '',
-                customer_id: singleSale ? singleSale.customer_id : '',
                 quotation_id: singleSale ? singleSale.quotation_id : '',
                 warehouse_id: singleSale ? singleSale.warehouse_id : '',
                 tax_rate: singleSale.tax_rate ? singleSale.tax_rate.toFixed(2) : '0.00',
@@ -123,13 +132,17 @@ console.log("Currencies", currencies);
                 order_no:singleSale?singleSale.order_no:'',
                 market_place:singleSale?singleSale.market_place:'',
                 currency:singleSale?singleSale.currency:'',
+                name:singleSale?singleSale.name:'',
+                email:singleSale?singleSale.email:'',
+                phone:singleSale?singleSale.phone:'',
+                address:singleSale?singleSale.address:'',
+                city:singleSale?singleSale.city:'',
             })
         }
         if (singleSale && isQuotation) {
             setSaleValue({
                 date: singleSale ? moment(singleSale.date).toDate() : '',
                 quotation_id: singleSale ? singleSale.quotation_id : '',
-                customer_id: singleSale ? singleSale.customer_id : '',
                 warehouse_id: singleSale ? singleSale.warehouse_id : '',
                 tax_rate: singleSale.tax_rate ? singleSale.tax_rate.toFixed(2) : '0.00',
                 tax_amount: singleSale.tax_amount ? singleSale.tax_amount.toFixed(2) : '0.00',
@@ -146,6 +159,11 @@ console.log("Currencies", currencies);
                 order_no:singleSale?singleSale.order_no:'',
                 market_place:singleSale?singleSale.market_place:'',
                 currency:singleSale?singleSale.currency:'',
+                name:singleSale?singleSale.name:'',
+                email:singleSale?singleSale.email:'',
+                phone:singleSale?singleSale.phone:'',
+                address:singleSale?singleSale.address:'',
+                city:singleSale?singleSale.city:'',
             })
         }
     }, [singleSale]);
@@ -168,9 +186,7 @@ console.log("Currencies", currencies);
             error['date'] = getFormattedMessage('globally.date.validate.label');
         } else if (!saleValue.warehouse_id) {
             error['warehouse_id'] = getFormattedMessage('product.input.warehouse.validate.label');
-        } else if (!saleValue.customer_id) {
-            error['customer_id'] = getFormattedMessage('sale.select.customer.validate.label');
-        } else if (qtyCart.length > 0) {
+        }  else if (qtyCart.length > 0) {
             dispatch(addToast({ text: getFormattedMessage('globally.product-quantity.validate.message'), type: toastType.ERROR }))
         } else if (updateProducts.length < 1) {
             dispatch(addToast({ text: getFormattedMessage('purchase.product-list.validate.message'), type: toastType.ERROR }))
@@ -192,10 +208,7 @@ console.log("Currencies", currencies);
         setErrors('');
     };
 
-    const onCustomerChange = (obj) => {
-        setSaleValue(inputs => ({ ...inputs, customer_id: obj }));
-        setErrors('');
-    };
+
     const onParcelCompanyChange = (obj) => {
         setSaleValue(inputs => ({ ...inputs, parcel_company_id: obj }));
         setErrors('');
@@ -220,6 +233,12 @@ console.log("Currencies", currencies);
             }
         }
         setSaleValue(inputs => ({ ...inputs, [e.target.name]: value && value }));
+    };
+
+    const onChangeEmail = (e) => {
+        e.preventDefault();
+        const { value } = e.target;
+        setSaleValue(inputs => ({...inputs, [e.target.name]: value && value}))
     };
 
     const onNotesChangeInput = (e) => {
@@ -339,7 +358,6 @@ console.log("Defalut Currency Option", currencyNameDefault)
             date: moment(prepareData.date).toDate(),
             is_sale_created: "true",
             quotation_id: prepareData ? prepareData.quotation_id : '',
-            customer_id: prepareData.customer_id.value ? prepareData.customer_id.value : prepareData.customer_id,
             warehouse_id: prepareData.warehouse_id.value ? prepareData.warehouse_id.value : prepareData.warehouse_id,
             discount: prepareData.discount,
             tax_rate: prepareData.tax_rate,
@@ -360,7 +378,11 @@ console.log("Defalut Currency Option", currencyNameDefault)
             order_no:prepareData.order_no,
             market_place:prepareData.market_place.label,
             currency:prepareData.currency.value,
-
+            name:prepareData.name,
+            email:prepareData.email,
+            phone:prepareData.phone,
+            address:prepareData.address,
+            city:prepareData.city,
         }
         return formValue
     };
@@ -397,6 +419,7 @@ console.log("Defalut Currency Option", currencyNameDefault)
     const parcel_company_id = { label: label, value: singleSale?.parcel_company_id }
 
 console.log(singleSale,'this is from singlesale value')
+
     return (
         <div className='card'>
             <div className='card-body'>
@@ -421,12 +444,77 @@ console.log(singleSale,'this is from singlesale value')
                                      isWarehouseDisable={true}
                                      placeholder={placeholderText('purchase.select.warehouse.placeholder.label')}/>
                     </div>
-                    <div className='col-md-4' style={{zIndex: 500}}>
-                        <ReactSelect name='customer_id' data={customers} onChange={onCustomerChange}
-                                     title={getFormattedMessage('customer.title')} errors={errors['customer_id']}
-                                     defaultValue={saleValue.customer_id} value={saleValue.customer_id}
-                                     placeholder={placeholderText('sale.select.customer.placeholder.label')}/>
+
+
+                    <div className='col-md-4 mb-5'>
+                        <label className='form-label'>
+                            {getFormattedMessage("globally.input.name.label")}:
+                        </label>
+                        <span className='required'/>
+                        <input type='text' name='name' value={saleValue.name}
+                               placeholder={placeholderText("globally.input.name.placeholder.label")}
+                               className='form-control' autoFocus={true}
+                               onChange={(e) => onChangeInput(e)}/>
+                        <span
+                            className='text-danger d-block fw-400 fs-small mt-2'>{errors['name'] ? errors['name'] : null}</span>
                     </div>
+                    <div className='col-md-4 mb-5'>
+                        <label
+                            className='form-label'>
+                            {getFormattedMessage("globally.input.email.label")}:
+                        </label>
+                        <span className='required'/>
+                        <input type='email' name='email' className='form-control'
+                               placeholder={placeholderText("globally.input.email.placeholder.label")}
+                               onChange={(e) => onChangeEmail(e)}
+                               value={saleValue.email}/>
+                        <span
+                            className='text-danger d-block fw-400 fs-small mt-2'>{errors['email'] ? errors['email'] : null}</span>
+                    </div>
+
+                    <div className='col-md-4 mb-5'>
+                        <label
+                            className='form-label'>
+                            {getFormattedMessage("globally.input.phone-number.label")}:
+                        </label>
+                        <span className='required'/>
+                        <input type='text' name='phone' className='form-control' pattern='[0-9]*'
+                               placeholder={placeholderText("globally.input.phone-number.placeholder.label")}
+                               onKeyPress={(event) => numValidate(event)}
+                               onChange={(e) => onChangeInput(e)}
+                               value={saleValue.phone}/>
+                        <span
+                            className='text-danger d-block fw-400 fs-small mt-2'>{errors['phone'] ? errors['phone'] : null}</span>
+                    </div>
+
+                    <div className='col-md-4 mb-5'>
+                        <label
+                            className='form-label'>
+                            {getFormattedMessage("globally.input.city.label")}:
+                        </label>
+                        <span className='required'/>
+                        <input type='text' name='city' className='form-control'
+                               placeholder={placeholderText("globally.input.city.placeholder.label")}
+                               onChange={(e) => onChangeInput(e)}
+                               value={saleValue.city}/>
+                        <span
+                            className='text-danger d-block fw-400 fs-small mt-2'>{errors['city'] ? errors['city'] : null}</span>
+                    </div>
+
+                    <div className='col-md-8 mb-3'>
+                        <label
+                            className='form-label'>
+                            {getFormattedMessage("globally.input.address.label")}:
+                        </label>
+                        <span className='required'/>
+                        <textarea type='text' rows="2" cols="50" name='address' className='form-control'
+                                  placeholder={placeholderText("globally.input.address.placeholder.label")}
+                                  onChange={(e) => onChangeInput(e)}
+                                  value={saleValue.address}/>
+                        <span
+                            className='text-danger d-block fw-400 fs-small mt-2'>{errors['address'] ? errors['address'] : null}</span>
+                    </div>
+
                     <div className='mb-5'>
                         <label className='form-label'>
                             {getFormattedMessage('product.title')}:

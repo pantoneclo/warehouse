@@ -833,8 +833,8 @@ export const statusOptions = [
 ];
 
 export const saleStatusOptions = [
-    { id: 1, name: 'status.filter.pending.label' },  //pending
-    { id: 2, name: 'status.filter.received.label' }, //confirmed
+    { id: 2, name: 'status.filter.pending.label' },  //pending
+    { id: 1, name: 'status.filter.received.label' }, //confirmed
     { id: 3, name: 'status.filter.ordered.label' },  //picked up
     { id: 4, name: 'status.filter.ontheway.label' }, //On The Way
     { id: 5, name: 'status.filter.delivered.label' },  //Delivered
@@ -957,21 +957,21 @@ export const eccomercePlatform = [
 
 
 export const countryOptions = [
-    { id: 1, code:'BD', name: 'Bangladesh' },
-    { id: 2, code:'SI', name: 'Slovenia' },
-    { id: 3, code:'IT', name: 'Italy' },
-    { id: 4, code:'SK', name: 'Slovakia' },
-    { id: 5, code:'PL', name: 'Poland' },
-    { id: 6, code:'GR', name: 'Greece' },
-    { id: 7, code:'RO', name: 'Romania' },
-    { id: 8, code:'LT', name: 'Lithuania' },
-    { id: 9, code:'BG', name: 'Bulgaria' },
-    { id: 10, code:'AT', name: 'Austria' },
-    { id: 11, code:'ES', name: 'Spain' },
-    { id: 12, code:'PT', name: 'Portugal' },
-    { id: 13, code:'DE', name: 'Germany' },
-    { id: 14, code:'HR', name: 'Croatia' },
-    { id: 15, code:'CZ', name: 'Czech Republic' },
-    { id: 16, code:'IN', name: 'India' },
+    { id: 1, code:'BD', name: 'Bangladesh', vat:0 },
+    { id: 2, code:'SI', name: 'Slovenia', vat:22},
+    { id: 3, code:'IT', name: 'Italy', vat:22},
+    { id: 4, code:'SK', name: 'Slovakia', vat:20},
+    { id: 5, code:'PL', name: 'Poland', vat:23},
+    { id: 6, code:'GR', name: 'Greece', vat:24},
+    { id: 7, code:'RO', name: 'Romania', vat:19},
+    { id: 8, code:'LT', name: 'Lithuania', vat:21},
+    { id: 9, code:'BG', name: 'Bulgaria', vat:20},
+    { id: 10, code:'AT', name: 'Austria', vat:20},
+    { id: 11, code:'ES', name: 'Spain', vat:21},
+    { id: 12, code:'PT', name: 'Portugal', vat:23},
+    { id: 13, code:'DE', name: 'Germany', vat:19},
+    { id: 14, code:'HR', name: 'Croatia', vat:25},
+    { id: 15, code:'CZ', name: 'Czech Republic', vat:21},
+    { id: 16, code:'IN', name: 'India', vat:0},
     // Add more countries as needed
 ];

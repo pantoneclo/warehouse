@@ -121,7 +121,7 @@ class Sale extends BaseModel implements HasMedia, JsonResourceful
 
     public static $rules = [
 
-        'customer_id' => 'required|exists:customers,id',
+//        'customer_id' => 'required|exists:customers,id',
         'warehouse_id' => 'required|exists:warehouses,id',
         'tax_rate' => 'nullable|numeric',
         'tax_amount' => 'nullable|numeric',

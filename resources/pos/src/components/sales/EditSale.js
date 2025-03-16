@@ -69,7 +69,7 @@ console.log(sales.attributes?.market_place , 'this is from sales attributes')
             discount_type: item.discount_type,
             discount_value: item.discount_value,
             discount_amount: item.discount_amount,
-           
+
             isEdit: true,
             stock: item.product && item.product.stocks.filter(item => item.warehouse_id === sales.attributes.warehouse_id),
             sub_total: item.sub_total,
@@ -88,10 +88,10 @@ console.log(sales.attributes?.market_place , 'this is from sales attributes')
         order_no:sales.attributes?.order_no? sales.attributes?.order_no : '',
         // market_place:sales.attributes?.market_place?sales.attributes?.market_place:'',
 
-        
+
         shipment_id: sales.attributes?.shipment?.id ? sales.attributes?.shipment?.id : '',
         market_place :{
-             
+
             label: selectMarketPlace && selectMarketPlace[0] && selectMarketPlace[0].name,
             value: selectMarketPlace && selectMarketPlace[0] && selectMarketPlace[0].id
 
