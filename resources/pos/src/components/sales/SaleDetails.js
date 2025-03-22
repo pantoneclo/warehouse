@@ -21,7 +21,7 @@ const SaleDetails = (props) => {
 
     const [parcelStatusUpdate, setParcelStatusUpdate] = useState(
       {}
-        
+
         );
 
     useEffect(() => {
@@ -108,7 +108,7 @@ const SaleDetails = (props) => {
                                     </div>
                                 </div>
                             </Col>
-                          
+
                             <Col md={4}>
                                 <div className='d-flex justify-between text-gray-600 bg-light align-items-center p-2 mb-0 text-uppercase'>
                                     <h5 className='flex-grow-1'>{getFormattedMessage('globally.parcel.info.title')}</h5>
@@ -231,26 +231,30 @@ const SaleDetails = (props) => {
                                     <div className='table-responsive'>
                                         <table className='table border'>
                                             <tbody>
-                                                <tr>
-                                                    <td className='py-3'>{getFormattedMessage('globally.detail.order.tax')}</td>
-                                                    <td className='py-3'>
-                                                        {currencySymbolHendling(allConfigData, frontSetting.value && frontSetting.value.currency_symbol, saleDetails && saleDetails.tax_amount > 0 ? saleDetails.tax_amount : '0.00')} ({saleDetails && parseFloat(saleDetails.tax_rate).toFixed(2)}%)
-                                                    </td>
-                                                </tr>
-                                                <tr>
-                                                    <td className='py-3'>{getFormattedMessage('globally.detail.discount')}</td>
-                                                    <td className='py-3'>{currencySymbolHendling(allConfigData, frontSetting.value && frontSetting.value.currency_symbol, saleDetails && saleDetails.discount)}</td>
-                                                </tr>
-                                                <tr>
-                                                    <td className='py-3'>{getFormattedMessage('globally.detail.shipping')}</td>
-                                                    <td className='py-3'>{currencySymbolHendling(allConfigData, frontSetting.value && frontSetting.value.currency_symbol, saleDetails && saleDetails.shipping)}</td>
-                                                </tr>
-                                                <tr>
-                                                    <td className='py-3 text-primary'>{getFormattedMessage('globally.detail.grand.total')}</td>
-                                                    <td className='py-3 text-primary'>
-                                                        {currencySymbolHendling(allConfigData, frontSetting.value && frontSetting.value.currency_symbol, saleDetails && saleDetails.grand_total)}
-                                                    </td>
-                                                </tr>
+                                            <tr>
+                                                <td className='py-3'>{getFormattedMessage('globally.detail.order.tax')}</td>
+                                                <td className='py-3'>
+                                                    {currencySymbolHendling(allConfigData, frontSetting.value && frontSetting.value.currency_symbol, saleDetails && saleDetails.tax_amount > 0 ? saleDetails.tax_amount : '0.00')} ({saleDetails && parseFloat(saleDetails.tax_rate).toFixed(2)}%)
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td className='py-3'>{getFormattedMessage('globally.detail.discount')}</td>
+                                                <td className='py-3'>{currencySymbolHendling(allConfigData, frontSetting.value && frontSetting.value.currency_symbol, saleDetails && saleDetails.discount)}</td>
+                                            </tr>
+                                            <tr>
+                                                <td className='py-3'>{getFormattedMessage('purchase.input.cod.label')}</td>
+                                                <td className='py-3'>{currencySymbolHendling(allConfigData, frontSetting.value && frontSetting.value.currency_symbol, saleDetails && saleDetails.cod)}</td>
+                                            </tr>
+                                            <tr>
+                                                <td className='py-3'>{getFormattedMessage('globally.detail.shipping')}</td>
+                                                <td className='py-3'>{currencySymbolHendling(allConfigData, frontSetting.value && frontSetting.value.currency_symbol, saleDetails && saleDetails.shipping)}</td>
+                                            </tr>
+                                            <tr>
+                                                <td className='py-3 text-primary'>{getFormattedMessage('globally.detail.grand.total')}</td>
+                                                <td className='py-3 text-primary'>
+                                                    {currencySymbolHendling(allConfigData, frontSetting.value && frontSetting.value.currency_symbol, saleDetails && saleDetails.grand_total)}
+                                                </td>
+                                            </tr>
                                             </tbody>
                                         </table>
                                     </div>
@@ -265,7 +269,7 @@ const SaleDetails = (props) => {
 };
 
 const mapStateToProps = (state) => {
-    const { saleDetails, frontSetting, allConfigData } = state;
+    const {saleDetails, frontSetting, allConfigData} = state;
     return { saleDetails, frontSetting, allConfigData }
 };
 

@@ -124,7 +124,7 @@ class SaleRepository extends BaseRepository
             $saleInputArray = Arr::only($input, [
                 'warehouse_id', 'tax_rate', 'tax_amount', 'discount', 'shipping', 'grand_total',
                 'received_amount', 'paid_amount', 'payment_type', 'note', 'date', 'status',
-                'payment_status', 'market_place', 'order_no', 'country', 'currency'
+                'payment_status', 'market_place', 'order_no', 'country', 'currency','cod'
             ]);
 
             // Step 3: Add customer_id to the sale input array
@@ -471,22 +471,22 @@ class SaleRepository extends BaseRepository
 
         $subTotalAmount = $sale->saleItems()->sum('sub_total');
 
-        if ($input['discount'] <= $subTotalAmount) {
-            $input['grand_total'] = $subTotalAmount - $input['discount'];
-        } else {
-            throw new UnprocessableEntityHttpException('Discount amount should not be greater than total.');
-        }
-        if ($input['tax_rate'] <= 100 && $input['tax_rate'] >= 0) {
-            $input['tax_amount'] = $input['grand_total'] * $input['tax_rate'] / 100;
-        } else {
-            throw new UnprocessableEntityHttpException('Please enter tax value between 0 to 100.');
-        }
-        $input['grand_total'] += $input['tax_amount'];
-        if ($input['shipping'] <= $input['grand_total'] && $input['shipping'] >= 0) {
-            $input['grand_total'] += $input['shipping'];
-        } else {
-            throw new UnprocessableEntityHttpException('Shipping amount should not be greater than total.');
-        }
+//        if ($input['discount'] <= $subTotalAmount) {
+//            $input['grand_total'] = $subTotalAmount - $input['discount'];
+//        } else {
+//            throw new UnprocessableEntityHttpException('Discount amount should not be greater than total.');
+//        }
+//        if ($input['tax_rate'] <= 100 && $input['tax_rate'] >= 0) {
+//            $input['tax_amount'] = $input['grand_total'] * $input['tax_rate'] / 100;
+//        } else {
+//            throw new UnprocessableEntityHttpException('Please enter tax value between 0 to 100.');
+//        }
+//        $input['grand_total'] += $input['tax_amount'];
+//        if ($input['shipping'] <= $input['grand_total'] && $input['shipping'] >= 0) {
+//            $input['grand_total'] += $input['shipping'];
+//        } else {
+//            throw new UnprocessableEntityHttpException('Shipping amount should not be greater than total.');
+//        }
 
         if ($input['payment_status'] == Sale::PAID) {
             $input['paid_amount'] = $input['grand_total'];

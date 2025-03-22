@@ -117,6 +117,7 @@ class Sale extends BaseModel implements HasMedia, JsonResourceful
         'order_no',
         'market_place',
         'currency',
+        'cod',
     ];
 
     public static $rules = [
@@ -247,6 +248,7 @@ class Sale extends BaseModel implements HasMedia, JsonResourceful
             'other_cost'=>$this->other_cost,
             'other_income'=>$this->other_income,
             'selling_value_eur'=>$this->selling_value_eur,
+            'cod'=>$this->cod,
         ];
 
         return $fields;

@@ -446,6 +446,7 @@
     "purchase.order-item.table.tax.column.label": "Tax",
     "purchase.order-item.table.sub-total.column.label": "Subtotal",
     "purchase.input.order-tax.label": "Order Tax",
+    "purchase.input.cod.label": "COD",
     "purchase.input.shipping.label": "Shipping",
     "purchase.input.discount.validate.label": "Please enter discount",
     "purchase.input.order-tax.validate.label": "Please enter order tax",

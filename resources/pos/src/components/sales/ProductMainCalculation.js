@@ -7,9 +7,12 @@ import {currencySymbolHendling, getFormattedMessage} from '../../shared/sharedMe
 
 const ProductMainCalculation = (props) => {
     const {inputValues, updateProducts, frontSetting, allConfigData} = props;
-    let totalAmountAfterDiscount = calculateSubTotal(updateProducts) - inputValues.discount
-    let taxCal = (totalAmountAfterDiscount * inputValues.tax_rate / 100).toFixed(2)
+    let totalAmountAfterDiscount = calculateSubTotal(updateProducts) +Number(inputValues.shipping) + Number(inputValues.cod)  - inputValues.discount
+    let taxCal = ((totalAmountAfterDiscount * inputValues.tax_rate) / (100+inputValues.tax_rate)).toFixed(2)
 
+
+    console.log('Tax Rate', inputValues.tax_rate)
+    console.log('Total Amount After Discount', totalAmountAfterDiscount)
     return (
         <div className='col-xxl-5 col-lg-6 col-md-6 col-12 float-end'>
             <div className='card'>
@@ -32,6 +35,11 @@ const ProductMainCalculation = (props) => {
                                 <td className='py-3'>{getFormattedMessage('purchase.input.shipping.label')}</td>
                                 <td className='py-3'>
                                     {currencySymbolHendling(allConfigData, frontSetting.value && frontSetting.value.currency_symbol, inputValues.shipping ? inputValues.shipping : 0)}</td>
+                            </tr>
+                            <tr>
+                                <td className='py-3'>{getFormattedMessage('purchase.input.cod.label')}</td>
+                                <td className='py-3'>
+                                    {currencySymbolHendling(allConfigData, frontSetting.value && frontSetting.value.currency_symbol, inputValues.cod ? inputValues.cod : 0)}</td>
                             </tr>
                             <tr>
                                 <td className='py-3 text-primary'>{getFormattedMessage('purchase.grant-total.label')}</td>

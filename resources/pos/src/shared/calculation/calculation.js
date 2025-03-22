@@ -43,19 +43,22 @@ export const amountBeforeTax = (cartItem) => {
 
 //Grand Total Calculation
 export const calculateCartTotalTaxAmount = (carts, inputValue) => {
-    let taxValue = inputValue && inputValue.tax_rate;
-    let totalTax = 0;
-    let price = 0;
+    if (!inputValue || !inputValue.tax_rate) return "0.00"; // Prevent errors
+
+    let taxValue = parseFloat(inputValue.tax_rate);
+    let totalAmountBeforeTax = 0;
 
     carts.forEach(cartItem => {
-        if (taxValue > 0) {
-            price = price + +cartItem.sub_total
-            totalTax = (((+price - inputValue.discount) / 100) * +taxValue) * +cartItem.quantity;
-        }
-    })
+        totalAmountBeforeTax += parseFloat(cartItem.sub_total || 0);
+    });
 
-    return (parseFloat(totalTax)).toFixed(2);
-}
+    let totalAmountAfterDiscount = totalAmountBeforeTax + Number(inputValue.shipping) + Number(inputValue.cod) - Number(inputValue.discount);
+
+    let totalTax = (totalAmountAfterDiscount * taxValue) / (100 + taxValue);
+
+    return totalTax.toFixed(2);
+};
+
 
 export const calculateSubTotal = (carts) => {
     let subTotalAmount = 0;
@@ -70,6 +73,6 @@ export const calculateCartTotalAmount = (carts, inputValue) => {
     const value = inputValue && inputValue;
     let totalAmountAfterDiscount = calculateSubTotal(carts) - value.discount
     let taxCal = (totalAmountAfterDiscount * inputValue.tax_rate / 100).toFixed(2)
-    finalTotalAmount = Number(totalAmountAfterDiscount) + Number(taxCal) + Number(value.shipping)
+    finalTotalAmount = Number(totalAmountAfterDiscount)  + Number(value.shipping) + Number(value.cod)
     return (parseFloat(finalTotalAmount).toFixed(2))
 }

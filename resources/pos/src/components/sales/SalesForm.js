@@ -33,6 +33,7 @@ import { preparePurchaseProductArray } from '../../shared/prepareArray/preparePu
 import { shippingCompanyNames ,getLabelById} from '../../constants'
 import { get } from 'lodash';
 import {fetchCurrencies} from "../../store/action/currencyAction";
+import { useIntl } from 'react-intl';
 const SalesForm = (props) => {
     const {
         addSaleData,
@@ -51,7 +52,7 @@ const SalesForm = (props) => {
         frontSetting,
         isQuotation, allConfigData
     } = props;
-
+    const intl = useIntl();
     const navigate = useNavigate();
     const dispatch = useDispatch();
     const [updateProducts, setUpdateProducts] = useState([]);
@@ -66,10 +67,11 @@ const SalesForm = (props) => {
     const [saleValue, setSaleValue] = useState({
         date: new Date(),
         warehouse_id: '',
-        tax_rate: "0.00",
+        tax_rate: 0.00,
         tax_amount: 0.00,
-        discount: "0.00",
-        shipping: "0.00",
+        discount: 0.00,
+        shipping: 0.00,
+        cod: 0.00,
         grand_total: 0.00,
         notes: singleSale ? singleSale.notes : '',
         received_amount: 0,
@@ -121,6 +123,7 @@ console.log("Currencies", currencies);
                 tax_amount: singleSale.tax_amount ? singleSale.tax_amount.toFixed(2) : '0.00',
                 discount: singleSale.discount ? singleSale.discount.toFixed(2) : '0.00',
                 shipping: singleSale.shipping ? singleSale.shipping.toFixed(2) : '0.00',
+                cod: singleSale.cod ? singleSale.cod.toFixed(2) : '0.00',
                 grand_total: singleSale ? singleSale.grand_total : '0.00',
                 status_id: singleSale ? singleSale.status_id : '',
                 payment_status: singleSale.is_Partial === 3 ? { "label": getFormattedMessage('payment-status.filter.partial.label'), "value": 3 } : singleSale ? singleSale.payment_status : '',
@@ -148,6 +151,7 @@ console.log("Currencies", currencies);
                 tax_amount: singleSale.tax_amount ? singleSale.tax_amount.toFixed(2) : '0.00',
                 discount: singleSale.discount ? singleSale.discount.toFixed(2) : '0.00',
                 shipping: singleSale.shipping ? singleSale.shipping.toFixed(2) : '0.00',
+                cod: singleSale.cod ? singleSale.cod.toFixed(2) : '0.00',
                 grand_total: singleSale ? singleSale.grand_total : '0.00',
                 status_id: singleSale ? singleSale.status_id : '',
                 payment_status: saleValue.payment_status ? saleValue.payment_status : '',
@@ -297,7 +301,14 @@ console.log("Currencies", currencies);
     handleCountryChange
 
     const handleCountryChange = (obj) => {
-        setSaleValue(inputs => ({ ...inputs, country: obj }));
+        console.log("Selected Country Object Before Fix:", obj); // Debugging
+        const fullCountry = countryNamesDefault.find(c => c.value === obj.value);
+        console.log("Full Country Object After Fix:", fullCountry); // Debugging
+        setSaleValue(inputs => ({
+            ...inputs,
+            country: fullCountry,
+            tax_rate: fullCountry?.vat ?? 0
+        }));
     };
 
     console.log('saleValue',saleValue)
@@ -327,21 +338,24 @@ console.log("Currencies", currencies);
 
     })
 
-    const countryFilterOption =getFormattedOptions(countryOptions)
+    const countryFilterOption =getFormattedOptions(countryOptions, intl)
+    console.log(countryFilterOption)
     const countryNamesDefault = countryFilterOption.map((option)=>{
         return {
             value:option.code,
-            label:option.name
+            label:option.name,
+            vat:option.vat
         }
 
     })
-
+    console.log("Country Options:", countryNamesDefault);
     const paymentMethodOption = getFormattedOptions(paymentMethodOptions)
     const paymentTypeDefaultValue = paymentMethodOption.map((option) => {
         return {
             value: option.id,
             label: option.name
         }
+
     })
 
     const currencyNameDefault = currencies.map((option)=> {
@@ -364,6 +378,7 @@ console.log("Defalut Currency Option", currencyNameDefault)
             tax_amount: calculateCartTotalTaxAmount(updateProducts, saleValue),
             sale_items: updateProducts,
             shipping: prepareData.shipping,
+            cod: prepareData.cod,
             grand_total: calculateCartTotalAmount(updateProducts, saleValue),
             received_amount: 0,
             paid_amount: 0,
@@ -418,7 +433,7 @@ console.log("Defalut Currency Option", currencyNameDefault)
     console.log(label, 'label')
     const parcel_company_id = { label: label, value: singleSale?.parcel_company_id }
 
-console.log(singleSale,'this is from singlesale value')
+
 
     return (
         <div className='card'>
@@ -545,6 +560,8 @@ console.log(singleSale,'this is from singlesale value')
                         <ProductMainCalculation inputValues={saleValue} allConfigData={allConfigData}
                                                 updateProducts={updateProducts} frontSetting={frontSetting}/>
                     </div>
+
+
                     <div className='col-md-4 mb-3'>
                         <label
                             className='form-label'>{getFormattedMessage('purchase.input.order-tax.label')}: </label>
@@ -560,6 +577,7 @@ console.log(singleSale,'this is from singlesale value')
                             <InputGroup.Text>%</InputGroup.Text>
                         </InputGroup>
                     </div>
+
                     <div className='col-md-4 mb-3'>
                         <Form.Label
                             className='form-label'>{getFormattedMessage('purchase.order-item.table.discount.column.label')}: </Form.Label>
@@ -574,6 +592,24 @@ console.log(singleSale,'this is from singlesale value')
                             <InputGroup.Text>{frontSetting.value && frontSetting.value.currency_symbol}</InputGroup.Text>
                         </InputGroup>
                     </div>
+
+
+                    <div className='col-md-4 mb-3'>
+                        <label
+                            className='form-label'>{getFormattedMessage('purchase.input.cod.label')}: </label>
+                        <InputGroup>
+                            <input aria-label='Dollar amount (with dot and two decimal places)' type='text'
+                                   className='form-control'
+                                   name='cod' value={saleValue.cod}
+                                   onBlur={(event) => onBlurInput(event)} onFocus={(event) => onFocusInput(event)}
+                                   onKeyPress={(event) => decimalValidate(event)}
+                                   onChange={(e) => onChangeInput(e)}
+                            />
+                            <InputGroup.Text>{frontSetting.value && frontSetting.value.currency_symbol}</InputGroup.Text>
+                        </InputGroup>
+                    </div>
+
+
                     <div className='col-md-4 mb-3'>
                         <label
                             className='form-label'>{getFormattedMessage('purchase.input.shipping.label')}: </label>
