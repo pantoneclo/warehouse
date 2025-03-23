@@ -307,7 +307,8 @@ console.log("Currencies", currencies);
         setSaleValue(inputs => ({
             ...inputs,
             country: fullCountry,
-            tax_rate: fullCountry?.vat ?? 0
+            tax_rate: fullCountry?.vat ?? 0,
+            currency: fullCountry.currency
         }));
     };
 
@@ -344,7 +345,8 @@ console.log("Currencies", currencies);
         return {
             value:option.code,
             label:option.name,
-            vat:option.vat
+            vat:option.vat,
+            currency:option.currency
         }
 
     })
@@ -432,7 +434,7 @@ console.log("Defalut Currency Option", currencyNameDefault)
     const label = getLabelById(singleSale?.parcel_company_id);
     console.log(label, 'label')
     const parcel_company_id = { label: label, value: singleSale?.parcel_company_id }
-
+    const filtredCurrency = currencyNameDefault.find(currency => currency.value === saleValue.country?.currency);
 
 
     return (
@@ -568,6 +570,7 @@ console.log("Defalut Currency Option", currencyNameDefault)
                         <InputGroup>
                             <input aria-label='Dollar amount (with dot and two decimal places)'
                                    className='form-control'
+                                   disabled={true}
                                    type='text' name='tax_rate' value={saleValue.tax_rate}
                                    onBlur={(event) => onBlurInput(event)} onFocus={(event) => onFocusInput(event)}
                                    onKeyPress={(event) => decimalValidate(event)}
@@ -725,24 +728,24 @@ console.log("Defalut Currency Option", currencyNameDefault)
                                      onChange={onPaymentTypeChange}
                         />
                     </div>}
-                    {isQuotation && <div className='col-md-4'>
+                   <div className='col-md-4'>
                         <ReactSelect multiLanguageOption={paymentStatusFilterOptions} onChange={onPaymentStatusChange}
                                      name='payment_status'
                                      title={getFormattedMessage('dashboard.recentSales.paymentStatus.label')}
                                      value={saleValue.payment_status} errors={errors['payment_status']}
                                      defaultValue={paymentStatusDefaultValue[0]}
                                      placeholder={placeholderText('sale.select.payment-status.placeholder')}/>
-                    </div>}
-                    {isQuotation && isPaymentType && <div className='col-md-4'>
+                    </div>
+                  <div className='col-md-4'>
                         <ReactSelect title={getFormattedMessage('select.payment-type.label')}
                                      name='payment_type'
                                      value={saleValue.payment_type} errors={errors['payment_type']}
                                      placeholder={placeholderText('sale.select.payment-type.placeholder')}
-                                     defaultValue={paymentTypeDefaultValue[0]}
+                                     defaultValue={paymentTypeDefaultValue[4]}
                                      multiLanguageOption={paymentMethodOption}
                                      onChange={onPaymentTypeChange}
                         />
-                    </div>}
+                    </div>
                     <div className='col-md-4'>
 
                         <ReactSelect title={getFormattedMessage('currency.label.name')}
@@ -750,8 +753,10 @@ console.log("Defalut Currency Option", currencyNameDefault)
                                      onChange={onCurrencyChange}
                                      placeholder={placeholderText('currency.select.label')}
                                      defaultValue={currencyNameDefault[0]}
-
+                                     isCurrencyDisable={true}
+                                     value={filtredCurrency}
                                      name='currency'
+
                         />
                     </div>
                     <div className='mb-3'>

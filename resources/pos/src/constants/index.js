@@ -939,6 +939,7 @@ export const shippingCompanyNames = [
     {id : 3, label: 'REDEX' },
     {id : 4, label: 'PACTIC' },
     {id : 5, label: 'PACKETA' },
+    {id : 6, label: 'PATHAO' },
 ]
 
 export const getLabelById = (id) => {
@@ -953,25 +954,27 @@ export const eccomercePlatform = [
     { id: 4, name: 'eccomerce.label.4' },
     { id: 5, name: 'eccomerce.label.5' },
     { id: 6, name: 'eccomerce.label.6' },
+    { id: 7, name: 'eccomerce.label.7' },
 ];
 
 
 export const countryOptions = [
-    { id: 1, code:'BD', name: 'Bangladesh', vat:0 },
-    { id: 2, code:'SI', name: 'Slovenia', vat:22},
-    { id: 3, code:'IT', name: 'Italy', vat:22},
-    { id: 4, code:'SK', name: 'Slovakia', vat:20},
-    { id: 5, code:'PL', name: 'Poland', vat:23},
-    { id: 6, code:'GR', name: 'Greece', vat:24},
-    { id: 7, code:'RO', name: 'Romania', vat:19},
-    { id: 8, code:'LT', name: 'Lithuania', vat:21},
-    { id: 9, code:'BG', name: 'Bulgaria', vat:20},
-    { id: 10, code:'AT', name: 'Austria', vat:20},
-    { id: 11, code:'ES', name: 'Spain', vat:21},
-    { id: 12, code:'PT', name: 'Portugal', vat:23},
-    { id: 13, code:'DE', name: 'Germany', vat:19},
-    { id: 14, code:'HR', name: 'Croatia', vat:25},
-    { id: 15, code:'CZ', name: 'Czech Republic', vat:21},
-    { id: 16, code:'IN', name: 'India', vat:0},
+    { id: 1, code:'BD', currency:"BDT", name: 'Bangladesh', vat:0 },
+    { id: 2, code:'SI', currency:"EUR", name: 'Slovenia', vat:22},
+    { id: 3, code:'IT', currency:"EUR", name: 'Italy', vat:22},
+    { id: 4, code:'SK', currency:"EUR", name: 'Slovakia', vat:20},
+    { id: 5, code:'PL', currency:"PLN", name: 'Poland', vat:23},
+    { id: 6, code:'GR', currency:"EUR", name: 'Greece', vat:24},
+    { id: 7, code:'RO', currency:"RON", name: 'Romania', vat:19},
+    { id: 8, code:'LT', currency:"EUR", name: 'Lithuania', vat:21},
+    { id: 9, code:'BG', currency:"BGN", name: 'Bulgaria', vat:20},
+    { id: 10, code:'AT', currency:"EUR", name: 'Austria', vat:20},
+    { id: 11, code:'ES', currency:"EUR", name: 'Spain', vat:21},
+    { id: 12, code:'PT', currency:"EUR", name: 'Portugal', vat:23},
+    { id: 13, code:'DE', currency:"EUR", name: 'Germany', vat:19},
+    { id: 14, code:'HR', currency:"EUR", name: 'Croatia', vat:25},
+    { id: 15, code:'CZ', currency:"CZK", name: 'Czech Republic', vat:21},
+    { id: 16, code:'HU', currency:"HUF", name: 'Hungry', vat:27},
+    { id: 17, code:'IN', currency:"RUP", name: 'India', vat:0},
     // Add more countries as needed
 ];
