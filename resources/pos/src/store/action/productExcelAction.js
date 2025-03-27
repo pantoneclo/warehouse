@@ -24,7 +24,7 @@ export const productExcelAction = (setIsWarehouseValue, isLoading = true, id) =>
 
 
 export const allProductsExcelAction = (setIsWarehouseValue, isLoading = true) => async (dispatch) => {
-   
+
         if (isLoading) {
             dispatch(setLoading(true));
         }
@@ -37,9 +37,34 @@ export const allProductsExcelAction = (setIsWarehouseValue, isLoading = true) =>
             dispatch(setLoading(false))
         }
      })
-        
+
      .catch(({response}) => {
         dispatch(addToast(
             {text: response.data.message, type: toastType.ERROR}));
     });
 };
+
+
+
+export const allComboProductsExcelAction = ( isLoading = true) => async (dispatch) => {
+
+    if (isLoading) {
+        dispatch(setLoading(true));
+    }
+
+    await apiConfig.get(`all-combo-products-export-excel`)
+        .then((response)=>{
+            window.open(response.data.data.all_combo_products_excel_url, '_blank');
+
+            if (isLoading) {
+                dispatch(setLoading(false))
+            }
+        })
+
+        .catch(({response}) => {
+            dispatch(addToast(
+                {text: response.data.message, type: toastType.ERROR}));
+        });
+};
+
+

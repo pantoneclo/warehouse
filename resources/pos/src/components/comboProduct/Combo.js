@@ -12,11 +12,13 @@ import  {fetchFrontSetting}  from '../../store/action/frontSettingAction';
 import TopProgressBar from "../../shared/components/loaders/TopProgressBar";
 import usePermission from '../../shared/utils/usePermission';
 import { Permissions } from '../../constants';
-import DeleteCombo from './DeleteCombo'; 
+import DeleteCombo from './DeleteCombo';
+
+import allComboProductsExcelAction  from '../../store/action/productExcelAction';
 
 const Combo = (props) => {
-    const { combos, fetchCombos, totalRecord, isLoading, frontSetting, fetchFrontSetting, allConfigData } = props;
-  
+    const { combos, fetchCombos, totalRecord, isLoading, frontSetting, fetchFrontSetting, allConfigData, allComboProductsExcelAction } = props;
+
     const [deleteModel, setDeleteModel] = useState(false);
     const [isDelete, setIsDelete] = useState(null);
     useEffect(() => {
@@ -31,8 +33,12 @@ const Combo = (props) => {
         };
         console.log("It's combo", combos)
     }, []);
- 
-    
+
+    const onExcelClick = () => {
+        allComboProductsExcelAction();
+    };
+
+
     const view_permission = usePermission(Permissions.PRODUCT_VIEW);
     const edit_permission = usePermission(Permissions.PRODUCT_EDIT);
     const delete_permission = usePermission(Permissions.PRODUCT_DELETE);
@@ -48,7 +54,7 @@ const Combo = (props) => {
     };
 
     const goToComboPage = (comboId) => {
-       
+
         window.location.href = '#/app/combo-products/details/' + comboId;
     };
 
@@ -62,7 +68,7 @@ console.log(combos, 'Combo Items ')
     const itemsValue = combos.length >= 0 && combos.map((combo) => {
 
         return (
-            {  
+            {
                 id: combo?.id,
                 name: combo?.attributes.name,
                 warehouse_id: combo?.attributes?.products[0]?.warehouse_id,
@@ -119,7 +125,7 @@ console.log(combos, 'Combo Items ')
                 )
             }
         },
-       
+
         {
             name: getFormattedMessage('react-data-table.action.column.label'),
             right: true,
@@ -163,6 +169,8 @@ console.log(combos, 'Combo Items ')
                 to='#/app/combo-products/create'
                 isShowFilterField={false}
                 isUnitFilter={false}
+                isExport
+                onExcelClick={onExcelClick}
                  />
 
            <DeleteCombo onClickDeleteModel={onClickDeleteModel} deleteModel={deleteModel} onDelete={isDelete} />

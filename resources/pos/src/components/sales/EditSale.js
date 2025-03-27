@@ -14,11 +14,11 @@ import paymentType from '../../shared/option-lists/paymentType.json';
 import Spinner from "../../shared/components/loaders/Spinner";
 import TopProgressBar from "../../shared/components/loaders/TopProgressBar";
 import { saleStatusOptions ,eccomercePlatform } from '../../constants';
-
+import { useIntl } from 'react-intl';
 const EditSale = (props) => {
     const {fetchSale, sales, customers, fetchAllCustomer, warehouses, fetchAllWarehouses, isLoading} = props;
     const {id} = useParams();
-
+    const intl = useIntl();
     useEffect(() => {
         fetchAllCustomer();
         fetchAllWarehouses();
@@ -28,13 +28,21 @@ const EditSale = (props) => {
 
     const statusFilterOptions = getFormattedOptions(saleStatusOptions)
     const marketplaceFilterOptions =getFormattedOptions(eccomercePlatform)
+    console.log(marketplaceFilterOptions, "Edit Marketplace Options")
     const statusDefaultValue =  sales.attributes && sales.attributes.status && statusFilterOptions.filter((option) => option.id === sales.attributes.status)
     const selectedPayment = sales.attributes && sales.attributes.payment_status && paymentStatus.filter((item) => item.value === sales.attributes.payment_status)
     const selectedPaymentType = sales.attributes && sales.attributes.payment_type && paymentType.filter((item) => item.value === sales.attributes.payment_type)
-    const test =Number(sales.attributes?.market_place) ;
-     const selectMarketPlace = sales.attributes && sales.attributes?.market_place && marketplaceFilterOptions.filter((option) => option.id === test)
-     console.log(selectMarketPlace,'selected market place')
-console.log(sales.attributes?.market_place , 'this is from sales attributes')
+    const test =sales.attributes?.market_place;
+    console.log(test, 'Market Place Value')
+    const selectMarketPlace =
+        sales.attributes?.market_place &&
+        marketplaceFilterOptions.filter((option) =>
+            option.name.toLowerCase() === test.toLowerCase()
+        );
+
+    console.log(selectMarketPlace, 'selected market place');
+
+console.log(sales.attributes , 'this is from sales attributes')
     const itemsValue = sales && sales.attributes && {
         date: sales.attributes.date,
         warehouse_id: {
@@ -45,12 +53,18 @@ console.log(sales.attributes?.market_place , 'this is from sales attributes')
             value: sales.attributes.customer_id,
             label: sales.attributes.customer_name,
         },
+        name:sales.attributes.customer_name,
+        phone:sales.attributes.customer_phone,
+        email:sales.attributes.customer_email,
+        city:sales.attributes.customer_city,
+        address:sales.attributes.customer_address,
         tax_rate: sales.attributes.tax_rate,
         tax_amount: sales.attributes.tax_amount,
         discount: sales.attributes.discount,
         shipping: sales.attributes.shipping,
         grand_total: sales.attributes.grand_total,
         amount: sales.attributes.amount,
+        cod: sales.attributes.cod,
         sale_items: sales.attributes.sale_items.map((item) => ({
             code: item.product && item.product.code,
             name: item.product && item.product.name,

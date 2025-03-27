@@ -216,6 +216,7 @@ console.log("Currencies", currencies);
     const onParcelCompanyChange = (obj) => {
         setSaleValue(inputs => ({ ...inputs, parcel_company_id: obj }));
         setErrors('');
+
     };
 
     const onCurrencyChange = (obj) => {
@@ -331,6 +332,7 @@ console.log("Currencies", currencies);
         }
     })
     const marketplaceFilterOption =getFormattedOptions(eccomercePlatform)
+    console.log(marketplaceFilterOption, "Marketplace Options");
     const marketplaceNamesDefault = marketplaceFilterOption.map((option)=>{
         return {
             value:option.id,
@@ -338,7 +340,7 @@ console.log("Currencies", currencies);
         }
 
     })
-
+    console.log(marketplaceNamesDefault, "Marketplace NamesDefault Options");
     const countryFilterOption =getFormattedOptions(countryOptions, intl)
     console.log(countryFilterOption)
     const countryNamesDefault = countryFilterOption.map((option)=>{
@@ -435,7 +437,13 @@ console.log("Defalut Currency Option", currencyNameDefault)
     console.log(label, 'label')
     const parcel_company_id = { label: label, value: singleSale?.parcel_company_id }
     const filtredCurrency = currencyNameDefault.find(currency => currency.value === saleValue.country?.currency);
+// Find the selected marketplace based on shipment_id
+    const selectMarketplace = marketplaceNamesDefault.find(market=> market.label == saleValue.label)
+    const selectedCountry = countryNamesDefault.find(c => c.value === saleValue.country);
 
+
+
+console.log(saleValue.market_place, "saleValue Marketplace")
 
     return (
         <div className='card'>
@@ -673,7 +681,7 @@ console.log("Defalut Currency Option", currencyNameDefault)
                             onChange={handleCountryChange}
                             name='country'
                             title={getFormattedMessage('globally.input.country.label')}
-                            value={saleValue.country}
+                            value={selectedCountry}
                             // errors={errors['payment_status']}
                             defaultValue={countryNamesDefault[0]}
                             placeholder={placeholderText('globally.input.country.placeholder.label')}/>

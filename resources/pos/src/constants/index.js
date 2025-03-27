@@ -975,6 +975,8 @@ export const countryOptions = [
     { id: 14, code:'HR', currency:"EUR", name: 'Croatia', vat:25},
     { id: 15, code:'CZ', currency:"CZK", name: 'Czech Republic', vat:21},
     { id: 16, code:'HU', currency:"HUF", name: 'Hungry', vat:27},
-    { id: 17, code:'IN', currency:"RUP", name: 'India', vat:0},
+    { id: 17, code:'EE', currency:"EUR", name: 'Estonia', vat:22},
+    { id: 18, code:'LV', currency:"EUR", name: 'Latvia', vat:21},
+    { id: 19, code:'IN', currency:"RUP", name: 'India', vat:0},
     // Add more countries as needed
 ];

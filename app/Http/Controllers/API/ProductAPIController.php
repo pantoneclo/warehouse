@@ -4,6 +4,7 @@ namespace App\Http\Controllers\API;
 
 use App\Exports\ProductExcelExport;
 use App\Exports\AllProductExcelExport;
+use App\Exports\AllComboProductExcelExport;
 use App\Http\Controllers\AppBaseController;
 use App\Http\Requests\CreateProductRequest;
 use App\Http\Requests\UpdateProductRequest;
@@ -203,6 +204,19 @@ class ProductAPIController extends AppBaseController
         Excel::store(new AllProductExcelExport, 'excel/all-products-excel-export.xlsx');
 
         $data['all_products_excel_url'] = Storage::url('excel/all-products-excel-export.xlsx');
+
+        return $this->sendResponse($data, 'Product retrieved successfully');
+    }
+
+
+    public function  getAllComboProductsExportExcel(Request $request): JsonResponse
+    {
+        if (Storage::exists('excel/all-combo-products-excel-export.xlsx')) {
+            Storage::delete('excel/all-combo-products-excel-export.xlsx');
+        }
+        Excel::store(new AllComboProductExcelExport, 'excel/all-combo-products-excel-export.xlsx');
+
+        $data['all_combo_products_excel_url'] = Storage::url('excel/all-combo-products-excel-export.xlsx');
 
         return $this->sendResponse($data, 'Product retrieved successfully');
     }

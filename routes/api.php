@@ -155,6 +155,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::get('products-export-excel/{id?}', [ProductAPIController::class, 'getProductExportExcel'])->name('products-export-excel');
     Route::get('all-products-export-excel', [ProductAPIController::class, 'getAllProductsExportExcel'])->name('all-products-export-excel');
+    Route::get('all-combo-products-export-excel', [ProductAPIController::class, 'getAllComboProductsExportExcel'])->name('all-combo-products-export-excel');
 
     Route::resource('transfers', TransferAPIController::class);
 
