@@ -194,25 +194,32 @@ const PurchaseForm = (props) => {
 
 
     const prepareData = (prepareData) => {
+        const parseOrZero = (value) => {
+            const parsed = parseFloat(value);
+            return isNaN(parsed) || value === null || value === undefined ? 0 : parsed;
+        };
+
         const formValue = {
             date: moment(prepareData.date).toDate(),
-            warehouse_id: prepareData.warehouse_id.value ? prepareData.warehouse_id.value : prepareData.warehouse_id ||1,
-            supplier_id: prepareData.supplier_id.value ? prepareData.supplier_id.value : prepareData.supplier_id || 1,
-            discount: prepareData.discount,
-            tax_rate: prepareData.tax_rate,
-            tax_amount: calculateCartTotalTaxAmount(updateProducts, purchaseValue),
+            warehouse_id: prepareData?.warehouse_id?.value || prepareData.warehouse_id || 1,
+            supplier_id: prepareData?.supplier_id?.value || prepareData.supplier_id || 1,
+            discount: parseOrZero(prepareData.discount),
+            tax_rate: parseOrZero(prepareData.tax_rate),
+            tax_amount: parseOrZero(calculateCartTotalTaxAmount(updateProducts, purchaseValue)),
             purchase_items: updateProducts,
-            shipping: prepareData.shipping,
-            grand_total: calculateCartTotalAmount(updateProducts, purchaseValue),
+            shipping: parseOrZero(prepareData.shipping),
+            grand_total: parseOrZero(calculateCartTotalAmount(updateProducts, purchaseValue)),
             received_amount: '',
             paid_amount: '',
             payment_type: 0,
-            notes: prepareData.notes,
+            notes: prepareData.notes || '',
             reference_code: '',
-            status: prepareData.status_id.value ? prepareData.status_id.value : prepareData.status_id,
-        }
-        return formValue
+            status: prepareData?.status_id?.value || prepareData.status_id || 1,
+        };
+
+        return formValue;
     };
+
 
     const onSubmit = (event) => {
         event.preventDefault();
@@ -245,7 +252,7 @@ const PurchaseForm = (props) => {
         <div className='card'>
             <div className='card-body'>
                 {/*<Form>*/}
-                
+
                     <div className='row'>
                         <div className='col-md-4'>
                             <label className='form-label'>
