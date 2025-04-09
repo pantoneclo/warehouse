@@ -6,7 +6,7 @@ namespace App\Exports;
 use App\Models\Product;
 use Maatwebsite\Excel\Concerns\FromView;
 
-use App\Models\Managestock;
+use App\Models\ManageStock;
 
 class AllProductExcelExport implements FromView
 {
