@@ -63,7 +63,7 @@ class Customer extends BaseModel
 
     public static $rules = [
         'name' => 'required',
-        'email' => 'required|email|unique:customers',
+        'email' => 'required|email',
         'phone' => 'required|numeric',
         'country' => 'required',
         'city' => 'required',

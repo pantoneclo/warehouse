@@ -45,10 +45,7 @@
             <td>{{$product->product_price}}</td>
 
             <td>
-                <?php
-                $totalQuantity = \App\Models\Managestock::where('product_id', $product->id)->sum('quantity');
-                ?>
-                {{$totalQuantity}}
+                {{ $product->stock_quantity }}
             </td>
             <td>{{ \Carbon\Carbon::parse($product->created_at)->isoFormat('Do MMM, YYYY')}}</td>
         </tr>

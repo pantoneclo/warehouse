@@ -1004,7 +1004,7 @@ const ProductAbsctractForm = (props) => {
                                             placeholder={placeholderText(
                                                 "product.input.tax-type.placeholder.label"
                                             )}
-                                           
+
                                         />
                                     </div>
 
@@ -1049,7 +1049,7 @@ const ProductAbsctractForm = (props) => {
                                                     name="base_cost"
                                                     className="form-control"
                                                     placeholder={placeholderText(
-                                                        "product.input.order-tax.placeholder.label"
+                                                        "product.input.base_cost.placeholder.label"
                                                     )}
                                                     onChange={(e) =>
                                                         onChangeInputTextFields(
@@ -1406,7 +1406,7 @@ const ProductAbsctractForm = (props) => {
                                                 )
                                             }
 
-                                      
+
                                         />
                                         <span className="text-danger d-block fw-400 fs-small mt-2">
                                             {errors["stock_alert"]
@@ -1447,7 +1447,7 @@ const ProductAbsctractForm = (props) => {
                                                 )
                                             }
 
-                                      
+
                                         />
                                         <span className="text-danger d-block fw-400 fs-small mt-2">
                                             {errors["code"]

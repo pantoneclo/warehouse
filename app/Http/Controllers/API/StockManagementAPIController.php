@@ -124,10 +124,7 @@ class StockManagementAPIController extends AppBaseController
             // Create the customer
             // Check if the customer already exists by email
             $existCustomer = Customer::where('email', $request->input('customer.email'))->first();
-            if ($existCustomer) {
-                // Use the existing customer
-                $customer = $existCustomer;
-            } else {
+
                 // Create a new customer
                 $customer = Customer::create([
                     'name' => $request->input('customer.name'),
@@ -138,7 +135,7 @@ class StockManagementAPIController extends AppBaseController
                     'address' => $request->input('customer.address'),
                     'dob' => $request->input('customer.dob'),
                 ]);
-            }
+
 
             $warehouse_id = $request->warehouse == "BD" ? "BD" : "SI";
 
@@ -1128,7 +1125,9 @@ class StockManagementAPIController extends AppBaseController
                 $order->save();
             } elseif ($operation == "Returned") {
                 $order->status = 8;
+                $order->save();
             } elseif ($operation == "Delivered") {
+                $order->payment_status = 1;
                 $order->status = 5;
                 $order->save();
             } elseif ($operation == "Confirmed") {

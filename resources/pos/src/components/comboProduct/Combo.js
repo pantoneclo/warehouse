@@ -14,7 +14,7 @@ import usePermission from '../../shared/utils/usePermission';
 import { Permissions } from '../../constants';
 import DeleteCombo from './DeleteCombo';
 
-import allComboProductsExcelAction  from '../../store/action/productExcelAction';
+import {allComboProductsExcelAction} from '../../store/action/productExcelAction.js';
 
 const Combo = (props) => {
     const { combos, fetchCombos, totalRecord, isLoading, frontSetting, fetchFrontSetting, allConfigData, allComboProductsExcelAction } = props;

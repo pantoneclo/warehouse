@@ -92,6 +92,7 @@ return [
         'color'=>'Color',
         'size'=>"Size",
         'order_type'=>'ORDER TYPE',
+        'fob_price'=>'FOB Price',
     ],
 
     'error' => [
