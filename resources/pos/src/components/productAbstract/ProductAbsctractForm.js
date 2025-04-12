@@ -287,9 +287,19 @@ const ProductAbsctractForm = (props) => {
         obj = { field: e.target.name },
         type = "abstract"
     ) => {
+        console.log('e:::::::::', {
+            e,
+            obj: { field: e.target.name, value: e.target.value },
+            type: "abstract"
+        });
+
         e.preventDefault();
         const { value } = e.target;
-
+        console.log('on Change text Fields', e, 'asdadasdasdadasdas', textValidationCheck(
+            e.target.value,
+            e.target.attributes["data-type"].value,
+            obj
+        ))
         if (
             textValidationCheck(
                 e.target.value,
@@ -304,13 +314,15 @@ const ProductAbsctractForm = (props) => {
                         [e.target.name]: value,
                     }));
 
+                    console.log('getProductAbstract:::', productAbstract);
+
                     break;
                 case "product-combination":
                     setProductVariantCombination((prev) => ({
                         ...prev,
                         [obj.index]: { ...prev[obj.index], [obj.field]: value },
                     }));
-                    console.log({ productVariantCombination });
+                    console.log('product variant combination', { productVariantCombination });
                     break;
 
                 default:
@@ -470,7 +482,7 @@ const ProductAbsctractForm = (props) => {
                 variant: { ...combination },
                 id: filteredProducts?.data.id,
                 product_cost:
-                    prev_state?.product_cost ??
+                    // prev_state?.product_cost ??
                     filteredProducts?.data.attributes.product_cost ??
                     productAbstract.base_cost,
                 product_price:
@@ -731,7 +743,7 @@ const ProductAbsctractForm = (props) => {
             errorss["order_tax"] = getFormattedMessage(
                 "product.input.order-tax.valid.validate.label"
             );
-        }  else if (!productAbstract["attributes"]) {
+        } else if (!productAbstract["attributes"]) {
             console.log("this is from attributes");
             errorss["attributes"] = getFormattedMessage(
                 "product.input.attributes.validate.label"
@@ -764,9 +776,9 @@ const ProductAbsctractForm = (props) => {
     const handleKeyDown = (e) => {
         // Prevent the default behavior for arrow up and down keys
         if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
-          e.preventDefault();
+            e.preventDefault();
         }
-      };
+    };
     return (
         <>
             {productAbstract !== null && (<div className="card">
@@ -793,7 +805,7 @@ const ProductAbsctractForm = (props) => {
                                             )}
                                             className="form-control"
                                             autoFocus={true}
-                                            value={productAbstract.name??''}
+                                            value={productAbstract.name ?? ''}
                                             onChange={(e) =>
                                                 onChangeInputTextFields(e)
                                             }
@@ -986,7 +998,7 @@ const ProductAbsctractForm = (props) => {
 
                                     <div className="col-md-6 mb-3">
                                         <ReactSelect
-                                        isRequired={true}
+                                            isRequired={true}
                                             title={getFormattedMessage(
                                                 "product.input.tax-type.label"
                                             )}
