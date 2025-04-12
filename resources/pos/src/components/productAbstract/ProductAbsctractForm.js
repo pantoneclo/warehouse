@@ -1292,99 +1292,99 @@ const ProductAbsctractForm = (props) => {
                                             0}
                                     </p>
 
-                                    <div className="col-md-4 mb-3">
-                                        <label className="form-label">
-                                            {getFormattedMessage(
-                                                "product.input.product-cost.label"
-                                            )}
-                                            :{" "}
-                                        </label>
-                                        <span className="required" />
-                                        <InputGroup>
-                                            <input
-                                                type="text"
-                                                name="product_cost"
-                                                data-type="number"
-                                                min={0}
-                                                className="form-control"
-                                                value={
-                                                    productVariantCombination[
-                                                        key
-                                                    ]?.product_cost ?? 0
-                                                }
-                                                onChange={(e) =>
-                                                    onChangeInputTextFields(
-                                                        e,
-                                                        {
-                                                            index: key,
-                                                            field: "product_cost",
-                                                        },
-                                                        "product-combination"
-                                                    )
-                                                }
-                                            // placeholder={placeholderText(
-                                            //     "product.input.product-cost.placeholder.label"
-                                            // )}
-                                            />
-                                            <InputGroup.Text>
-                                                {frontSetting.value &&
-                                                    frontSetting.value
-                                                        .currency_symbol}
-                                            </InputGroup.Text>
-                                        </InputGroup>
-                                        <span className="text-danger d-block fw-400 fs-small mt-2">
-                                            {errors["product_cost"]
-                                                ? errors["product_cost"][key]
-                                                : null}
-                                        </span>
-                                    </div>
+                                    {/*<div className="col-md-4 mb-3">*/}
+                                    {/*    <label className="form-label">*/}
+                                    {/*        {getFormattedMessage(*/}
+                                    {/*            "product.input.product-cost.label"*/}
+                                    {/*        )}*/}
+                                    {/*        :{" "}*/}
+                                    {/*    </label>*/}
+                                    {/*    <span className="required" />*/}
+                                    {/*    <InputGroup>*/}
+                                    {/*        <input*/}
+                                    {/*            type="text"*/}
+                                    {/*            name="product_cost"*/}
+                                    {/*            data-type="number"*/}
+                                    {/*            min={0}*/}
+                                    {/*            className="form-control"*/}
+                                    {/*            value={*/}
+                                    {/*                productVariantCombination[*/}
+                                    {/*                    key*/}
+                                    {/*                ]?.product_cost ?? 0*/}
+                                    {/*            }*/}
+                                    {/*            onChange={(e) =>*/}
+                                    {/*                onChangeInputTextFields(*/}
+                                    {/*                    e,*/}
+                                    {/*                    {*/}
+                                    {/*                        index: key,*/}
+                                    {/*                        field: "product_cost",*/}
+                                    {/*                    },*/}
+                                    {/*                    "product-combination"*/}
+                                    {/*                )*/}
+                                    {/*            }*/}
+                                    {/*        // placeholder={placeholderText(*/}
+                                    {/*        //     "product.input.product-cost.placeholder.label"*/}
+                                    {/*        // )}*/}
+                                    {/*        />*/}
+                                    {/*        <InputGroup.Text>*/}
+                                    {/*            {frontSetting.value &&*/}
+                                    {/*                frontSetting.value*/}
+                                    {/*                    .currency_symbol}*/}
+                                    {/*        </InputGroup.Text>*/}
+                                    {/*    </InputGroup>*/}
+                                    {/*    <span className="text-danger d-block fw-400 fs-small mt-2">*/}
+                                    {/*        {errors["product_cost"]*/}
+                                    {/*            ? errors["product_cost"][key]*/}
+                                    {/*            : null}*/}
+                                    {/*    </span>*/}
+                                    {/*</div>*/}
 
-                                    <div className="col-md-4 mb-3">
-                                        <label className="form-label">
-                                            {getFormattedMessage(
-                                                "product.input.product-price.label"
-                                            )}
-                                            :{" "}
-                                        </label>
-                                        <span className="required" />
-                                        <InputGroup>
-                                            <input
-                                                type="text"
-                                                data-type="number"
-                                                name="product_price"
-                                                min={0}
-                                                className="form-control"
-                                                // placeholder={placeholderText(
-                                                //     "product.input.product-price.placeholder.label"
-                                                // )}
-                                                value={
-                                                    productVariantCombination[
-                                                        key
-                                                    ]?.product_price ?? 0
-                                                }
-                                                onChange={(e) =>
-                                                    onChangeInputTextFields(
-                                                        e,
-                                                        {
-                                                            index: key,
-                                                            field: "product_price",
-                                                        },
-                                                        "product-combination"
-                                                    )
-                                                }
-                                            />
-                                            <InputGroup.Text>
-                                                {frontSetting.value &&
-                                                    frontSetting.value
-                                                        .currency_symbol}
-                                            </InputGroup.Text>
-                                        </InputGroup>
-                                        <span className="text-danger d-block fw-400 fs-small mt-2">
-                                            {errors["product_price"]
-                                                ? errors["product_price"][key]
-                                                : null}
-                                        </span>
-                                    </div>
+                                    {/*<div className="col-md-4 mb-3">*/}
+                                    {/*    <label className="form-label">*/}
+                                    {/*        {getFormattedMessage(*/}
+                                    {/*            "product.input.product-price.label"*/}
+                                    {/*        )}*/}
+                                    {/*        :{" "}*/}
+                                    {/*    </label>*/}
+                                    {/*    <span className="required" />*/}
+                                    {/*    <InputGroup>*/}
+                                    {/*        <input*/}
+                                    {/*            type="text"*/}
+                                    {/*            data-type="number"*/}
+                                    {/*            name="product_price"*/}
+                                    {/*            min={0}*/}
+                                    {/*            className="form-control"*/}
+                                    {/*            // placeholder={placeholderText(*/}
+                                    {/*            //     "product.input.product-price.placeholder.label"*/}
+                                    {/*            // )}*/}
+                                    {/*            value={*/}
+                                    {/*                productVariantCombination[*/}
+                                    {/*                    key*/}
+                                    {/*                ]?.product_price ?? 0*/}
+                                    {/*            }*/}
+                                    {/*            onChange={(e) =>*/}
+                                    {/*                onChangeInputTextFields(*/}
+                                    {/*                    e,*/}
+                                    {/*                    {*/}
+                                    {/*                        index: key,*/}
+                                    {/*                        field: "product_price",*/}
+                                    {/*                    },*/}
+                                    {/*                    "product-combination"*/}
+                                    {/*                )*/}
+                                    {/*            }*/}
+                                    {/*        />*/}
+                                    {/*        <InputGroup.Text>*/}
+                                    {/*            {frontSetting.value &&*/}
+                                    {/*                frontSetting.value*/}
+                                    {/*                    .currency_symbol}*/}
+                                    {/*        </InputGroup.Text>*/}
+                                    {/*    </InputGroup>*/}
+                                    {/*    <span className="text-danger d-block fw-400 fs-small mt-2">*/}
+                                    {/*        {errors["product_price"]*/}
+                                    {/*            ? errors["product_price"][key]*/}
+                                    {/*            : null}*/}
+                                    {/*    </span>*/}
+                                    {/*</div>*/}
 
                                     <div className="col-md-4 mb-3">
                                         <label className="form-label">

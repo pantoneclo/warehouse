@@ -117,8 +117,8 @@ class ProductAbstractRepository extends BaseRepository
                     $product->code = Product::generateProductCodeByValue($productAbstract->id, $variant->id);
                     $product->variant_id = $variant->id;
                     $product->product_abstract_id = $productAbstract->id;
-                    $product->product_cost = $productData['product_cost'];
-                    $product->product_price = $productData['product_price'];
+                    $product->product_cost = $input['base_cost'];
+                    $product->product_price = $input['base_price'];
                     $product->stock_alert = $productData['stock_alert'];
                     $product->quantity_limit = $productData['quantity_limit'];
                     $product->save();
@@ -154,8 +154,8 @@ class ProductAbstractRepository extends BaseRepository
     {
 
         try {
-           
-            
+
+
 
             DB::beginTransaction();
             $productAbstract = ProductAbstract::findOrFail($id);
@@ -184,29 +184,29 @@ class ProductAbstractRepository extends BaseRepository
                         config('app.media_disc'));
                 }
             }
-            
+
             // checking if product is available or not
              //start delete product from here if not in submitted form while it stay in database
-       
-         
-       
+
+
+
             if (isset($input['products']) && !empty($input['products'])) {
 
-          
+
                 $products = $input['products'];
 
                 $all_products = $productAbstract->products->pluck('id')->toArray();
                 $delete_avoid_products = collect($products)->pluck('id')->toArray();
                 $productsToDelete = array_diff($all_products, $delete_avoid_products);
-               
+
                 foreach ($productsToDelete as $productToDelete) {
                     $product = Product::find($productToDelete);
                     $product->delete();
                 }
 
-               
 
-                //start edit or update single product from here 
+
+                //start edit or update single product from here
                 foreach ($products as $productData) {
                     $product = Product::find($productData['id']);
 
@@ -215,7 +215,7 @@ class ProductAbstractRepository extends BaseRepository
                         $product->delete();
                         continue;
                     }
-                 
+
                     //variant check
                     $variant_get = json_decode($productData['variant']);
                     $variant = Variant::where('id', '!=', -1);
@@ -243,12 +243,12 @@ class ProductAbstractRepository extends BaseRepository
 
                         $variant->save();
                     }
-                   
+
 
                     // Create a new product if new products come from frontend form
                     $is_new_product = false;
                     if ($product == null) {
-                        //cheking if product is available or not which is coming from frontend form switch 
+                        //cheking if product is available or not which is coming from frontend form switch
                         if ($productData['is_available'] === 'false') {
                             continue;
                         }
@@ -256,14 +256,14 @@ class ProductAbstractRepository extends BaseRepository
                         $product = new Product();
                     }
 
-                    //else update existing product 
+                    //else update existing product
 
                     $product->name = $input['name'];
                     $product->code = Product::generateProductCodeByValue($productAbstract->id, $variant->id);
                     $product->variant_id = $variant->id;
                     $product->product_abstract_id = $productAbstract->id;
-                    $product->product_cost = $productData['product_cost'];
-                    $product->product_price = $productData['product_price'];
+                    $product->product_cost = $input['base_cost'];
+                    $product->product_price = $input['base_price'];
                     $product->stock_alert = $productData['stock_alert'];
                     $product->quantity_limit = $productData['quantity_limit'];
                     $product->save();
@@ -278,7 +278,7 @@ class ProductAbstractRepository extends BaseRepository
 
                     //if new product then generate barcode for it , barcode never be updated
 
-                    if ($is_new_product) {                      
+                    if ($is_new_product) {
                         $code = Product::generateProductCodeByValue($productAbstract->id, $variant->id);
                         $reference_code = $code;
                         $input['code'] = $code;
@@ -291,12 +291,12 @@ class ProductAbstractRepository extends BaseRepository
                 }
 
             }
-            else 
+            else
             {
-              
+
                 DB::rollBack();
                 throw new UnprocessableEntityHttpException('Product is required');
-             
+
             }
             DB::commit();
             return $productAbstract;
