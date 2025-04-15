@@ -311,6 +311,8 @@ console.log("Currencies", currencies);
             tax_rate: fullCountry?.vat ?? 0,
             currency: fullCountry.currency
         }));
+
+        onCurrencyChange(fullCountry.currency)
     };
 
     console.log('saleValue',saleValue)
@@ -396,7 +398,7 @@ console.log("Defalut Currency Option", currencyNameDefault)
             country:prepareData.country.value,
             order_no:prepareData.order_no,
             market_place:prepareData.market_place.label,
-            currency:prepareData.currency.value,
+            currency: typeof prepareData.currency === 'object' ? prepareData.currency.value : prepareData.currency || '',
             name:prepareData.name,
             email:prepareData.email,
             phone:prepareData.phone,
@@ -413,6 +415,7 @@ console.log("Defalut Currency Option", currencyNameDefault)
             if (singleSale && !isQuotation) {
                 editSale(id, prepareFormData(saleValue), navigate);
             } else {
+              
                 addSaleData(prepareFormData(saleValue));
                 setSaleValue(saleValue);
             }
