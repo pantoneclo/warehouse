@@ -129,10 +129,22 @@ class SaleRepository extends BaseRepository
 
             // Step 3: Add customer_id to the sale input array
             $saleInputArray['customer_id'] = $customerId; // Use the customer_id
+            $saleInputArray['order_process_fee'] = 0.85; //order_process_fee
 
             // Step 4: Create the sale
             /** @var Sale $sale */
             $sale = Sale::create($saleInputArray);
+
+            if($input['market_place'] == "MIMOVRSTE" && $input['payment_type'] == "5"){
+                $sale->marketplace_commission = ($sale->grand_total - 5)* 0.18;
+                $sale->save();
+            }elseif($input['market_place'] == "MIMOVRSTE" && $input['payment_type'] != "5"){
+                $sale->marketplace_commission = ($sale->grand_total - 3) * 0.18;
+                $sale->save();
+            }elseif ($input['market_place'] == "PIGUE"){
+                $sale->marketplace_commission = ($sale->grand_total - $sale->shipping) * 0.1;
+                $sale->save();
+            }
 
             if ($input['is_sale_created'] && $QuotationId) {
                 $quotation = Quotation::find($QuotationId);

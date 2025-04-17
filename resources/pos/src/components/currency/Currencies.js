@@ -36,7 +36,8 @@ const Currencies = (props) => {
         name: item.attributes.name,
         code: item.attributes.code,
         symbol: item.attributes.symbol,
-        id: item.id
+        id: item.id,
+        conversion_rate: item.attributes.conversion_rate
     }));
 
     const columns = [
@@ -64,6 +65,16 @@ const Currencies = (props) => {
             cell: row => {
                 return <span className='badge bg-light-primary'>
                             <span>{row.symbol}</span>
+                        </span>
+            }
+        },
+        {
+            name: getFormattedMessage('currency.modal.input.symbol.conversion_rate'),
+            sortField: 'conversion_rate',
+            sortable: true,
+            cell: row => {
+                return <span className='badge bg-light-primary'>
+                            <span>{row.conversion_rate}</span>
                         </span>
             }
         },

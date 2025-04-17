@@ -38,12 +38,14 @@ class Currency extends BaseModel
         'name',
         'code',
         'symbol',
+        'conversion_rate',
     ];
 
     public static $rules = [
         'name' => 'required|unique:currencies',
         'code' => 'required',
         'symbol' => 'required',
+        'conversion_rate' => 'required',
     ];
 
     /**
@@ -65,6 +67,7 @@ class Currency extends BaseModel
             'name' => $this->name,
             'code' => $this->code,
             'symbol' => $this->symbol,
+            'conversion_rate' => $this->conversion_rate,
         ];
 
         return $fields;

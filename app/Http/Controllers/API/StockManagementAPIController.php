@@ -168,6 +168,9 @@ class StockManagementAPIController extends AppBaseController
                 [
                     'order_type' => $request->input('order_type', 1) // If order_type exists, store it; otherwise, null
                 ],
+                [
+                    'order_process_fee' => 0.85 //order_process_fee
+                ],
                 $additionalFields
             );
 
@@ -1208,6 +1211,12 @@ class StockManagementAPIController extends AppBaseController
                 'message' => 'Unable to change order status!.'
             ]);
         }
+    }
+
+
+    public  function webHookOrderCourierAssign(Request $request)
+    {
+          dd($request);
     }
 
 

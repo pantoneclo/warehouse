@@ -77,6 +77,7 @@ return [
         'selling_market' => 'SELLING MARKET',
         'currency' => 'CURRENCY',
         'order_no' => 'ORDER NUMBER',
+        'style_no' => 'STYLE NUMBER',
         'vat' => 'VAT ',
         'selling_value' => 'SELLING VALUE ',
         'selling_value_eur' => ' SELLING VALUE (EUR)',

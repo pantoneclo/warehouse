@@ -415,7 +415,7 @@ console.log("Defalut Currency Option", currencyNameDefault)
             if (singleSale && !isQuotation) {
                 editSale(id, prepareFormData(saleValue), navigate);
             } else {
-              
+
                 addSaleData(prepareFormData(saleValue));
                 setSaleValue(saleValue);
             }

@@ -40,6 +40,7 @@
         <th style=" text-align: center; width: 200%">{{ __('messages.pdf.selling_country') }}</th>
         <th style=" text-align: center; width: 200%">{{ __('messages.pdf.selling_market') }}</th>
         <th style=" text-align: center; width: 200%">{{ __('messages.pdf.order_no') }}</th>
+        <th style=" text-align: center; width: 200%">{{ __('messages.pdf.style_no') }}</th>
         <th style=" text-align: center; width: 200%">{{ __('messages.pdf.date') }}</th>
         <th style=" text-align: center; width: 200%">{{ __('messages.pdf.order_type') }}</th>
         <th style=" text-align: center; width: 200%">{{ __('messages.pdf.ttl_sale_item') }}</th>
@@ -79,12 +80,27 @@
         @php
             $sum_grand_total += $sale->grand_total;
             $sum_selling_value_euro_total += $sale->selling_value_eur;
+
+           $panStyles = $sale->saleItems
+            ->map(function($item) {
+                return optional($item->product->productAbstract)->pan_style;
+            })
+            ->filter()
+            ->groupBy(function($style) {
+                return $style;
+            })
+            ->map(function($group, $style) {
+                return count($group) > 1 ? "{$style}(" . count($group) . ")" : $style;
+            })
+            ->values()
+            ->implode(', ');
         @endphp
         <tr align="center" style="background-color: dodgerblue; border: 5px solid black; font-weight: bold;">
             <td style="text-align: center;">{{$key+1}}</td>
             <td style="text-align: center;">{{$sale->country}}</td>
-            <td style="text-align: center;">{{$sale->market_place}}</td>
+            <td style="text-align: center;">{{ ucfirst(strtolower($sale->market_place)) }}</td>
             <td style="text-align: center;">{{$sale->order_no}}</td>
+            <td style="text-align: center;">{{$panStyles}}</td>
             <td style="text-align: center;">{{\Carbon\Carbon::parse($sale->date)->format('d-m-Y')}}</td>
             <td style="text-align: center;">
                 @if($sale->order_type)
@@ -108,7 +124,7 @@
 
 
 
-            <td style="text-align: center;">{{$sale->grand_total}}</td>
+            <td style="text-align: center;">{{ (float) str_replace(',', '', $sale->grand_total) }}</td>
             <td style="text-align: center;">{{$sale->selling_value_eur}}</td>
 
             <td style="text-align: center;">{{$sale->marketplace_commission}}</td>

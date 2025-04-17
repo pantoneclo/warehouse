@@ -12,16 +12,19 @@ const CurrencyForm = (props) => {
     const [formValue, setFormValue] = useState({
         name: singleCurrency ? singleCurrency.name : '',
         code: singleCurrency ? singleCurrency.code : '',
-        symbol: singleCurrency ? singleCurrency.symbol : ''
+        symbol: singleCurrency ? singleCurrency.symbol : '',
+        conversion_rate: singleCurrency ? singleCurrency.conversion_rate : ''
     });
 
     const [errors, setErrors] = useState({
         name: '',
         code: '',
-        symbol: ''
+        symbol: '',
+        conversion_rate:''
     });
 
-    const disabled = singleCurrency && singleCurrency.name === formValue.name.trim() && singleCurrency.code === formValue.code.trim() && singleCurrency.symbol === formValue.symbol.trim();
+    const disabled = singleCurrency && singleCurrency.name === formValue.name.trim() && singleCurrency.code === formValue.code.trim() && singleCurrency.symbol === formValue.symbol.trim()&&
+        parseFloat(singleCurrency.conversion_rate) === parseFloat(formValue.conversion_rate);
 
     const handleValidation = () => {
         let errorss = {};
@@ -36,7 +39,10 @@ const CurrencyForm = (props) => {
             errorss['code'] = getFormattedMessage("currency.modal.input.code.valid.validate.label");
         } else if (!formValue['symbol'].trim()) {
             errorss['symbol'] = getFormattedMessage("currency.modal.input.symbol.validate.label");
-        } else {
+        }else if (!formValue['conversion_rate'].trim()) {
+            errorss['conversion_rate'] = getFormattedMessage("currency.modal.input.conversion_rate.validate.label");
+        }
+        else {
             isValid = true;
         }
         setErrors(errorss);
@@ -71,7 +77,8 @@ const CurrencyForm = (props) => {
         setFormValue({
             name: '',
             code: '',
-            symbol: ''
+            symbol: '',
+            conversion_rate:''
         });
         setErrors('');
         handleClose(false);
@@ -107,25 +114,40 @@ const CurrencyForm = (props) => {
                                 className='text-danger d-block fw-400 fs-small mt-2'>{errors['name'] ? errors['name'] : null}</span>
                         </div>
                         <div className='col-md-12 mb-5'>
-                                <label
-                                    className='form-label'>{getFormattedMessage("currency.modal.input.code.label")} : </label>
-                                <span className='required'/>
-                                <input type='text' name='code'
-                                              placeholder={placeholderText("currency.modal.input.code.placeholder.label")}
-                                              className='form-control' value={formValue.code}
-                                              onChange={(e) => onChangeInput(e)}
-                                />
-                                <span className='text-danger d-block fw-400 fs-small mt-2'>{errors['code'] ? errors['code'] : null}</span>
+                            <label
+                                className='form-label'>{getFormattedMessage("currency.modal.input.code.label")} : </label>
+                            <span className='required'/>
+                            <input type='text' name='code'
+                                   placeholder={placeholderText("currency.modal.input.code.placeholder.label")}
+                                   className='form-control' value={formValue.code}
+                                   onChange={(e) => onChangeInput(e)}
+                            />
+                            <span
+                                className='text-danger d-block fw-400 fs-small mt-2'>{errors['code'] ? errors['code'] : null}</span>
                         </div>
                         <div className='col-md-12'>
                             <label
                                 className='form-label'>{getFormattedMessage("currency.modal.input.symbol.label")} : </label>
                             <span className='required'/>
                             <input type='text' name='symbol'
-                                          placeholder={placeholderText("currency.modal.input.symbol.placeholder.label")}
-                                          className='form-control' value={formValue.symbol}
-                                          onChange={(e) => onChangeInput(e)}/>
-                            <span className='text-danger d-block fw-400 fs-small mt-2'>{errors['symbol'] ? errors['symbol'] : null}</span>
+                                   placeholder={placeholderText("currency.modal.input.symbol.placeholder.label")}
+                                   className='form-control' value={formValue.symbol}
+                                   onChange={(e) => onChangeInput(e)}/>
+                            <span
+                                className='text-danger d-block fw-400 fs-small mt-2'>{errors['symbol'] ? errors['symbol'] : null}</span>
+                        </div>
+
+                        {/*Atiqur Rahman*/}
+                        <div className='col-md-12'>
+                            <label
+                                className='form-label'>{getFormattedMessage("currency.modal.input.symbol.conversion_rate")} : </label>
+                            <span className='required'/>
+                            <input type='number' name='conversion_rate'
+                                   placeholder={placeholderText("currency.modal.input.conversion_rate.placeholder.label")}
+                                   className='form-control' value={formValue.conversion_rate}
+                                   onChange={(e) => onChangeInput(e)}/>
+                            <span
+                                className='text-danger d-block fw-400 fs-small mt-2'>{errors['symbol'] ? errors['symbol'] : null}</span>
                         </div>
                     </div>
                 </Modal.Body>

@@ -23,7 +23,7 @@ class SaleReportExport implements FromView
         $startDate =  $this->startDate;
         $endDate = $this->endDate;
         $status = $this->status;
-        $sales = Sale::with(['saleItems', 'warehouse', 'customer', 'payments', 'shipment']);
+        $sales = Sale::with(['saleItems.product.productAbstract', 'warehouse', 'customer', 'payments', 'shipment']);
         if ($startDate != 'null' && $endDate != 'null' && $startDate && $endDate) {
             $sales->whereBetween('date', [$startDate, $endDate]);
         }
