@@ -6,7 +6,7 @@
     <style>
         * {
             font-family: DejaVu Sans, Arial, "Helvetica", Arial, "Liberation Sans", sans-serif;
-            font-size: 14px;
+            font-size: 12px;
             font-weight: bold;
         }
 
@@ -20,7 +20,7 @@
             border: 1px solid #000000;
             text-align: left;
             padding-left: 10px;
-            font-size: 14px;
+            font-size: 12px;
         }
 
         /*tr:nth-child(even) {*/
@@ -36,7 +36,7 @@
         }
 
         p {
-            font-size: 14px;
+            font-size: 12px;
         }
 
         .page-break {
@@ -52,7 +52,7 @@
         .product-details {
             width: 100%;
             clear: both;
-            margin-top:5px;
+            margin-top:1px;
         }
 
 
@@ -72,7 +72,7 @@
 
         .product-names p,
         .product-images img {
-            margin: 5px 0;
+            margin: 2px 0;
         }
 
         .product-images img {
@@ -96,7 +96,7 @@
             @foreach($item->combo as $combo_item)
                 @if(!in_array($combo_item->product->productAbstract->brand->name, $uniqueBrand))
                     <p class="mb-0 mt-0"
-                       style="font-size: 17px;font-weight: bold;margin-top: 0px;margin-bottom:4px;">{{ $combo_item->product->productAbstract->brand->name }}</p>
+                       style="font-size: 14px;font-weight: bold;margin-top: 0px;margin-bottom:2px;">{{ $combo_item->product->productAbstract->brand->name }}</p>
                     @php
                         $uniqueBrand[] = $combo_item->product->productAbstract->brand->name;
                     @endphp
@@ -104,7 +104,7 @@
             @endforeach
             <div class="barcode text-center" style="text-align: center">
                 <img src="{{ public_path($item->combo[0]->barcode_image) }}"
-                     alt="Barcode" style="width:60%;object-fit: contain;object-position: center;margin-bottom: 2px;">
+                     alt="Barcode" style="width:60%;object-fit: contain;object-position: center;margin-bottom: 0px;">
             </div>
             <div>
                 {{ $item->combo[0] ? $item->combo[0]->sticker_id : '-' }}
@@ -113,7 +113,7 @@
             </div>
 
             <div class="product-details clearfix">
-                <div class="product-names" style="margin-top:5px;">
+                <div class="product-names" style="margin-top:1px;">
                     <table class="table">
                         <tbody>
                         <tr>
@@ -169,7 +169,7 @@
                         </tr>
                         <tr>
                             <td>CARTON NO</td>
-                            <td height="40px"> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;  &nbsp; &nbsp; &nbsp; OF</td>
+                            <td height="20px"> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;  &nbsp; &nbsp; &nbsp; OF</td>
                         </tr>
                         </tbody>
                     </table>
@@ -188,7 +188,7 @@
                                 $publicPath = public_path($cleanUrl);
                             @endphp
                             <img src="{{ $publicPath }}" alt="Product Image"
-                                 style="height:170px;padding-top:5px;padding-left:20px;object-fit: contain;object-position: center;margin:0 auto;text-align:center;">
+                                 style="height:150px;padding-top:2px;padding-left:20px;object-fit: contain;object-position: center;margin:0 auto;text-align:center;">
                         @endif
                     @endif
 
@@ -201,7 +201,7 @@
                 @endforeach
             </div>
             <div>
-                <p style="text-align: center;font-size: 14px;margin-top: 4px;margin-bottom: 0px;">MADE IN BANGLADESH</p>
+                <p style="text-align: center;font-size: 14px;margin-top: 1px;margin-bottom: 0px;">MADE IN BANGLADESH</p>
             </div>
 
             @if ($boxIndex < $item->no_of_boxes)
