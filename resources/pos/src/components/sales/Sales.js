@@ -8,6 +8,7 @@ import { fetchSales } from '../../store/action/salesAction';
 import DeleteSale from './DeleteSale';
 import { currencySymbolHendling, getFormattedDate, getFormattedMessage, placeholderText } from '../../shared/sharedMethod';
 import { salePdfAction } from '../../store/action/salePdfAction';
+import { saleInvoiceAction } from '../../store/action/salePdfAction';
 import ActionDropDownButton from '../../shared/action-buttons/ActionDropDownButton';
 import { fetchFrontSetting } from '../../store/action/frontSettingAction';
 import ShowPayment from '../../shared/showPayment/ShowPayment';
@@ -25,6 +26,7 @@ const Sales = (props) => {
         totalRecord,
         isLoading,
         salePdfAction,
+        saleInvoiceAction,
         fetchFrontSetting,
         currencies,
         fetchCurrencies,
@@ -86,7 +88,8 @@ const Sales = (props) => {
 
     //onClick pdf function
     const onPdfClick = (id) => {
-        salePdfAction(id);
+        saleInvoiceAction(id);
+        console.log("Invoice Download");
     };
 
     const onCreateSaleReturnClick = (item) => {
@@ -344,7 +347,7 @@ const Sales = (props) => {
                     title={getFormattedMessage('sale.title')}
                     isPaymentShow={true}
                     isCreatePayment={row.create_payment_permission}
-                    isPdfIcon={false}
+                    isPdfIcon={true}
                     isEditMode={row.edit_permission}
                     isDeleteMode={row.delete_permission}
                     isViewIcon={row.view_permission}
@@ -410,4 +413,4 @@ const mapStateToProps = (state) => {
     return { sales,currencies, totalRecord, isLoading, frontSetting, isCallSaleApi, allConfigData };
 };
 
-export default connect(mapStateToProps, { fetchSales, salePdfAction, fetchCurrencies, fetchFrontSetting })(Sales);
+export default connect(mapStateToProps, { fetchSales, salePdfAction,saleInvoiceAction, fetchCurrencies, fetchFrontSetting })(Sales);

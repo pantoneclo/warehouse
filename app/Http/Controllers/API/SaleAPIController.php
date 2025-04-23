@@ -114,7 +114,6 @@ class SaleAPIController extends AppBaseController
     public function store(CreateSaleRequest $request)
     {
 
-
         if (!Auth::user()->can('sale.create')) {
             return $this->sendError('Permission Denied');
         }
@@ -125,8 +124,6 @@ class SaleAPIController extends AppBaseController
             }
         }
         $input = $request->all();
-
-
         $sale = $this->saleRepository->storeSale($input);
         return new SaleResource($sale);
     }
@@ -273,6 +270,7 @@ class SaleAPIController extends AppBaseController
      */
     public function pdfDownload(Sale $sale): JsonResponse
     {
+
         $sale = $sale->load('customer', 'saleItems.product', 'payments');
         $data = [];
         if (Storage::exists('pdf/Sale-' . $sale->reference_code . '.pdf')) {
@@ -285,6 +283,17 @@ class SaleAPIController extends AppBaseController
         ]);
         Storage::disk(config('app.media_disc'))->put('pdf/Sale-' . $sale->reference_code . '.pdf', $pdf->output());
         $data['sale_pdf_url'] = Storage::url('pdf/Sale-' . $sale->reference_code . '.pdf');
+
+        return $this->sendResponse($data, 'pdf retrieved Successfully');
+    }
+
+
+
+    public  function invoiceDownload(Sale $sale): JsonResponse
+    {
+        $fileName = 'invoice_1745218745_QywfFpJ9.pdf';
+        $fileUrl = url('uploads/sales/invoices/' . $fileName);
+        $data['sale_invoice_url'] = Storage::url('sales/invoices/' . $fileName);
 
         return $this->sendResponse($data, 'pdf retrieved Successfully');
     }

@@ -19,3 +19,25 @@ export const salePdfAction = (saleId, isLoading = true) => async (dispatch) => {
                 {text: response.data.message, type: toastType.ERROR}));
         });
 };
+
+
+
+export const saleInvoiceAction = (saleId, isLoading = true) => async (dispatch) => {
+    console.log('I am in invoice action')
+    if (isLoading) {
+        dispatch(setLoading(true))
+    }
+    apiConfig.get(apiBaseURL.SALE_INVOICE_DOWNLOAD + '/' + saleId)
+        .then((response) => {
+            console.log('I am here')
+            window.open(response.data.data.sale_invoice_url, '_blank');
+            if (isLoading) {
+                dispatch(setLoading(false))
+            }
+        })
+        .catch(({response}) => {
+            dispatch(addToast(
+                {text: response.data.message, type: toastType.ERROR}));
+        });
+};
+

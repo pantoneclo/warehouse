@@ -119,6 +119,7 @@ class Sale extends BaseModel implements HasMedia, JsonResourceful
         'currency',
         'cod',
         'order_process_fee',
+        'file'
     ];
 
     public static $rules = [

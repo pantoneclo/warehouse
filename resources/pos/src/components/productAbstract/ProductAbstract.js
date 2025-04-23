@@ -113,7 +113,8 @@ const ProductAbstract = (props) => {
                 edit_permission: edit_permission,
                 delete_permission: delete_permission,
                 quantity:product?.attributes.total_quantity,
-                
+                base_cost:product?.attributes.base_cost,
+
 
             }
         )
@@ -161,8 +162,16 @@ const ProductAbstract = (props) => {
             sortField: 'brand_name',
             sortable: false,
         },
-       
-        
+        {
+            name: getFormattedMessage('base.cost.label'),
+            selector: row => <span className='badge bg-light-danger'>
+                <span>{row.base_cost}</span>
+            </span>,
+            sortField: 'base_cost',
+            sortable: false,
+        },
+
+
         {
             name: getFormattedMessage('quantity.lable'),
             selector: row => <span className='badge bg-light-danger'>

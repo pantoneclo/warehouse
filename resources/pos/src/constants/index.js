@@ -56,6 +56,7 @@ export const apiBaseURL = {
     SALE_DETAILS: 'sale-info',
     SALE_RETURN: 'sales-return',
     SALE_PDF: 'sale-pdf-download',
+    SALE_INVOICE_DOWNLOAD: 'sale-invoice-download',
     QUOTATION_PDF: 'quotation-pdf-download',
     SALE_RETURN_PDF: 'sale-return-pdf-download',
     PURCHASE_PDF: 'purchase-pdf-download',

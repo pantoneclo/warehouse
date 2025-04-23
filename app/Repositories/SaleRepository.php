@@ -29,6 +29,8 @@ use Symfony\Component\HttpKernel\Exception\UnprocessableEntityHttpException;
 use App\Http\Controllers\API\StockManagementAPIController;
 use App\Helpers\StockHelper;
 
+use Illuminate\Support\Str;
+
 /**
  * Class SaleRepository
  */
@@ -145,6 +147,99 @@ class SaleRepository extends BaseRepository
                 $sale->marketplace_commission = ($sale->grand_total - $sale->shipping) * 0.1;
                 $sale->save();
             }
+
+
+       // invoice upload
+            if (!empty($input['file'])) {
+                try {
+                    $base64_str = $input['file'];
+
+                    // Validate base64 string format
+                    if (!preg_match("/^data:(.*?);base64,/", $base64_str, $matches)) {
+                        throw new \Exception('Invalid base64 file format');
+                    }
+
+                    $mimeType = $matches[1];
+                    $extension = $this->mimeToExtension($mimeType);
+
+                    // Validate allowed file types
+                    $allowedTypes = [
+                        'pdf' => 'application/pdf',
+                        'doc' => 'application/msword',
+                        'docx' => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+                        'xls' => 'application/vnd.ms-excel',
+                        'xlsx' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                        'jpg' => 'image/jpeg',
+                        'jpeg' => 'image/jpeg',
+                        'png' => 'image/png',
+                        'gif' => 'image/gif',
+                        'webp' => 'image/webp'
+                    ];
+
+                    if (!in_array($mimeType, $allowedTypes)) {
+                        throw new \Exception('Unsupported file type. Only documents and images are allowed.');
+                    }
+
+                    // Extract the base64 data
+                    $base64_data = substr($base64_str, strpos($base64_str, ',') + 1);
+                    $file_data = base64_decode($base64_data);
+
+                    // Validate the decoded data
+                    if ($file_data === false) {
+                        throw new \Exception('Base64 decoding failed');
+                    }
+
+                    // Check file size (max 5MB)
+                    $fileSize = strlen($file_data);
+                    $maxSize = 5 * 1024 * 1024; // 5MB
+                    if ($fileSize > $maxSize) {
+                        throw new \Exception('File size exceeds maximum limit of 5MB');
+                    }
+
+                    // Additional validation for images
+                    if (strpos($mimeType, 'image/') === 0) {
+                        if (!@getimagesizefromstring($file_data)) {
+                            throw new \Exception('Invalid image data');
+                        }
+                    }
+
+                    // Create sales/invoices directory structure if it doesn't exist
+                    $uploadPath = public_path('uploads/sales/invoices');
+                    if (!file_exists($uploadPath)) {
+                        mkdir($uploadPath, 0755, true);
+                    }
+
+                    // Generate unique filename with correct extension
+                    $fileName = 'invoice_' . time() . '_' . Str::random(8) . '.' . $extension;
+                    $filePath = $uploadPath . '/' . $fileName;
+
+                    // Save the file with error handling
+                    if (file_put_contents($filePath, $file_data) === false) {
+                        throw new \Exception('Failed to save file');
+                    }
+
+                    // Set proper permissions
+                    chmod($filePath, 0644);
+
+                    // Store filename in database
+                    $data['file'] = $fileName;
+                    $sale->file = $fileName;
+                    $sale->save();
+
+                } catch (\Exception $e) {
+                    \Log::error('Invoice upload error: ' . $e->getMessage());
+                    throw new \Exception('Invoice upload failed: ' . $e->getMessage());
+                }
+            }
+       // invoice upload End
+
+
+
+
+
+
+
+
 
             if ($input['is_sale_created'] && $QuotationId) {
                 $quotation = Quotation::find($QuotationId);
@@ -410,6 +505,24 @@ class SaleRepository extends BaseRepository
             DB::rollBack();
             throw new UnprocessableEntityHttpException($e->getMessage());
         }
+    }
+
+
+    private function mimeToExtension($mimeType)
+    {
+        $mimeMap = [
+            'application/pdf' => 'pdf',
+            'application/msword' => 'doc',
+            'application/vnd.openxmlformats-officedocument.wordprocessingml.document' => 'docx',
+            'application/vnd.ms-excel' => 'xls',
+            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' => 'xlsx',
+            'image/jpeg' => 'jpg',
+            'image/png' => 'png',
+            'image/gif' => 'gif',
+            'image/webp' => 'webp'
+        ];
+
+        return $mimeMap[$mimeType] ?? 'bin';
     }
 
     /**

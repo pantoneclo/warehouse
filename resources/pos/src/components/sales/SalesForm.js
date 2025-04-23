@@ -64,6 +64,19 @@ const SalesForm = (props) => {
     const [newSaleUnit, setNewSaleUnit] = useState('');
     const [isPaymentType, setIsPaymentType] = useState(false)
 
+    const [uploadedFile, setUploadedFile] = useState(null);
+
+    const handleFileChange = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                setSaleValue(prev => ({ ...prev, file: reader.result })); // base64 string
+            };
+            reader.readAsDataURL(file);
+        }
+    };
+
     const [saleValue, setSaleValue] = useState({
         date: new Date(),
         warehouse_id: '',
@@ -91,6 +104,7 @@ const SalesForm = (props) => {
         phone:'',
         address:'',
         city:'',
+        file:null
     });
     const [errors, setErrors] = useState({
         date: '',
@@ -140,6 +154,7 @@ console.log("Currencies", currencies);
                 phone:singleSale?singleSale.phone:'',
                 address:singleSale?singleSale.address:'',
                 city:singleSale?singleSale.city:'',
+                file:singleSale?singleSale.file:'',
             })
         }
         if (singleSale && isQuotation) {
@@ -168,6 +183,7 @@ console.log("Currencies", currencies);
                 phone:singleSale?singleSale.phone:'',
                 address:singleSale?singleSale.address:'',
                 city:singleSale?singleSale.city:'',
+                file:singleSale?singleSale.file:'',
             })
         }
     }, [singleSale]);
@@ -404,6 +420,7 @@ console.log("Defalut Currency Option", currencyNameDefault)
             phone:prepareData.phone,
             address:prepareData.address,
             city:prepareData.city,
+            file:prepareData.file,
         }
         return formValue
     };
@@ -739,7 +756,7 @@ console.log(saleValue.market_place, "saleValue Marketplace")
                                      onChange={onPaymentTypeChange}
                         />
                     </div>}
-                   <div className='col-md-4'>
+                    <div className='col-md-4'>
                         <ReactSelect multiLanguageOption={paymentStatusFilterOptions} onChange={onPaymentStatusChange}
                                      name='payment_status'
                                      title={getFormattedMessage('dashboard.recentSales.paymentStatus.label')}
@@ -747,7 +764,7 @@ console.log(saleValue.market_place, "saleValue Marketplace")
                                      defaultValue={paymentStatusDefaultValue[0]}
                                      placeholder={placeholderText('sale.select.payment-status.placeholder')}/>
                     </div>
-                  <div className='col-md-4'>
+                    <div className='col-md-4'>
                         <ReactSelect title={getFormattedMessage('select.payment-type.label')}
                                      name='payment_type'
                                      value={saleValue.payment_type} errors={errors['payment_type']}
@@ -770,6 +787,18 @@ console.log(saleValue.market_place, "saleValue Marketplace")
 
                         />
                     </div>
+                    <div className='col-md-4'>
+                        <label htmlFor="uploadFile" className='form-label'>Upload File</label>
+                        <input
+                            type="file"
+                            id="uploadFile"
+                            name="uploadFile"
+                            className="form-control"
+                            accept=".pdf,.ppt,.pptx,.doc,.docx,image/*"
+                            onChange={handleFileChange}
+                        />
+                    </div>
+
                     <div className='mb-3'>
                         <label className='form-label'>
                             {getFormattedMessage('globally.input.notes.label')}: </label>

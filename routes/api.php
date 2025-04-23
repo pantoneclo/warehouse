@@ -187,6 +187,7 @@ Route::middleware('auth:sanctum')->group(function () {
     //    Route::middleware('permission:manage_sale')->group(function () {
     Route::resource('sales', SaleAPIController::class);
     Route::get('sale-pdf-download/{sale}', [SaleAPIController::class, 'pdfDownload'])->name('sale-pdf-download');
+    Route::get('sale-invoice-download/{sale}', [SaleAPIController::class, 'invoiceDownload'])->name('sale-invoice-download');
     Route::get('sale-info/{sale}', [SaleAPIController::class, 'saleInfo'])->name('sale-info');
     Route::patch('sales/report/{sale}', [SaleAPIController::class, 'salesReportEdit'])->name('sales.report.edit');
     Route::post('parcelStatusUpdate', [SaleAPIController::class, 'parcelStatusUpdate'])->name('parcelStatusUpdate');
@@ -369,7 +370,7 @@ Route::middleware('checkApiKey')->group(function (){
     Route::post('/webhook/order', [StockManagementAPIController::class, 'webHookOrder'])->name('webhook.order');
 
     Route::post('/webhook/manageStock', [StockManagementAPIController::class, 'manageStock'])->name('webhook.order.manageStock');
-     Route::post('/webhook/order/cancel', [StockManagementAPIController::class, 'webHookOrderCancel'])->name('webhook.order');
+     Route::post('/webhook/order/cancel', [StockManagementAPIController::class, 'webHookOrderCancel'])->name('webhook.order.cancel');
      Route::post('/webhook/order/return', [StockManagementAPIController::class, 'webHookOrderReturn'])->name('webhook.order.return');
     Route::post('/webhook/manage-status', [StockManagementAPIController::class, 'webHookUpdateSellStatus']);
     Route::post('/webhook/order/statuschanged', [StockManagementAPIController::class, 'webHookOrderStatusUpdate']);
