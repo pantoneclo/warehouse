@@ -289,13 +289,28 @@ class SaleAPIController extends AppBaseController
 
 
 
-    public  function invoiceDownload(Sale $sale): JsonResponse
+    public  function invoiceDownload($sale): JsonResponse
     {
-        $fileName = 'invoice_1745218745_QywfFpJ9.pdf';
-        $fileUrl = url('uploads/sales/invoices/' . $fileName);
-        $data['sale_invoice_url'] = Storage::url('sales/invoices/' . $fileName);
 
-        return $this->sendResponse($data, 'pdf retrieved Successfully');
+
+        $sale = Sale::findOrFail($sale);
+
+        $marketplace = strtolower(trim($sale->market_place));
+
+        if(in_array($marketplace, ['pantoneclo', 'pantone'])){
+
+           $fileName = "https://api.pantoneclo.com/api/productOrder/web/stream-invoice/".$sale->order_no;
+            $data['sale_invoice_url'] = $fileName;
+            return $this->sendResponse($data, 'pdf retrieved Successfully');
+        }else{
+
+            $fileName = $sale->file;
+            $fileUrl = url('uploads/sales/invoices/' . $fileName);
+            $data['sale_invoice_url'] = Storage::url('sales/invoices/' . $fileName);
+
+            return $this->sendResponse($data, 'pdf retrieved Successfully');
+        }
+
     }
 
     /**
