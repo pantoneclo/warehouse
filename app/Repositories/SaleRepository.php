@@ -149,7 +149,7 @@ class SaleRepository extends BaseRepository
             }
 
 
-       // invoice upload
+            // invoice upload
             if (!empty($input['file'])) {
                 try {
                     $base64_str = $input['file'];
@@ -221,17 +221,26 @@ class SaleRepository extends BaseRepository
                     // Set proper permissions
                     chmod($filePath, 0644);
 
-                    // Store filename in database
-                    $data['file'] = $fileName;
+                    // Store ONLY the filename in database
+                    // Remove any existing file reference from input/data array
+                    unset($input['file']);
+                    unset($input['file']);
+
+                    // Save only the filename to database
                     $sale->file = $fileName;
                     $sale->save();
 
                 } catch (\Exception $e) {
+                    // Delete the file if it was created
+                    if (isset($filePath) && file_exists($filePath)) {
+                        unlink($filePath);
+                    }
+
                     \Log::error('Invoice upload error: ' . $e->getMessage());
                     throw new \Exception('Invoice upload failed: ' . $e->getMessage());
                 }
             }
-       // invoice upload End
+// invoice upload End
 
 
 
