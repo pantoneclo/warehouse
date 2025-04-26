@@ -256,6 +256,12 @@ console.log("Currencies", currencies);
         setSaleValue(inputs => ({ ...inputs, [e.target.name]: value && value }));
     };
 
+
+    const onChangeText = (e) => {
+        e.preventDefault();
+        setSaleValue(inputs => ({ ...inputs, [e.target.name]: e.target.value }));
+    };
+
     const onChangeEmail = (e) => {
         e.preventDefault();
         const { value } = e.target;
@@ -540,7 +546,7 @@ console.log(saleValue.market_place, "saleValue Marketplace")
                         <span className='required'/>
                         <input type='text' name='city' className='form-control'
                                placeholder={placeholderText("globally.input.city.placeholder.label")}
-                               onChange={(e) => onChangeInput(e)}
+                               onChange={(e) => onChangeText(e)}
                                value={saleValue.city}/>
                         <span
                             className='text-danger d-block fw-400 fs-small mt-2'>{errors['city'] ? errors['city'] : null}</span>
@@ -554,7 +560,7 @@ console.log(saleValue.market_place, "saleValue Marketplace")
                         <span className='required'/>
                         <textarea type='text' rows="2" cols="50" name='address' className='form-control'
                                   placeholder={placeholderText("globally.input.address.placeholder.label")}
-                                  onChange={(e) => onChangeInput(e)}
+                                  onChange={(e) => onChangeText(e)}
                                   value={saleValue.address}/>
                         <span
                             className='text-danger d-block fw-400 fs-small mt-2'>{errors['address'] ? errors['address'] : null}</span>
