@@ -124,6 +124,7 @@ class SaleAPIController extends AppBaseController
             }
         }
         $input = $request->all();
+
         $sale = $this->saleRepository->storeSale($input);
         return new SaleResource($sale);
     }

@@ -119,7 +119,9 @@ class Sale extends BaseModel implements HasMedia, JsonResourceful
         'currency',
         'cod',
         'order_process_fee',
-        'file'
+        'file',
+        'conversion_rate',
+        'selling_value_eur',
     ];
 
     public static $rules = [
@@ -139,6 +141,7 @@ class Sale extends BaseModel implements HasMedia, JsonResourceful
         'payment_status' => 'integer|required',
         'reference_code' => 'nullable',
         'date' => 'date|required',
+        'order_no' => 'required|string|unique:sales',
     ];
 
     public $casts = [

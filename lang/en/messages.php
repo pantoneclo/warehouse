@@ -94,6 +94,8 @@ return [
         'size'=>"Size",
         'order_type'=>'ORDER TYPE',
         'fob_price'=>'FOB Price',
+        'total_fob'=>'TOTAL FOB',
+        'conversion_rate'=>'CONVERSION RATE',
     ],
 
     'error' => [

@@ -3,6 +3,7 @@
 namespace App\Repositories;
 
 use App\Mail\MailSender;
+use App\Models\Currency;
 use App\Models\Customer;
 use App\Models\MailTemplate;
 use App\Models\ManageStock;
@@ -100,6 +101,7 @@ class SaleRepository extends BaseRepository
         try {
             DB::beginTransaction();
 
+
             $input['date'] = $input['date'] ?? date('Y/m/d');
             $input['is_sale_created'] = $input['is_sale_created'] ?? false;
             $QuotationId = $input['quotation_id'] ?? false;
@@ -122,6 +124,8 @@ class SaleRepository extends BaseRepository
             }
 
 
+
+
             // Step 2: Prepare sale input array
             $saleInputArray = Arr::only($input, [
                 'warehouse_id', 'tax_rate', 'tax_amount', 'discount', 'shipping', 'grand_total',
@@ -132,7 +136,9 @@ class SaleRepository extends BaseRepository
             // Step 3: Add customer_id to the sale input array
             $saleInputArray['customer_id'] = $customerId; // Use the customer_id
             $saleInputArray['order_process_fee'] = 0.85; //order_process_fee
-
+            $saleInputArray['conversion_rate'] = Currency::where('code', $input['currency'])->value('conversion_rate')??1;
+            //conversion_rate
+            $saleInputArray['selling_value_eur'] =$input['grand_total'] * $saleInputArray['conversion_rate'];
             // Step 4: Create the sale
             /** @var Sale $sale */
             $sale = Sale::create($saleInputArray);
@@ -143,7 +149,7 @@ class SaleRepository extends BaseRepository
             }elseif($input['market_place'] == "MIMOVRSTE" && $input['payment_type'] != "5"){
                 $sale->marketplace_commission = ($sale->grand_total - 3) * 0.18;
                 $sale->save();
-            }elseif ($input['market_place'] == "PIGUE"){
+            }elseif ($input['market_place'] == "PIGU"){
                 $sale->marketplace_commission = ($sale->grand_total - $sale->shipping) * 0.1;
                 $sale->save();
             }
@@ -210,7 +216,7 @@ class SaleRepository extends BaseRepository
                     }
 
                     // Generate unique filename with correct extension
-                    $fileName = 'invoice_' . time() . '_' . Str::random(8) . '.' . $extension;
+                    $fileName = 'invoice_'.$input['country'].'_'.$input['order_no'].'_' . time() . '_' . Str::random(8) . '.' . $extension;
                     $filePath = $uploadPath . '/' . $fileName;
 
                     // Save the file with error handling

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\API;
 
+use App\Models\Currency;
 use App\Services\ApiService;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StockManagementRequest;
@@ -81,6 +82,8 @@ class StockManagementAPIController extends AppBaseController
 
     public function webHookOrder(Request $request)
     {
+//        dd($request->all());
+
         DB::beginTransaction();
         try {
 
@@ -149,12 +152,20 @@ class StockManagementAPIController extends AppBaseController
                 ], 404);
             }
 
+
+            $conversion_rate = Currency::where('code', $request->currency)->value('conversion_rate')??1;
+
+            //conversion_rate
+
+            $selling_value_eur =$request->grand_total *  $conversion_rate;
+
             // Additional fields not directly available in the request
             $additionalFields = [
                 'customer_id' => $customer->id,
-                'warehouse_id' => $warehouse->id
+                'warehouse_id' => $warehouse->id,
+                'selling_value_eur' => $selling_value_eur,
+                'conversion_rate' => $conversion_rate??1,
             ];
-
             // Extract sale input data and merge additional fields
             $saleInputArray = array_merge(
                 Arr::only($request->all(), [
@@ -175,7 +186,15 @@ class StockManagementAPIController extends AppBaseController
             );
 
             // Create the sale record
-            $sale = Sale::create($saleInputArray);
+            try {
+                $sale = Sale::create($saleInputArray);
+            } catch (\Exception $e) {
+                return response()->json([
+                    'error' => true,
+                    'message' => 'Failed to create sale: ' . $e->getMessage(),
+                    'code' => 500
+                ], 500);
+            }
             // Check if the sale was created successfully
             if (!$sale || !$sale->id) {
                 throw new UnprocessableEntityHttpException('Sale record could not be created.');

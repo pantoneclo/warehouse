@@ -41,11 +41,13 @@
         <th style=" text-align: center; width: 200%">{{ __('messages.pdf.selling_market') }}</th>
         <th style=" text-align: center; width: 200%">{{ __('messages.pdf.order_no') }}</th>
         <th style=" text-align: center; width: 200%">{{ __('messages.pdf.style_no') }}</th>
+        <th style=" text-align: center; width: 200%">{{ __('messages.pdf.total_fob') }}</th>
         <th style=" text-align: center; width: 200%">{{ __('messages.pdf.date') }}</th>
-        <th style=" text-align: center; width: 200%">{{ __('messages.pdf.order_type') }}</th>
+
         <th style=" text-align: center; width: 200%">{{ __('messages.pdf.ttl_sale_item') }}</th>
         <th style=" text-align: center; width: 200%">{{ __('messages.pdf.currency') }}</th>
         <th style=" text-align: center; width: 200%">{{ __('messages.pdf.selling_value') }}</th>
+        <th style=" text-align: center; width: 200%">{{ __('messages.pdf.conversion_rate') }}</th>
         <th style=" text-align: center; width: 200%">{{ __('messages.pdf.selling_value_eur') }}</th>
 
         <th style=" text-align: center; width: 200%">{{ __('messages.pdf.mp_comm') }}</th>
@@ -94,6 +96,10 @@
             })
             ->values()
             ->implode(', ');
+
+           $fobSum = $sale->saleItems->sum(function ($item) {
+                        return optional(optional($item->product)->productAbstract)->base_cost;
+                    });
         @endphp
         <tr align="center" style="background-color: dodgerblue; border: 5px solid black; font-weight: bold;">
             <td style="text-align: center;">{{$key+1}}</td>
@@ -101,19 +107,9 @@
             <td style="text-align: center;">{{ ucfirst(strtolower($sale->market_place)) }}</td>
             <td style="text-align: center;">{{$sale->order_no}}</td>
             <td style="text-align: center;">{{$panStyles}}</td>
+            <td style="text-align: center;">{{$fobSum}}</td>
             <td style="text-align: center;">{{\Carbon\Carbon::parse($sale->date)->format('d-m-Y')}}</td>
-            <td style="text-align: center;">
-                @if($sale->order_type)
-                    @if($sale->order_type == 1)
-                        COD
-                    @else
-                        PREPAID
-                    @endif
-                @else
-                    ' '
-                @endif
 
-            </td>
             @if(count($sale->saleItems) > 0)
                 <td style="text-align: center;">{{count($sale->saleItems)}}  </td>
             @else
@@ -125,6 +121,7 @@
 
 
             <td style="text-align: center;">{{ (float) str_replace(',', '', $sale->grand_total) }}</td>
+            <td style="text-align: center;">{{$sale->conversion_rate??1}}</td>
             <td style="text-align: center;">{{$sale->selling_value_eur}}</td>
 
             <td style="text-align: center;">{{$sale->marketplace_commission}}</td>

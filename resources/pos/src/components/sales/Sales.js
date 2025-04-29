@@ -125,7 +125,8 @@ const Sales = (props) => {
         delete_permission: delete_permission,
         create_sale_return_permission:create_sale_return_permission,
         create_payment_permission:create_payment_permission,
-        order_no:sale.attributes.order_no
+        order_no:sale.attributes.order_no,
+        market_place:sale.attributes.market_place,
     }));
 
     useEffect(() => {
@@ -185,6 +186,73 @@ const Sales = (props) => {
             selector: row => row.customer_name,
             sortField: 'customer_name',
             sortable: false,
+        },
+        {
+            name: getFormattedMessage('globally.input.country.label'),
+            sortField: 'country',
+            selector: row => row.country,
+            sortable: false,
+        },
+        {
+            name: getFormattedMessage('marketplace.label'),
+            sortField: 'market_place',
+            selector: row => row.market_place,
+            sortable: false,
+        },
+        {
+            name: getFormattedMessage('dashboard.recentSales.paymentStatus.label'),
+            sortField: 'payment_status',
+            sortable: false,
+            cell: row => {
+                return (
+                    row.payment_status === 1 &&
+                    <span className='badge bg-light-success'>
+                        <span>{getFormattedMessage("payment-status.filter.paid.label")}</span>
+                    </span> ||
+                    row.payment_status === 2 &&
+                    <span className='badge bg-light-danger'>
+                        <span>{getFormattedMessage("payment-status.filter.unpaid.label")}</span>
+                    </span> ||
+                    row.payment_status === 3 &&
+                    <span className='badge bg-light-warning'>
+                        {/*<span>{getFormattedMessage("payment-status.filter.unpaid.label")}</span>*/}
+                        <span>{getFormattedMessage("payment-status.filter.partial.label")}</span>
+                    </span>
+                )
+            }
+        },
+        {
+            name: getFormattedMessage('react-data-table.action.column.label'),
+            right: true,
+            ignoreRowClick: true,
+            allowOverflow: true,
+            button: true,
+            cell: row => {
+                if (row.edit_permission || row.view_permission || row.delete_permission) {
+                    return (
+                        <ActionDropDownButton
+                            item={row}
+                            goToEditProduct={goToEdit}
+                            onClickDeleteModel={onClickDeleteModel}
+                            onPdfClick={onPdfClick}
+                            title={getFormattedMessage('sale.title')}
+                            isPaymentShow={true}
+                            isCreatePayment={row.create_payment_permission}
+                            isPdfIcon={true}
+                            isEditMode={row.edit_permission}
+                            isDeleteMode={row.delete_permission}
+                            isViewIcon={row.view_permission}
+                            isCreateSaleReturn={row.create_sale_return_permission}
+                            goToDetailScreen={goToDetailScreen}
+                            onShowPaymentClick={onShowPaymentClick}
+                            onCreatePaymentClick={onCreatePaymentClick}
+                            onCreateSaleReturnClick={onCreateSaleReturnClick}
+                        />
+                    );
+                } else {
+                    return <p className='badge text-warning'>{getFormattedMessage('no.permission.message')}</p>; // or any other fallback UI if none of the permissions are true
+                }
+            }
         },
         {
             name: getFormattedMessage('warehouse.title'),
@@ -257,28 +325,7 @@ const Sales = (props) => {
             },
             sortable: true,
         },
-        {
-            name: getFormattedMessage('dashboard.recentSales.paymentStatus.label'),
-            sortField: 'payment_status',
-            sortable: false,
-            cell: row => {
-                return (
-                    row.payment_status === 1 &&
-                    <span className='badge bg-light-success'>
-                        <span>{getFormattedMessage("payment-status.filter.paid.label")}</span>
-                    </span> ||
-                    row.payment_status === 2 &&
-                    <span className='badge bg-light-danger'>
-                        <span>{getFormattedMessage("payment-status.filter.unpaid.label")}</span>
-                    </span> ||
-                    row.payment_status === 3 &&
-                    <span className='badge bg-light-warning'>
-                        {/*<span>{getFormattedMessage("payment-status.filter.unpaid.label")}</span>*/}
-                        <span>{getFormattedMessage("payment-status.filter.partial.label")}</span>
-                    </span>
-                )
-            }
-        },
+
         {
             name: getFormattedMessage('select.payment-type.label'),
             sortField: 'payment_type',
@@ -330,46 +377,9 @@ const Sales = (props) => {
                 )
             }
         },
-        {
-            name: getFormattedMessage('react-data-table.action.column.label'),
-            right: true,
-            ignoreRowClick: true,
-            allowOverflow: true,
-            button: true,
-            cell: row => {
-              if (row.edit_permission || row.view_permission || row.delete_permission) {
-                return (
-                  <ActionDropDownButton
-                    item={row}
-                    goToEditProduct={goToEdit}
-                    onClickDeleteModel={onClickDeleteModel}
-                    onPdfClick={onPdfClick}
-                    title={getFormattedMessage('sale.title')}
-                    isPaymentShow={true}
-                    isCreatePayment={row.create_payment_permission}
-                    isPdfIcon={true}
-                    isEditMode={row.edit_permission}
-                    isDeleteMode={row.delete_permission}
-                    isViewIcon={row.view_permission}
-                    isCreateSaleReturn={row.create_sale_return_permission}
-                    goToDetailScreen={goToDetailScreen}
-                    onShowPaymentClick={onShowPaymentClick}
-                    onCreatePaymentClick={onCreatePaymentClick}
-                    onCreateSaleReturnClick={onCreateSaleReturnClick}
-                  />
-                );
-              } else {
-                return <p className='badge text-warning'>{getFormattedMessage('no.permission.message')}</p>; // or any other fallback UI if none of the permissions are true
-              }
-            }
-          },
 
-          {
-            name: getFormattedMessage('globally.input.country.label'),
-            sortField: 'country',
-            selector: row => row.country,
-            sortable: false,
-        },
+
+
 
 
     ];
