@@ -93,7 +93,7 @@ return [
         'color'=>'Color',
         'size'=>"Size",
         'order_type'=>'ORDER TYPE',
-        'fob_price'=>'FOB Price',
+        'fob_price'=>'FOB',
         'total_fob'=>'TOTAL FOB',
         'conversion_rate'=>'CONVERSION RATE',
     ],

@@ -168,7 +168,7 @@
             @elseif($sale->status == \App\Models\Sale::DELIVERED)
                 <td>Delivered</td>
             @elseif($sale->status == \App\Models\Sale::CANCLED)
-                <td>Cancled</td>
+                <td>Canceled</td>
             @endif
 
             @if($sale->payment_status == \App\Models\Sale::PAID)

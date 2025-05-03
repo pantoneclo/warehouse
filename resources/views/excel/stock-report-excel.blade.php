@@ -20,6 +20,8 @@
         <th style="text-align: center; width: 300%">{{ __('messages.pdf.color') }}</th>
         <th style=" text-align: center; width: 300%">{{ __('messages.pdf.size') }}</th>
         <th style="width: 250%">{{ __('messages.pdf.current_stock') }}</th>
+        <th style="width: 250%">{{ __('messages.pdf.fob_price') }}</th>
+        <th style="width: 250%">{{ __('messages.pdf.total_fob') }}</th>
     </tr>
     </thead>
     <tbody>
@@ -41,6 +43,8 @@
             <td style="text-align: center;">{{$product->color?? ''}}</td>
             <td style="text-align: center;">{{$product->size?? ''}}</td>
             <td>{{$stock->quantity}}</td>
+            <td>{{$stock->product->productAbstract->base_cost}}</td>
+            <td>{{$stock->product->productAbstract->base_cost * $stock->quantity}}</td>
         </tr>
     @endforeach
     </tbody>
