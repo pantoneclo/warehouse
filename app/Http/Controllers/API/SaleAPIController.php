@@ -124,7 +124,6 @@ class SaleAPIController extends AppBaseController
             }
         }
         $input = $request->all();
-
         $sale = $this->saleRepository->storeSale($input);
         return new SaleResource($sale);
     }
@@ -302,6 +301,9 @@ class SaleAPIController extends AppBaseController
 
            $fileName = "https://api.pantoneclo.com/api/productOrder/web/stream-invoice/".$sale->order_no;
             $data['sale_invoice_url'] = $fileName;
+            $data['country'] = $sale->country;
+            $data['invoice_no'] = $sale->order_no;
+
             return $this->sendResponse($data, 'pdf retrieved Successfully');
         }else{
 
