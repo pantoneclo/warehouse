@@ -89,7 +89,7 @@ const SaleReport = (props) => {
         courier_fee: sale.attributes?.courier_fee ? sale.attributes.courier_fee : parseFloat(0.00).toFixed(2),
         other_cost: sale.attributes?.other_cost ? sale.attributes.other_cost : parseFloat(0.00).toFixed(2),
         selling_value_eur: sale.attributes?.selling_value_eur ? sale.attributes.selling_value_eur : parseFloat(0.00).toFixed(2),
-        reference_code: sale.attributes?.reference_code,
+
         country: sale.attributes?.country,
         note: sale.attributes?.note,
         is_return: sale.attributes?.is_return,
@@ -148,24 +148,47 @@ const SaleReport = (props) => {
             sortField: 'customer_name',
             sortable: false,
         },
-       
+
         {
             name: getFormattedMessage('purchase.select.status.label'),
             sortField: 'status',
             sortable: false,
             cell: row => {
                 return (
-                    row.status === 1 &&
-                    <span className='badge bg-light-success'>
-                        <span>{getFormattedMessage("status.filter.received.label")}</span>
-                    </span> ||
                     row.status === 2 &&
-                    <span className='badge bg-light-primary'>
+                    <span className='badge bg-primary'>
                         <span>{getFormattedMessage("status.filter.pending.label")}</span>
+                    </span> ||
+                    row.status === 1 &&
+                    <span className='badge bg-light-primary'>
+                        <span>{getFormattedMessage("status.filter.received.label")}</span>
                     </span> ||
                     row.status === 3 &&
                     <span className='badge bg-light-warning'>
                         <span>{getFormattedMessage("status.filter.ordered.label")}</span>
+                    </span>||
+                    row.status === 4 &&
+                    <span className='badge bg-light-info'>
+                        <span>{getFormattedMessage("status.filter.ontheway.label")}</span>
+                    </span>||
+                    row.status === 5 &&
+                    <span className='badge bg-light-success'>
+                        <span>{getFormattedMessage("status.filter.delivered.label")}</span>
+                    </span>||
+                    row.status === 6 &&
+                    <span className='badge bg-light-danger'>
+                        <span>{getFormattedMessage("status.filter.cancelled.label")}</span>
+                    </span>||
+
+                    row.status === 7 &&
+                    <span className='badge bg-light-danger'>
+                        <span>{getFormattedMessage("status.filter.order_failed.label")}</span>
+                    </span>
+                    ||
+
+                    row.status === 8 &&
+                    <span className='badge bg-light-warning'>
+                        <span>{getFormattedMessage("status.filter.returned.label")}</span>
                     </span>
                 )
             }
@@ -291,7 +314,7 @@ const SaleReport = (props) => {
                             <span>REDEX</span>
                         </span>
                     ) : ''
-                ) : ''; 
+                ) : '';
             }
         },
         {
@@ -329,7 +352,7 @@ const SaleReport = (props) => {
                                 },
                             }}
 
-           
+
                             />
                            {isEditSaleReportOpen && (
                                 <EditSaleReportModal

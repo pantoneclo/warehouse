@@ -121,7 +121,8 @@ console.log(sales.attributes , 'this is from sales attributes')
         status_id: {
             label: statusDefaultValue && statusDefaultValue[0] && statusDefaultValue[0].name,
             value: statusDefaultValue && statusDefaultValue[0] && statusDefaultValue[0].id
-        }
+        },
+        currency:sales.attributes?.currency
     };
 console.log(itemsValue,'itemsValue')
     return (

@@ -674,6 +674,8 @@ class SaleRepository extends BaseRepository
                     'tax_amount', 'discount_type', 'discount_value', 'discount_amount', 'sale_unit', 'quantity',
                     'sub_total'
                 ]);
+
+
                 $this->updateItem($saleItemArray, $input['warehouse_id']);
                 //create new product items
                 if (is_null($saleItem['sale_item_id'])) {
@@ -1102,6 +1104,11 @@ class SaleRepository extends BaseRepository
             'customer_id', 'warehouse_id', 'tax_rate', 'tax_amount', 'discount', 'shipping', 'grand_total',
             'received_amount', 'paid_amount', 'payment_type', 'note', 'date', 'status', 'payment_status'
             , 'market_place', 'order_no', 'country'
+        ]);
+        $saleInputArray = Arr::only($input, [
+            'warehouse_id', 'tax_rate', 'tax_amount', 'discount', 'shipping', 'grand_total',
+            'received_amount', 'paid_amount', 'payment_type', 'note', 'date', 'status',
+            'payment_status', 'market_place', 'order_no', 'country', 'currency','cod'
         ]);
         $sale->update($saleInputArray);
 

@@ -236,6 +236,11 @@ console.log("Currencies", currencies);
     };
 
     const onCurrencyChange = (obj) => {
+
+        if(singleSale){
+            singleSale.currency = obj
+        }
+
         setSaleValue(inputs => ({ ...inputs, currency: obj }));
         setErrors('');
     };
@@ -394,6 +399,7 @@ console.log("Currencies", currencies);
     })
 
 console.log("Defalut Currency Option", currencyNameDefault)
+
     const prepareFormData = (prepareData) => {
         const formValue = {
 
@@ -462,7 +468,19 @@ console.log("Defalut Currency Option", currencyNameDefault)
     const label = getLabelById(singleSale?.parcel_company_id);
     console.log(label, 'label')
     const parcel_company_id = { label: label, value: singleSale?.parcel_company_id }
-    const filtredCurrency = currencyNameDefault.find(currency => currency.value === saleValue.country?.currency);
+    let currencyToFilterBy;
+    if (singleSale) {
+        // Update case - use the currency from singleSale
+        console.log("Edit Currency Option", singleSale.currency);
+        currencyToFilterBy = singleSale.currency;
+    } else {
+        // Create case - use the currency from saleValue.country
+        currencyToFilterBy = saleValue.country?.currency;
+    }
+    const filtredCurrency = currencyNameDefault.find(
+        currency => currency.value === currencyToFilterBy
+    );
+
 // Find the selected marketplace based on shipment_id
     const selectMarketplace = marketplaceNamesDefault.find(market=> market.label == saleValue.label)
     const selectedCountry = countryNamesDefault.find(c => c.value === saleValue.country);
@@ -744,24 +762,7 @@ console.log(saleValue.market_place, "saleValue Marketplace")
 
                     {/* parcel end */}
                     <br/>
-                    {singleSale && <div className='col-md-4'>
-                        <ReactSelect multiLanguageOption={paymentStatusFilterOptions} onChange={onPaymentStatusChange}
-                                     name='payment_status'
-                                     title={getFormattedMessage('dashboard.recentSales.paymentStatus.label')}
-                                     value={saleValue.payment_status} errors={errors['payment_status']}
-                                     defaultValue={paymentStatusDefaultValue[0]}
-                                     placeholder={placeholderText('sale.select.payment-status.placeholder')}/>
-                    </div>}
-                    {singleSale && saleValue.payment_status.value !== 2 && <div className='col-md-4'>
-                        <ReactSelect title={getFormattedMessage('select.payment-type.label')}
-                                     name='payment_type'
-                                     value={saleValue.payment_type} errors={errors['payment_type']}
-                                     placeholder={placeholderText('sale.select.payment-type.placeholder')}
-                                     defaultValue={paymentTypeDefaultValue[0]}
-                                     multiLanguageOption={paymentMethodOption}
-                                     onChange={onPaymentTypeChange}
-                        />
-                    </div>}
+
                     <div className='col-md-4'>
                         <ReactSelect multiLanguageOption={paymentStatusFilterOptions} onChange={onPaymentStatusChange}
                                      name='payment_status'

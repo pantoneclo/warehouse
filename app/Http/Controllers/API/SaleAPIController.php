@@ -173,6 +173,7 @@ class SaleAPIController extends AppBaseController
             return $this->sendError('Permission Denied');
         }
         $input = $request->all();
+
         $sale = $this->saleRepository->updateSale($input, $id);
 
         return new SaleResource($sale);
