@@ -629,7 +629,7 @@
     "status.filter.ordered.label": "Picked Up",
     "status.filter.ontheway.label": "On The Way",
     "status.filter.delivered.label": "Delivered",
-    "status.filter.cancelled.label": "Cancelled",
+    "status.filter.cancelled.label": "Canceled",
     "status.filter.order_failed.label": "Failed Order",
     "status.filter.returned.label": "Returned",
     "payment-status.filter.paid.label": "Paid",

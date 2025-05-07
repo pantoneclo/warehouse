@@ -169,6 +169,8 @@
                 <td>Delivered</td>
             @elseif($sale->status == \App\Models\Sale::CANCLED)
                 <td>Canceled</td>
+            @elseif($sale->status == \App\Models\Sale::FAILED_ORDER)
+                <td>Failed Order</td>
             @endif
 
             @if($sale->payment_status == \App\Models\Sale::PAID)
@@ -177,6 +179,8 @@
                 <td>unpaid</td>
             @elseif($sale->payment_status == \App\Models\Sale::PARTIAL_PAID)
                 <td>partial</td>
+            @elseif($sale->payment_status == \App\Models\Sale::RETURNED)
+                <td>Returned</td>
             @endif
             <td style="text-align: center;">
                 @if($sale->payment_type)
