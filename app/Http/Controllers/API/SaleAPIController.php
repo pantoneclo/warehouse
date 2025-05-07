@@ -310,6 +310,8 @@ class SaleAPIController extends AppBaseController
             $fileName = $sale->file;
             $fileUrl = url('uploads/sales/invoices/' . $fileName);
             $data['sale_invoice_url'] = Storage::url('sales/invoices/' . $fileName);
+            $data['country'] = $sale->country;
+            $data['invoice_no'] = $sale->order_no;
 
             return $this->sendResponse($data, 'pdf retrieved Successfully');
         }

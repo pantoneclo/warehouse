@@ -24,6 +24,13 @@ class UpdateSaleRequest extends FormRequest
      */
     public function rules()
     {
-        return Sale::$rules;
+        $id = $this->route('sale'); // Get the sale ID from the route
+
+        $rules = Sale::$rules;
+
+        // Modify the unique rule for 'order_no' to ignore the current record
+        $rules['order_no'] = 'required|string|unique:sales,order_no,' . $id;
+
+        return $rules;
     }
 }
