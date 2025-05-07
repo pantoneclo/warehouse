@@ -1096,15 +1096,6 @@ class SaleRepository extends BaseRepository
         $sale->first();
         $saleExistGrandTotal = $sale->grand_total;
 
-        if ($input['payment_status'] == Sale::PAID && $input['grand_total'] > $saleExistGrandTotal) {
-            $input['payment_status'] = Sale::PARTIAL_PAID;
-        }
-
-        $saleInputArray = Arr::only($input, [
-            'customer_id', 'warehouse_id', 'tax_rate', 'tax_amount', 'discount', 'shipping', 'grand_total',
-            'received_amount', 'paid_amount', 'payment_type', 'note', 'date', 'status', 'payment_status'
-            , 'market_place', 'order_no', 'country'
-        ]);
         $saleInputArray = Arr::only($input, [
             'warehouse_id', 'tax_rate', 'tax_amount', 'discount', 'shipping', 'grand_total',
             'received_amount', 'paid_amount', 'payment_type', 'note', 'date', 'status',
