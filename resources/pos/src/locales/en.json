@@ -581,6 +581,7 @@
     "sale.details.title": "Sale Details",
     "sale.detail.customer.info": "Customer Info",
     "sale.detail.invoice.info": "Invoice Info",
+    "sale.detail.invoice.number": "Invoice",
     "sales-return.title": "Sales Returns",
     "sale-return.title": "Sale Return",
     "sale-return.create.title": "Create Sale Return",

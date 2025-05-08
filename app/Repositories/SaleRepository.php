@@ -249,13 +249,6 @@ class SaleRepository extends BaseRepository
 // invoice upload End
 
 
-
-
-
-
-
-
-
             if ($input['is_sale_created'] && $QuotationId) {
                 $quotation = Quotation::find($QuotationId);
                 $quotation->update([
@@ -1079,22 +1072,17 @@ class SaleRepository extends BaseRepository
         if ($input['discount'] > $subTotalAmount || $input['discount'] < 0) {
             throw new UnprocessableEntityHttpException('Discount amount should not be greater than total.');
         }
-        $input['grand_total'] = $subTotalAmount - $input['discount'];
         if ($input['tax_rate'] > 100 || $input['tax_rate'] < 0) {
             throw new UnprocessableEntityHttpException('Please enter tax value between 0 to 100.');
         }
-        $input['tax_amount'] = $input['grand_total'] * $input['tax_rate'] / 100;
 
-        $input['grand_total'] += $input['tax_amount'];
+
 
         if ($input['shipping'] > $input['grand_total'] || $input['shipping'] < 0) {
             throw new UnprocessableEntityHttpException('Shipping amount should not be greater than total.');
         }
 
-        $input['grand_total'] += $input['shipping'];
-
         $sale->first();
-        $saleExistGrandTotal = $sale->grand_total;
 
         $saleInputArray = Arr::only($input, [
             'warehouse_id', 'tax_rate', 'tax_amount', 'discount', 'shipping', 'grand_total',

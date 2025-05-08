@@ -173,7 +173,6 @@ class SaleAPIController extends AppBaseController
             return $this->sendError('Permission Denied');
         }
         $input = $request->all();
-
         $sale = $this->saleRepository->updateSale($input, $id);
 
         return new SaleResource($sale);
@@ -246,8 +245,12 @@ class SaleAPIController extends AppBaseController
         try {
             DB::beginTransaction();
             $sale = $this->saleRepository->with('saleItems')->where('id', $id)->first();
+
             foreach ($sale->saleItems as $saleItem) {
+                dd($saleItem);
                 manageStock($sale->warehouse_id, $saleItem['product_id'], $saleItem['quantity']);
+
+
             }
             if (File::exists(Storage::path('sales/barcode-' . $sale->reference_code . '.png'))) {
                 File::delete(Storage::path('sales/barcode-' . $sale->reference_code . '.png'));

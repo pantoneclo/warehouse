@@ -61,7 +61,7 @@ const SaleDetails = (props) => {
                         <div className='row'>
                             <div className='col-12'>
                                 <h4 className='font-weight-bold text-center mb-5'>
-                                    {getFormattedMessage('sale.details.title')} : {saleDetails && saleDetails.reference_code}
+                                    {getFormattedMessage('sale.detail.invoice.number')} : {saleDetails && saleDetails.order_no}
                                 </h4>
                             </div>
                         </div>
