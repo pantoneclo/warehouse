@@ -244,16 +244,35 @@ class SaleAPIController extends AppBaseController
         }
         try {
             DB::beginTransaction();
-            $sale = $this->saleRepository->with('saleItems')->where('id', $id)->first();
-
-            foreach ($sale->saleItems as $saleItem) {
-                dd($saleItem);
-                manageStock($sale->warehouse_id, $saleItem['product_id'], $saleItem['quantity']);
+            $sale = $this->saleRepository->with(['saleItems',  'shipment', 'payments'])->where('id', $id)->first();
 
 
+
+            // 1. Delete related shipment (proper collection check)
+            if ($sale->shipment) {
+                $sale->shipment()->delete();
             }
+
+            // 2. Handle any payments (proper collection check)
+            if ($sale->payments) {
+                $sale->payments()->delete();
+            }
+
+            if ($sale->status != 6 && $sale->status != 7) {
+                foreach ($sale->saleItems as $saleItem) {
+
+                    manageStock($sale->warehouse_id, $saleItem['product_id'], $saleItem['quantity']);
+
+                }
+            }
+
+
             if (File::exists(Storage::path('sales/barcode-' . $sale->reference_code . '.png'))) {
                 File::delete(Storage::path('sales/barcode-' . $sale->reference_code . '.png'));
+            }
+
+            if (File::exists(Storage::path('sales/invoices/' . $sale->file))) {
+                File::delete(Storage::path('sales/invoices/' . $sale->file));
             }
             $this->saleRepository->delete($id);
             DB::commit();

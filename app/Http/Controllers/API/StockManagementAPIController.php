@@ -1123,114 +1123,259 @@ class StockManagementAPIController extends AppBaseController
         }
     }
 
-    public function webHookOrderStatusUpdate(Request $request){
-        $current_status = $request->currentStatus;
-        $operation = $request->operation;
-        $warehouse_id = $request->warehouse == "BD" ? "BD" : "SI";
-
-        // Fetch the warehouse by country code
-        $warehouse = Warehouse::where('country_code', $warehouse_id)->first();
-        $order = Sale::where('order_no', $request->order_no)->first();
-        if (!$warehouse) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Warehouse not found.'
-            ], 404);
-        }
-//[1:confirmed, 2:Pending, 3:Picked Up, 4:On The Way, 5:Delivered, 6:Cancelled, 7:Failed Order, 8:Returned]
-        if(!in_array($order->status, [6, 7, 8])) {
-            if ($operation == "Cancelled") {
-                $order->status = 6;
-                $order->save();
-            } elseif ($operation == "Failed Delivery") {
-                $order->status = 7;
-                $order->save();
-            } elseif ($operation == "Returned") {
-                $order->status = 8;
-                $order->save();
-            } elseif ($operation == "Delivered") {
-                $order->payment_status = 1;
-                $order->status = 5;
-                $order->save();
-            } elseif ($operation == "Confirmed") {
-                $order->status = 1;
-                $order->save();
-            } elseif ($operation == "Picked Up") {
-                $order->status = 3;
-                $order->save();
-            } elseif ($operation == "On The Way") {
-                $order->status = 4;
-                $order->save();
+    public function webHookOrderStatusUpdate(Request $request)
+    {
+        try {
+            // Validate required fields
+            if (!$request->has(['order_no', 'operation', 'warehouse', 'items'])) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Missing required parameters'
+                ], 400);
             }
 
+            $operation = $request->operation;
+            $warehouseCode = $request->warehouse == "BD" ? "BD" : "SI";
+            $statusMap = [
+                'Confirmed' => 1,
+                'Pending' => 2,
+                'Picked Up' => 3,
+                'On The Way' => 4,
+                'Delivered' => 5,
+                'Cancelled' => 6,
+                'Failed Delivery' => 7,
+                'Returned' => 8
+            ];
 
-            // ✅ Corrected condition
-            if (!in_array($current_status, ["Cancelled", "Returned", "Failed Delivery"]) &&
-                in_array($operation, ["Cancelled", "Returned", "Failed Delivery"])) {
+            // Fetch the warehouse and order
+            $warehouse = Warehouse::where('country_code', $warehouseCode)->first();
+            if (!$warehouse) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Warehouse not found.'
+                ], 404);
+            }
 
-                // Stock update logic if order is NOT canceled, returned, or failed
+            $order = Sale::where('order_no', $request->order_no)->first();
+            if (!$order) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Order not found.'
+                ], 404);
+            }
+
+            // Check if order is already in a final state
+            if (in_array($order->status, [6, 7, 8])) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Order is already in a final state and cannot be modified.'
+                ], 400);
+            }
+
+            // Update order status
+            if (!isset($statusMap[$operation])) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Invalid operation.'
+                ], 400);
+            }
+
+            $newStatus = $statusMap[$operation];
+            $order->status = $newStatus;
+
+            // Update payment status if delivered
+            if ($operation == 'Delivered') {
+                $order->payment_status = 1;
+            }
+
+            $order->save();
+
+            // Handle stock updates for cancellations, returns, and failed deliveries
+            if (in_array($operation, ['Cancelled', 'Returned', 'Failed Delivery'])) {
                 foreach ($request->items as $item) {
-                    $code = $item['code'];
-                    $quantity = $item['quantity'];
-                    $firstFiveChars = substr($item['code'], 0, 5);
-
-                    if ($firstFiveChars === 'COMBO') {
-                        // Handle combo products
-                        $comboProductIds = ComboProduct::where('code', $item['code'])
-                            ->where('warehouse_id', $warehouse->id)
-                            ->pluck('product_id');
-
-                        foreach ($comboProductIds as $productId) {
-                            // Get the stock quantity for this product in the warehouse
-                            $manageStockProduct = ManageStock::where('warehouse_id', $warehouse->id)
-                                ->where('product_id', $productId)
-                                ->first();
-
-                            if ($manageStockProduct) {
-                                $totalQuantity = $manageStockProduct->quantity + $item['quantity'];
-                                $manageStockProduct->update([
-                                    'quantity' => $totalQuantity,
-                                ]);
-                            }
-                        }
-                        $this->manageStockForCodeAndWarehouse($code, $warehouse->id);
-                    } else {
-                        $product = Product::where('code', $item['code'])->first();
-                        $manageStockProduct = ManageStock::whereWarehouseId($warehouse->id)->whereProductId($product->id)->first();
-                        if ($manageStockProduct) {
-                            $totalQuantity = $manageStockProduct->quantity + $item['quantity'];
-                            $manageStockProduct->update([
-                                'quantity' => $totalQuantity,
-                            ]);
-                        } else {
-                            throw new UnprocessableEntityHttpException('Quantity must be less than available quantity.');
-                        }
-
-                        $this->manageStockForCodeAndWarehouse($code, $warehouse->id);
-
+                    try {
+                        $this->updateStockForItem($item, $warehouse);
+                    } catch (\Exception $e) {
+                        \Log::error("Failed to update stock for item {$item['code']}: " . $e->getMessage());
+                        continue; // Continue with next item even if one fails
                     }
-
-
                 }
 
                 return response()->json([
                     'status' => 'success',
-                    'message' => 'Product quantity updated successfully.',
+                    'message' => 'Order status updated and product quantities restored.',
                     'data' => $request->all()
                 ], 200);
-            } else {
-                return response()->json([
-                    'status' => 'error',
-                    'message' => 'Unable to update Product quantity due to order status.'
-                ]);
             }
-        }else{
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Order status updated successfully.'
+            ], 200);
+
+        } catch (\Exception $e) {
+            \Log::error("Order status update failed: " . $e->getMessage());
             return response()->json([
                 'status' => 'error',
-                'message' => 'Unable to change order status!.'
-            ]);
+                'message' => 'An unexpected error occurred.'
+            ], 500);
         }
     }
+
+    protected function updateStockForItem($item, $warehouse)
+    {
+        $code = $item['code'];
+        $quantity = $item['quantity'];
+
+        if (str_starts_with($code, 'COMBO')) {
+            // Handle combo products
+            $comboProductIds = ComboProduct::where('code', $code)
+                ->where('warehouse_id', $warehouse->id)
+                ->pluck('product_id');
+
+            foreach ($comboProductIds as $productId) {
+                $manageStockProduct = ManageStock::where('warehouse_id', $warehouse->id)
+                    ->where('product_id', $productId)
+                    ->first();
+
+                if ($manageStockProduct) {
+                    $manageStockProduct->increment('quantity', $quantity);
+                } else {
+                    \Log::warning("Product $productId in combo $code not found in warehouse {$warehouse->id}");
+                }
+            }
+        } else {
+            // Handle regular products
+            $product = Product::where('code', $code)->first();
+            if (!$product) {
+                throw new \Exception("Product with code $code not found");
+            }
+
+            $manageStockProduct = ManageStock::where('warehouse_id', $warehouse->id)
+                ->where('product_id', $product->id)
+                ->first();
+
+            if ($manageStockProduct) {
+                $manageStockProduct->increment('quantity', $quantity);
+            } else {
+                throw new \Exception("Product $code not found in warehouse {$warehouse->id}");
+            }
+        }
+
+        $this->manageStockForCodeAndWarehouse($code, $warehouse->id);
+    }
+
+
+
+//    public function webHookOrderStatusUpdate(Request $request){
+//        $current_status = $request->currentStatus;
+//        $operation = $request->operation;
+//        $warehouse_id = $request->warehouse == "BD" ? "BD" : "SI";
+//
+//        // Fetch the warehouse by country code
+//        $warehouse = Warehouse::where('country_code', $warehouse_id)->first();
+//        $order = Sale::where('order_no', $request->order_no)->first();
+//        if (!$warehouse) {
+//            return response()->json([
+//                'status' => 'error',
+//                'message' => 'Warehouse not found.'
+//            ], 404);
+//        }
+////[1:confirmed, 2:Pending, 3:Picked Up, 4:On The Way, 5:Delivered, 6:Cancelled, 7:Failed Order, 8:Returned]
+//        if(!in_array($order->status, [6, 7, 8])) {
+//            if ($operation == "Cancelled") {
+//                $order->status = 6;
+//                $order->save();
+//                \Log::info("Order Cancalled success");
+//            } elseif ($operation == "Failed Delivery") {
+//                $order->status = 7;
+//                $order->save();
+//            } elseif ($operation == "Returned") {
+//                $order->status = 8;
+//                $order->save();
+//            } elseif ($operation == "Delivered") {
+//                $order->payment_status = 1;
+//                $order->status = 5;
+//                $order->save();
+//            } elseif ($operation == "Confirmed") {
+//                $order->status = 1;
+//                $order->save();
+//            } elseif ($operation == "Picked Up") {
+//                $order->status = 3;
+//                $order->save();
+//            } elseif ($operation == "On The Way") {
+//                $order->status = 4;
+//                $order->save();
+//            }
+//
+//
+//            // ✅ Corrected condition
+//            if (!in_array($current_status, ["Cancelled", "Returned", "Failed Delivery"]) &&
+//                in_array($operation, ["Cancelled", "Returned", "Failed Delivery"])) {
+//
+//                // Stock update logic if order is NOT canceled, returned, or failed
+//                foreach ($request->items as $item) {
+//                    $code = $item['code'];
+//                    $quantity = $item['quantity'];
+//                    $firstFiveChars = substr($item['code'], 0, 5);
+//
+//                    if ($firstFiveChars === 'COMBO') {
+//                        // Handle combo products
+//                        $comboProductIds = ComboProduct::where('code', $item['code'])
+//                            ->where('warehouse_id', $warehouse->id)
+//                            ->pluck('product_id');
+//
+//                        foreach ($comboProductIds as $productId) {
+//                            // Get the stock quantity for this product in the warehouse
+//                            $manageStockProduct = ManageStock::where('warehouse_id', $warehouse->id)
+//                                ->where('product_id', $productId)
+//                                ->first();
+//
+//                            if ($manageStockProduct) {
+//                                $totalQuantity = $manageStockProduct->quantity + $item['quantity'];
+//                                $manageStockProduct->update([
+//                                    'quantity' => $totalQuantity,
+//                                ]);
+//                            }
+//                        }
+//                        $this->manageStockForCodeAndWarehouse($code, $warehouse->id);
+//                    } else {
+//                        $product = Product::where('code', $item['code'])->first();
+//                        $manageStockProduct = ManageStock::whereWarehouseId($warehouse->id)->whereProductId($product->id)->first();
+//                        if ($manageStockProduct) {
+//                            $totalQuantity = $manageStockProduct->quantity + $item['quantity'];
+//                            $manageStockProduct->update([
+//                                'quantity' => $totalQuantity,
+//                            ]);
+//                        } else {
+//                            throw new UnprocessableEntityHttpException('Quantity must be less than available quantity.');
+//                        }
+//
+//                        $this->manageStockForCodeAndWarehouse($code, $warehouse->id);
+//
+//                    }
+//
+//
+//                }
+//
+//                return response()->json([
+//                    'status' => 'success',
+//                    'message' => 'Product quantity updated successfully.',
+//                    'data' => $request->all()
+//                ], 200);
+//            } else {
+//                return response()->json([
+//                    'status' => 'error',
+//                    'message' => 'Unable to update Product quantity due to order status.'
+//                ]);
+//            }
+//        }else{
+//            return response()->json([
+//                'status' => 'error',
+//                'message' => 'Unable to change order status!.'
+//            ]);
+//        }
+//    }
 
 
     public  function webHookOrderCourierAssign(Request $request)

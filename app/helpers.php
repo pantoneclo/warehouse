@@ -6,6 +6,8 @@ use App\Models\Setting;
 use App\Models\Supplier;
 use Illuminate\Support\Str;
 
+use App\Helpers\StockHelper;
+
 
 if (!function_exists('getPageSize')) {
     /**
@@ -93,9 +95,10 @@ if (!function_exists('manageStock')) {
      */
     function manageStock($warehouseID, $productID, $qty = 0)
     {
-        $product = ManageStock::whereWarehouseId($warehouseID)
+        $product = ManageStock::with('product')->whereWarehouseId($warehouseID)
             ->whereProductId($productID)
             ->first();
+
 
         if ($product) {
             $totalQuantity = $product->quantity + $qty;
@@ -106,6 +109,8 @@ if (!function_exists('manageStock')) {
             $product->update([
                 'quantity' => $totalQuantity,
             ]);
+
+            StockHelper::manageStockForCodeAndWarehouse($product->product->code, $warehouseID);
         } else {
             if ($qty < 0) {
                 $qty = 0;
