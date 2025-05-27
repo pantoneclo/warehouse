@@ -77,6 +77,11 @@ const PosMainPage = (props) => {
         tax: 0,
         shipping: 0
     });
+
+    // Country select
+
+    const [selectedCountry, setSelectedCountry] = useState(null);
+
     const [cashPaymentValue, setCashPaymentValue] = useState(
         { notes: '', payment_status: { label: getFormattedMessage("dashboard.recentSales.paid.label"), value: 1 }, });
     const [errors, setErrors] = useState({ notes: '' });
@@ -103,9 +108,8 @@ const PosMainPage = (props) => {
 
     //grand total on cart item
     const discountTotal = subTotal - cartItemValue.discount
-    const taxTotal = discountTotal * cartItemValue.tax / 100
-    const mainTotal = discountTotal + taxTotal
-    const grandTotal = (Number(mainTotal) + Number(cartItemValue.shipping)).toFixed(2);
+    const grandTotal = (Number(discountTotal) + Number(cartItemValue.shipping)).toFixed(2);
+    const taxTotal = (grandTotal * cartItemValue.tax) / (100 + cartItemValue.tax)
 
     useEffect(() => {
         setPaymentPrint({
@@ -323,7 +327,6 @@ const PosMainPage = (props) => {
             warehouse_id: selectedOption && selectedOption[0] ? selectedOption[0].value : selectedOption && selectedOption.value,
             sale_items: updateProducts,
             grand_total: grandTotal,
-            payment_status: 1,
             payment_type: paymentValue.pyment_type.value,
             discount: cartItemValue.discount,
             shipping: cartItemValue.shipping,
@@ -331,7 +334,8 @@ const PosMainPage = (props) => {
             note: cashPaymentValue.notes,
             status: 1,
             hold_ref_no: hold_ref_no,
-            payment_status: cashPaymentValue?.payment_status?.value
+            payment_status: cashPaymentValue?.payment_status?.value,
+            order_no:"POS"
         }
         return formValue
     };
@@ -432,6 +436,8 @@ const PosMainPage = (props) => {
                     <PosHeader setSelectedCustomerOption={setSelectedCustomerOption} selectedCustomerOption={selectedCustomerOption}
                         setSelectedOption={setSelectedOption} selectedOption={selectedOption} customerModel={customerModel}
                         updateCustomer={modalShowCustomer}
+                        selectedCountry={selectedCountry}
+                        setSelectedCountry={setSelectedCountry}
                     />
                     <div className='left-content custom-card mb-3 p-3'>
                         <div className='main-table overflow-auto'>
@@ -461,7 +467,7 @@ const PosMainPage = (props) => {
                             </Table>
                         </div>
                         <CartItemMainCalculation totalQty={totalQty} subTotal={subTotal} grandTotal={grandTotal}
-                            cartItemValue={cartItemValue} onChangeCart={onChangeCart}
+                            cartItemValue={cartItemValue} taxTotal={taxTotal} onChangeCart={onChangeCart}
                             allConfigData={allConfigData}
                             frontSetting={frontSetting} onChangeTaxCart={onChangeTaxCart} />
                         <PaymentButton updateProducts={updateProducts} updateCart={addToCarts} setUpdateProducts={setUpdateProducts} setCartItemValue={setCartItemValue} setCashPayment={setCashPayment}

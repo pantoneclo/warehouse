@@ -102,7 +102,7 @@ const SaleReport = (props) => {
         sale_items:sale.attributes?.sale_items || '',
         shipment:sale.attributes?.shipment,
         id: sale.id
-    }
+     }
     }): [];
 
     console.log("Currency", currencies);

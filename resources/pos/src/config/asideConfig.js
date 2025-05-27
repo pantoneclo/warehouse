@@ -25,6 +25,20 @@ export default [
         ],
     },
     {
+        title: "header.pos.title",
+        name:"pos",
+        fontIcon: <FontAwesomeIcon icon={faWarehouse}/>,
+        to: '/app/pos',
+        class: 'd-flex',
+        permission: Permissions.MANAGE_POS_SCREEN,
+        items: [
+            {
+                title: getFormattedMessage('header.pos.title'),
+                to: '/app/pos',
+            },
+        ],
+    },
+    {
         title: 'inventory.title',
         name: "inventory",
         fontIcon: <FontAwesomeIcon icon={faWarehouse}/>,
@@ -523,13 +537,7 @@ export default [
 
         ]
     },
-    {
-        to: '/app/pos',
-        class: 'd-none',
-        name:"pos",
-        title: "header.pos.title",
-        permission: Permissions.MANAGE_POS_SCREEN,
-    },
+
     {
         title: 'settings.title',
         name: "settings",
@@ -558,5 +566,6 @@ export default [
             //     to: '/app/mail-settings'
             // },
         ],
-    }
+    },
+
 ];

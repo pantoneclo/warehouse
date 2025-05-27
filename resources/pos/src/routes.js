@@ -257,7 +257,7 @@ export const route = [
         ele: <ProductAbstract />,
         permission: Permissions.MANAGE_PRODUCTS,
     },
-    
+
 
     {
         path: "product/abstracts",
@@ -399,7 +399,7 @@ export const route = [
     {
         path: "pos",
         ele: <PosMainPage />,
-       
+        permission: Permissions.MANAGE_POS_SCREEN
     },
     {
         path: "/payment",

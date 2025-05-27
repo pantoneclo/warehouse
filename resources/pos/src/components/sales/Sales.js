@@ -104,7 +104,10 @@ const Sales = (props) => {
     const create_payment_permission = usePermission(Permissions.MANAGE_SALE_PAYMENT);
 
 
-    const itemsValue = currencySymbol && sales.length >= 0 && sales.map(sale => ({
+    const itemsValue = currencySymbol && sales.length >= 0 && sales.map(sale => {
+        const currency = currencies.find(currency => currency.attributes.code === sale.attributes?.currency);
+
+        return{
         date: getFormattedDate(sale.attributes.date, allConfigData && allConfigData),
         // date_for_payment: sale.attributes.date,
         time: moment(sale.attributes.created_at).format('LT'),
@@ -117,7 +120,7 @@ const Sales = (props) => {
         grand_total: sale.attributes.grand_total,
         paid_amount: sale.attributes.paid_amount ? sale.attributes.paid_amount : 0.00.toFixed(2),
         id: sale.id,
-        currency: currencySymbol,
+        currency: currency?.attributes?.symbol || '',
         country:sale.attributes.country,
         is_return: sale.attributes.is_return,
         view_permission: view_permission,
@@ -127,7 +130,9 @@ const Sales = (props) => {
         create_payment_permission:create_payment_permission,
         order_no:sale.attributes.order_no,
         market_place:sale.attributes.market_place,
-    }));
+
+        }
+    });
 
     useEffect(() => {
         const grandTotalSum = () => {

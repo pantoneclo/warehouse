@@ -4,7 +4,7 @@ import {Row} from "react-bootstrap";
 import {currencySymbolHendling, decimalValidate, getFormattedMessage, numValidate, placeholderText} from '../../../shared/sharedMethod';
 
 const CartItemMainCalculation = (props) => {
-    const {totalQty, subTotal, cartItemValue, onChangeCart, grandTotal, frontSetting, allConfigData, onChangeTaxCart} = props;
+    const {totalQty, subTotal,taxTotal, cartItemValue, onChangeCart, grandTotal, frontSetting, allConfigData, onChangeTaxCart} = props;
 
     return (
         <div className='calculation mt-5'>
@@ -52,7 +52,16 @@ const CartItemMainCalculation = (props) => {
                     <h4 className='fs-3 mb-2 custom-big-content text-gray-600'>
                         {getFormattedMessage('pos-total-qty.title')} : {totalQty ? totalQty : '0'}
                     </h4>
-                    <h4 className='fs-3 mb-2 text-gray-600'>{getFormattedMessage('pos.subtotal.small.title')} : {currencySymbolHendling(allConfigData, frontSetting.value && frontSetting.value.currency_symbol, subTotal ? subTotal: '0.00')}</h4>
+
+                    <h4 className='fs-3 mb-2 custom-big-content text-gray-600'>
+                        {getFormattedMessage('globally.detail.order.vat')} : {taxTotal ? Number(taxTotal).toFixed(2) : '0'}
+                    </h4>
+
+
+                    <h4 className='fs-3 mb-2 text-gray-600'>{getFormattedMessage('pos.subtotal.small.title')} : {currencySymbolHendling(allConfigData, frontSetting.value && frontSetting.value.currency_symbol, subTotal ? subTotal : '0.00')}</h4>
+                    <h4 className='fs-3 mb-2 custom-big-content text-gray-600'>
+                        {getFormattedMessage('purchase.order-item.table.discount.column.label')} : {cartItemValue.discount ? cartItemValue.discount : '0'}
+                    </h4>
                     <h2 className='fs-1 mb-2 text-gray-800'>{getFormattedMessage('pos-total.title')} : {currencySymbolHendling(allConfigData, frontSetting.value && frontSetting.value.currency_symbol, grandTotal ? grandTotal : '0.00')}</h2>
                 </div>
             </Row>

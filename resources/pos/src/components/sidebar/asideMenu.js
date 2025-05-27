@@ -234,7 +234,7 @@ const AsideMenu = (props) => {
                                  )
                                 })}
                               </SubMenu> :
-                              mainItems.to !== '/app/pos' && <MenuItem key={index}
+                              <MenuItem key={index}
                                           icon={mainItems.fontIcon}
                                           className={`${isMenuCollapse === false ? mainItems.class : ''} flex-column`}
                                           active={location.pathname === mainItems.to
