@@ -134,6 +134,12 @@
                         EXPEDICO
                     @elseif($sale->shipment->parcel_company_id == 3)
                         REDEX
+                    @elseif($sale->shipment->parcel_company_id == 5)
+                        PACKETA
+                    @elseif($sale->shipment->parcel_company_id == 6)
+                        PATHAO
+                    @elseif($sale->shipment->parcel_company_id == 4)
+                        PACTIC
                     @else
                         NOT YET
                     @endif
@@ -141,7 +147,7 @@
                     NOT YET
                 @endif
             </td>
-            <td style="text-align: center;">{{$sale->courier_fee}}</td>
+            <td style="text-align: center;">{{$sale->shipping}}</td>
             <td style="text-align: center;">{{$sale->tax_amount}}</td>
             <td>{{number_format((float)$sale->payments->sum('amount'), 2)}}</td>
             <td style="text-align: center;">
