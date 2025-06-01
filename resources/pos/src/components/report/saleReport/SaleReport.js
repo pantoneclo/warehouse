@@ -234,6 +234,10 @@ const SaleReport = (props) => {
                     row.payment_status === 3 &&
                     <span className='badge bg-light-warning'>
                         <span>{getFormattedMessage("payment-status.filter.partial.label")}</span>
+                    </span> ||
+                    row.payment_status === 4 &&
+                    <span className='badge bg-light-warning'>
+                        <span>{getFormattedMessage("payment-status.filter.refund.label")}</span>
                     </span>
                 )
             }

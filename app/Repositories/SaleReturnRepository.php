@@ -101,6 +101,7 @@ class SaleReturnRepository extends BaseRepository
             $saleUpdate = $sale->update([
                 'is_return' => 1,
                 'status' => 8,
+                'payment_status' => 4,
             ]);
             $saleReturn = $this->storeSaleReturnItems($saleReturn, $input);
 

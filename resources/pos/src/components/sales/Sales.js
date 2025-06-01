@@ -222,6 +222,12 @@ const Sales = (props) => {
                     <span className='badge bg-light-warning'>
                         {/*<span>{getFormattedMessage("payment-status.filter.unpaid.label")}</span>*/}
                         <span>{getFormattedMessage("payment-status.filter.partial.label")}</span>
+                    </span>||
+
+                row.payment_status === 4 &&
+                <span className='badge bg-light-warning'>
+                        {/*<span>{getFormattedMessage("payment-status.filter.unpaid.label")}</span>*/}
+                    <span>{getFormattedMessage("payment-status.filter.refund.label")}</span>
                     </span>
                 )
             }

@@ -669,6 +669,7 @@
     "product.quantity.alert.reports.title": "Product Quantity Alerts",
     "globally-saving-btn-label": "Saving...",
     "payment-status.filter.partial.label": "Partial",
+    "payment-status.filter.refund.label": "Refunded",
     "dashboard.recentSales.total-product.label": "Total Products",
     "adjustments.title": "Adjustments",
     "adjustments.create.title": "Create Adjustment",

@@ -193,6 +193,7 @@ class Sale extends BaseModel implements HasMedia, JsonResourceful
     const UNPAID = 2;
 
     const PARTIAL_PAID = 3;
+    const REFUND = 4;
 
     /**
      * @return array

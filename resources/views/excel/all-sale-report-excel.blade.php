@@ -172,7 +172,7 @@
             @elseif($sale->status == \App\Models\Sale::FAILED_ORDER)
                 <td>Failed Order</td>
             @elseif($sale->status == \App\Models\Sale::RETURNED)
-                <td>Returned</td>    
+                <td>Returned</td>
             @endif
 
             @if($sale->payment_status == \App\Models\Sale::PAID)
@@ -181,13 +181,13 @@
                 <td>unpaid</td>
             @elseif($sale->payment_status == \App\Models\Sale::PARTIAL_PAID)
                 <td>partial</td>
-            @elseif($sale->payment_status == \App\Models\Sale::RETURNED)
-                <td>Returned</td>
+            @elseif($sale->payment_status == \App\Models\Sale::REFUND)
+                <td>refunded</td>
             @endif
             <td style="text-align: center;">
                 @if($sale->payment_type)
                     @if($sale->payment_type== 1)
-                        CASH
+                        COD
                     @elseif($sale->payment_type== 2)
                         CHEQUE
                     @elseif($sale->payment_type== 3)
