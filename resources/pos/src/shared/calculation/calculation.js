@@ -42,22 +42,45 @@ export const amountBeforeTax = (cartItem) => {
 }
 
 //Grand Total Calculation
-export const calculateCartTotalTaxAmount = (carts, inputValue) => {
-    if (!inputValue || !inputValue.tax_rate) return "0.00"; // Prevent errors
+// export const calculateCartTotalTaxAmount = (carts, inputValue) => {
+//     if (!inputValue || !inputValue.tax_rate) return "0.00"; // Prevent errors
+//
+//     let taxValue = parseFloat(inputValue.tax_rate);
+//     let totalAmountBeforeTax = 0;
+//
+//     carts.forEach(cartItem => {
+//         totalAmountBeforeTax += parseFloat(cartItem.sub_total || 0);
+//     });
+//
+//     let totalAmountAfterDiscount = totalAmountBeforeTax + Number(inputValue.shipping) + Number(inputValue.cod) - Number(inputValue.discount);
+//
+//     let totalTax = (totalAmountAfterDiscount * taxValue) / (100 + taxValue);
+//
+//     return totalTax.toFixed(2);
+// };
 
-    let taxValue = parseFloat(inputValue.tax_rate);
+
+export const calculateCartTotalTaxAmount = (carts, inputValue) => {
+    if (!inputValue || !inputValue.tax_rate) return "0.00";
+
+    let taxValue = parseFloat(inputValue.tax_rate) || 0;
+    let shipping = parseFloat(inputValue.shipping) || 0;
+    let cod = parseFloat(inputValue.cod) || 0;
+    let discount = parseFloat(inputValue.discount) || 0;
+
     let totalAmountBeforeTax = 0;
 
     carts.forEach(cartItem => {
         totalAmountBeforeTax += parseFloat(cartItem.sub_total || 0);
     });
 
-    let totalAmountAfterDiscount = totalAmountBeforeTax + Number(inputValue.shipping) + Number(inputValue.cod) - Number(inputValue.discount);
+    let totalAmountAfterDiscount = totalAmountBeforeTax + shipping + cod - discount;
 
     let totalTax = (totalAmountAfterDiscount * taxValue) / (100 + taxValue);
 
-    return totalTax.toFixed(2);
+    return isNaN(totalTax) ? "0.00" : totalTax.toFixed(2);
 };
+
 
 
 export const calculateSubTotal = (carts) => {

@@ -171,6 +171,8 @@
                 <td>Canceled</td>
             @elseif($sale->status == \App\Models\Sale::FAILED_ORDER)
                 <td>Failed Order</td>
+            @elseif($sale->status == \App\Models\Sale::RETURNED)
+                <td>Returned</td>    
             @endif
 
             @if($sale->payment_status == \App\Models\Sale::PAID)

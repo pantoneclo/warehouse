@@ -98,7 +98,10 @@ class SaleReturnRepository extends BaseRepository
 
             /** @var Sale $sale */
             $saleReturn = SaleReturn::create($saleReturnInputArray);
-            $saleUpdate = $sale->update(['is_return' => 1]);
+            $saleUpdate = $sale->update([
+                'is_return' => 1,
+                'status' => 8,
+            ]);
             $saleReturn = $this->storeSaleReturnItems($saleReturn, $input);
 
             foreach ($input['sale_return_items'] as $purchaseItem) {

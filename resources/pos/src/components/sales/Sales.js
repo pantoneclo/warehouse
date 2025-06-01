@@ -270,45 +270,51 @@ const Sales = (props) => {
             sortField: 'status',
             sortable: false,
             cell: row => {
+                if (row.is_return === 1) {
+                    return (
+                        <span className='badge bg-light-danger'>
+                          <span>{getFormattedMessage("status.filter.returned.label")}</span>
+                       </span>
+                    );
+                }
+
                 return (
                     row.status === 2 &&
                     <span className='badge bg-primary'>
-                        <span>{getFormattedMessage("status.filter.pending.label")}</span>
-                    </span> ||
+                <span>{getFormattedMessage("status.filter.pending.label")}</span>
+            </span> ||
                     row.status === 1 &&
                     <span className='badge bg-light-primary'>
-                        <span>{getFormattedMessage("status.filter.received.label")}</span>
-                    </span> ||
+                <span>{getFormattedMessage("status.filter.received.label")}</span>
+            </span> ||
                     row.status === 3 &&
                     <span className='badge bg-light-warning'>
-                        <span>{getFormattedMessage("status.filter.ordered.label")}</span>
-                    </span>||
+                <span>{getFormattedMessage("status.filter.ordered.label")}</span>
+            </span> ||
                     row.status === 4 &&
                     <span className='badge bg-light-info'>
-                        <span>{getFormattedMessage("status.filter.ontheway.label")}</span>
-                    </span>||
+                <span>{getFormattedMessage("status.filter.ontheway.label")}</span>
+            </span> ||
                     row.status === 5 &&
                     <span className='badge bg-light-success'>
-                        <span>{getFormattedMessage("status.filter.delivered.label")}</span>
-                    </span>||
+                <span>{getFormattedMessage("status.filter.delivered.label")}</span>
+            </span> ||
                     row.status === 6 &&
                     <span className='badge bg-light-danger'>
-                        <span>{getFormattedMessage("status.filter.cancelled.label")}</span>
-                    </span>||
-
-                   row.status === 7 &&
-                   <span className='badge bg-light-danger'>
-                        <span>{getFormattedMessage("status.filter.order_failed.label")}</span>
-                    </span>
-                    ||
-
+                <span>{getFormattedMessage("status.filter.cancelled.label")}</span>
+            </span> ||
+                    row.status === 7 &&
+                    <span className='badge bg-light-danger'>
+                <span>{getFormattedMessage("status.filter.order_failed.label")}</span>
+            </span> ||
                     row.status === 8 &&
                     <span className='badge bg-light-warning'>
-                        <span>{getFormattedMessage("status.filter.returned.label")}</span>
-                    </span>
-                )
+                <span>{getFormattedMessage("status.filter.returned.label")}</span>
+            </span>
+                );
             }
         },
+
         {
             name: getFormattedMessage('purchase.grant-total.label'),
             sortField: 'grand_total',
@@ -319,17 +325,7 @@ const Sales = (props) => {
             },
             sortable: true,
         },
-        {
-            name: getFormattedMessage('dashboard.recentSales.paid.label'),
-            sortField: 'paid_amount',
-            cell: row => {
-                return row.reference_code === "Total" ? <span
-                    className="fw-bold fs-4">
-                    {currencySymbolHendling(allConfigData, row.currency, row.paid_amount)}</span> :
-                    <span>{currencySymbolHendling(allConfigData, row.currency, row.paid_amount)}</span>
-            },
-            sortable: true,
-        },
+
 
         {
             name: getFormattedMessage('select.payment-type.label'),

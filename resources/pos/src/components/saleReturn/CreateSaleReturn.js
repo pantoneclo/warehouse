@@ -85,7 +85,7 @@ const CreateSaleReturn = (props) => {
         sale_reference: sales.attributes.reference_code,
         isCreateSaleReturn: true,
     };
-
+    console.log('Sales Return', itemsValue)
     return (
         <MasterLayout>
             <TopProgressBar/>
