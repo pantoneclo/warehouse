@@ -1135,6 +1135,7 @@ class StockManagementAPIController extends AppBaseController
             }
 
             $operation = $request->operation;
+            $order_details =  $request->orderDetails;
             $warehouseCode = $request->warehouse == "BD" ? "BD" : "SI";
             $statusMap = [
                 'Confirmed' => 1,

@@ -117,8 +117,13 @@ class PurchaseAPIController extends AppBaseController
                 if (empty($saleItems)) {
                     dd("Sale items are empty or not an array", $saleItems);
                 }
-                // Call stock management controller to handle inventory
-                $this->stockManagementController->prepareStockItems($warehouse_id, $warehouse_code, $saleItems, $operation);
+
+                foreach ($saleItems as $saleItem) {
+
+                    manageStock( $warehouse_id, $saleItem['product_id'], 0);
+
+                }
+                
             } else {
                 // If required data is missing, debug or log the issue
                 dd($purchase);
