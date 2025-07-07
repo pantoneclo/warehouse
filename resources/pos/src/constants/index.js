@@ -941,6 +941,7 @@ export const shippingCompanyNames = [
     {id : 4, label: 'PACTIC' },
     {id : 5, label: 'PACKETA' },
     {id : 6, label: 'PATHAO' },
+    {id : 6, label: 'FAN COURIER' },
 ]
 
 export const getLabelById = (id) => {
