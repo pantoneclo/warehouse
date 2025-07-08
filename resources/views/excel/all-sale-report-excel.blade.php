@@ -140,6 +140,8 @@
                         PATHAO
                     @elseif($sale->shipment->parcel_company_id == 4)
                         PACTIC
+                    @elseif($sale->shipment->parcel_company_id == 7)
+                        FAN COURIER    
                     @else
                         NOT YET
                     @endif
