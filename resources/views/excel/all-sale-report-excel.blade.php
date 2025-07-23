@@ -39,35 +39,40 @@
         <th style=" text-align: center; ">{{ __('messages.sl_no') }}</th>
         <th style=" text-align: center; width: 200%">{{ __('messages.pdf.selling_country') }}</th>
         <th style=" text-align: center; width: 200%">{{ __('messages.pdf.selling_market') }}</th>
+        <th style=" text-align: center; width: 200%">{{ __('messages.pdf.date') }}</th>
         <th style=" text-align: center; width: 200%">{{ __('messages.pdf.order_no') }}</th>
         <th style=" text-align: center; width: 200%">{{ __('messages.pdf.style_no') }}</th>
-        <th style=" text-align: center; width: 200%">{{ __('messages.pdf.total_fob') }}</th>
-        <th style=" text-align: center; width: 200%">{{ __('messages.pdf.date') }}</th>
+        <th style=" text-align: center; width: 200%">{{ __('messages.pdf.item_descriptuion') }}</th> 
+        
+        
 
         <th style=" text-align: center; width: 200%">{{ __('messages.pdf.ttl_sale_item') }}</th>
         <th style=" text-align: center; width: 200%">{{ __('messages.pdf.currency') }}</th>
         <th style=" text-align: center; width: 200%">{{ __('messages.pdf.selling_value') }}</th>
         <th style=" text-align: center; width: 200%">{{ __('messages.pdf.conversion_rate') }}</th>
         <th style=" text-align: center; width: 200%">{{ __('messages.pdf.selling_value_eur') }}</th>
-
-        <th style=" text-align: center; width: 200%">{{ __('messages.pdf.mp_comm') }}</th>
-        <th style=" text-align: center; width: 200%">{{ __('messages.pdf.op_fee') }}</th>
-        <th style=" text-align: center; width: 200%">{{ __('messages.pdf.parcel_company') }}</th>
-        <th style=" text-align: center; width: 200%">{{ __('messages.pdf.courier_fee') }}</th>
         <th style=" text-align: center; width: 200%">{{ __('messages.pdf.vat') }}</th>
-        <th style=" text-align: center; width: 200%">{{ __('messages.pdf.received_amount') }}</th>
+        <th style=" text-align: center; width: 200%">{{ __('messages.pdf.mp_comm') }}</th>
+        <th style=" text-align: center; width: 200%">{{ __('messages.pdf.mp_mf') }}</th>
+        
+        
+        <th style=" text-align: center; width: 200%">{{ __('messages.pdf.courier_fee') }}</th>
+        <th style=" text-align: center; width: 200%">{{ __('messages.pdf.parcel_company') }}</th>
+        
         <th style=" text-align: center; width: 200%">SALES RETURN</th>
-        <th style=" text-align: center; width: 200%">{{ __('messages.pdf.other_income') }}</th>
+        <th style=" text-align: center; width: 200%">PROMOTION</th>
+        <th style=" text-align: center; width: 200%">META COST</th>
+       <th style=" text-align: center; width: 200%">{{ __('messages.pdf.received_amount') }}</th>
+        <th style=" text-align: center; width: 200%">{{ __('messages.pdf.op_fee') }}</th>
         <th style=" text-align: center; width: 200%">{{ __('messages.pdf.other_cost') }}</th>
-        <th style=" text-align: center; width: 200%">{{ __('messages.pdf.customer') }}</th>
-
-
-        <th style=" text-align: center; width: 200%">{{ __('messages.pdf.warehouse') }}</th>
-        <th style=" text-align: center; width: 200%">{{ __('messages.pdf.status') }}</th>
-
-        <th style=" text-align: center; width: 200%">{{ __('messages.pdf.payment_status') }}</th>
+    
+        <th style=" text-align: center; width: 200%">{{ __('messages.pdf.total_fob') }}</th>
+        <th style=" text-align: center; width: 200%">PROFIT/LOSS</th>
         <th style=" text-align: center; width: 200%">{{ __('messages.pdf.payment_method') }}</th>
-
+        <th style=" text-align: center; width: 200%">{{ __('messages.pdf.status') }}</th>
+        <th style=" text-align: center; width: 200%">{{ __('messages.pdf.payment_status') }}</th>
+        <th style=" text-align: center; width: 200%">{{ __('messages.pdf.customer') }}</th>
+        <th style=" text-align: center; width: 200%">{{ __('messages.pdf.warehouse') }}</th>
 
 
 
@@ -100,16 +105,19 @@
            $fobSum = $sale->saleItems->sum(function ($item) {
                         return optional(optional($item->product)->productAbstract)->base_cost;
                     });
+            $item_name  =   $sale->saleItems ->map(function($item) {
+                return $item->product->name;
+            })->values()
+            ->implode(', ');       
         @endphp
         <tr align="center" style="background-color: dodgerblue; border: 5px solid black; font-weight: bold;">
             <td style="text-align: center;">{{$key+1}}</td>
             <td style="text-align: center;">{{$sale->country}}</td>
             <td style="text-align: center;">{{ ucfirst(strtolower($sale->market_place)) }}</td>
+            <td style="text-align: center;">{{\Carbon\Carbon::parse($sale->date)->format('d-m-Y')}}</td>
             <td style="text-align: center;">{{$sale->order_no}}</td>
             <td style="text-align: center;">{{$panStyles}}</td>
-            <td style="text-align: center;">{{$fobSum}}</td>
-            <td style="text-align: center;">{{\Carbon\Carbon::parse($sale->date)->format('d-m-Y')}}</td>
-
+            <td style="text-align: center;">{{$item_name}}</td>
             @if(count($sale->saleItems) > 0)
                 <td style="text-align: center;">{{count($sale->saleItems)}}  </td>
             @else
@@ -123,9 +131,10 @@
             <td style="text-align: center;">{{ (float) str_replace(',', '', $sale->grand_total) }}</td>
             <td style="text-align: center;">{{$sale->conversion_rate??1}}</td>
             <td style="text-align: center;">{{$sale->selling_value_eur}}</td>
-
+            <td style="text-align: center;">{{$sale->tax_amount}}</td>
             <td style="text-align: center;">{{$sale->marketplace_commission}}</td>
-            <td style="text-align: center;">{{$sale->order_process_fee}}</td>
+            <td style="text-align: center;"></td>
+             <td style="text-align: center;">{{$sale->shipping}}</td>
             <td style="text-align: center;">
                 @if($sale->shipment)
                     @if($sale->shipment->parcel_company_id == 1)
@@ -149,9 +158,7 @@
                     NOT YET
                 @endif
             </td>
-            <td style="text-align: center;">{{$sale->shipping}}</td>
-            <td style="text-align: center;">{{$sale->tax_amount}}</td>
-            <td>{{number_format((float)$sale->payments->sum('amount'), 2)}}</td>
+           
             <td style="text-align: center;">
                 @if($sale->is_return)
                    RETURNED
@@ -159,39 +166,14 @@
                     NO
                 @endif
             </td>
-            <td style="text-align: center;">{{$sale->other_income}}</td>
+             <td style="text-align: center;"></td>
+              <td style="text-align: center;"></td>
+            <td>{{number_format((float)$sale->payments->sum('amount'), 2)}}</td>
+            <td style="text-align: center;">{{$sale->order_process_fee}}</td>
             <td style="text-align: center;">{{$sale->other_cost}}</td>
-            <td style="text-align: center;">{{$sale->customer->name}}</td>
-
-
-            <td style="text-align: center;">{{$sale->warehouse->name}}</td>
-            @if($sale->status == \App\Models\Sale::COMPLETED)
-                <td>Confirmed</td>
-            @elseif($sale->status == \App\Models\Sale::PENDING)
-                <td>Pending</td>
-            @elseif($sale->status == \App\Models\Sale::ORDERED)
-                <td>Picked Up</td>
-            @elseif($sale->status == \App\Models\Sale::ONTHEWAY)
-                <td>On The Way</td>
-            @elseif($sale->status == \App\Models\Sale::DELIVERED)
-                <td>Delivered</td>
-            @elseif($sale->status == \App\Models\Sale::CANCLED)
-                <td>Canceled</td>
-            @elseif($sale->status == \App\Models\Sale::FAILED_ORDER)
-                <td>Failed Order</td>
-            @elseif($sale->status == \App\Models\Sale::RETURNED)
-                <td>Returned</td>
-            @endif
-
-            @if($sale->payment_status == \App\Models\Sale::PAID)
-                <td>paid</td>
-            @elseif($sale->payment_status == \App\Models\Sale::UNPAID)
-                <td>unpaid</td>
-            @elseif($sale->payment_status == \App\Models\Sale::PARTIAL_PAID)
-                <td>partial</td>
-            @elseif($sale->payment_status == \App\Models\Sale::REFUND)
-                <td>refunded</td>
-            @endif
+            
+           <td style="text-align: center;">{{$fobSum}}</td>
+           <td style="text-align: center;"></td>
             <td style="text-align: center;">
                 @if($sale->payment_type)
                     @if($sale->payment_type== 1)
@@ -217,6 +199,35 @@
                     NOT YET
                 @endif
             </td>
+            @if($sale->status == \App\Models\Sale::COMPLETED)
+                <td>Confirmed</td>
+            @elseif($sale->status == \App\Models\Sale::PENDING)
+                <td>Pending</td>
+            @elseif($sale->status == \App\Models\Sale::ORDERED)
+                <td>Picked Up</td>
+            @elseif($sale->status == \App\Models\Sale::ONTHEWAY)
+                <td>On The Way</td>
+            @elseif($sale->status == \App\Models\Sale::DELIVERED)
+                <td>Delivered</td>
+            @elseif($sale->status == \App\Models\Sale::CANCLED)
+                <td>Canceled</td>
+            @elseif($sale->status == \App\Models\Sale::FAILED_ORDER)
+                <td>Failed Order</td>
+            @elseif($sale->status == \App\Models\Sale::RETURNED)
+                <td>Returned</td>
+            @endif
+
+             @if($sale->payment_status == \App\Models\Sale::PAID)
+                <td>paid</td>
+            @elseif($sale->payment_status == \App\Models\Sale::UNPAID)
+                <td>unpaid</td>
+            @elseif($sale->payment_status == \App\Models\Sale::PARTIAL_PAID)
+                <td>partial</td>
+            @elseif($sale->payment_status == \App\Models\Sale::REFUND)
+                <td>refunded</td>
+            @endif
+             <td style="text-align: center;">{{$sale->customer->name}}</td>
+             <td style="text-align: center;">{{$sale->warehouse->name}}</td>
         </tr>
     @endforeach
     </tbody>
