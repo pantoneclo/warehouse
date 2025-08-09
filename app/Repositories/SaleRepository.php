@@ -97,7 +97,7 @@ class SaleRepository extends BaseRepository
      */
     public function storeSale($input): Sale
     {
-        dd($input);
+     
         try {
             DB::beginTransaction();
 
