@@ -141,7 +141,7 @@ class Sale extends BaseModel implements HasMedia, JsonResourceful
         'payment_status' => 'integer|required',
         'reference_code' => 'nullable',
         'date' => 'date|required',
-        'order_no' => 'required|string|unique:sales',
+        'order_no' => 'nullable|string|unique:sales',
     ];
 
     public $casts = [

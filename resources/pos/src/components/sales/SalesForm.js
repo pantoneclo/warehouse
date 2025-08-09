@@ -419,7 +419,7 @@ console.log("Defalut Currency Option", currencyNameDefault)
             note: prepareData.notes,
             status: prepareData.status_id.value ? prepareData.status_id.value : prepareData.status_id,
             payment_status: prepareData.payment_status.value ? prepareData.payment_status.value : prepareData.payment_status,
-            payment_type: prepareData.payment_status.value === 2 ? 0 : prepareData.payment_type.value ? prepareData.payment_type.value : prepareData.payment_type,
+            payment_type: prepareData.payment_type?.value ?? prepareData.payment_type ?? 0,
             parcel_company_id: prepareData.parcel_company_id.value ? prepareData.parcel_company_id.value : prepareData.parcel_company_id,
             parcel_number: prepareData.parcel_number,
             shipment_id: prepareData.shipment_id ? prepareData.shipment_id : '',

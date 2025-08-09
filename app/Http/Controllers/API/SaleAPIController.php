@@ -328,7 +328,25 @@ class SaleAPIController extends AppBaseController
             $data['invoice_no'] = $sale->order_no;
 
             return $this->sendResponse($data, 'pdf retrieved Successfully');
-        }else{
+        }elseif(in_array($marketplace, ['pantoneclo whm'])){
+             $sale = $sale->load('customer', 'saleItems.product', 'payments');
+            
+            $data = [];
+            if (Storage::exists('pdf/Sale-'.$sale->country.'-'. $sale->order_no . '.pdf')) {
+                Storage::delete('pdf/Sale-'.$sale->country.'-'. $sale->order_no . '.pdf');
+            }
+            $companyLogo = getLogoUrl();
+            $pdf = PDF::loadView('pdf.sale-pdf', compact('sale', 'companyLogo'))->setOptions([
+                'tempDir' => public_path(),
+                'chroot' => public_path(),
+            ]);
+            Storage::disk(config('app.media_disc'))->put('pdf/Sale-'.$sale->country.'-'. $sale->order_no . '.pdf', $pdf->output());
+            $data['sale_pdf_url'] = Storage::url('pdf/Sale-'.$sale->country.'-'. $sale->order_no . '.pdf');
+
+            return $this->sendResponse($data, 'pdf retrieved Successfully');
+        }
+        
+        else{
 
             $fileName = $sale->file;
             $fileUrl = url('uploads/sales/invoices/' . $fileName);

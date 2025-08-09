@@ -20,7 +20,7 @@ return [
         'address' => 'Address',
         'email' => 'Email',
         'company_info' => 'Company Info',
-        'product' => 'Product',
+        'product' => 'PRODUCT',
         'unit_price' => 'UNIT PRICE',
         'quantity' => 'QUANTITY',
         'discount' => 'Discount',

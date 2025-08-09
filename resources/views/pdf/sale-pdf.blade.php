@@ -50,19 +50,17 @@
 
 <table width="100%">
     <tr>
-        <td>
-            <img src="{{getLogo()}}" alt="Company Logo" width="80px">
-        </td>
-        <td align="center" style="vertical-align: bottom">
-            <h2 style="color: dodgerblue;">{{ $sale->reference_code }}</h2>
-        </td>
-        <td width="30%" style="line-height: 5px;">
-            <h4 class="fw-bold vi-bold-text">{{ getLoginUserLanguage() == 'cn' ? 'Date' : __('messages.pdf.date') }}: <span
-                        class="fw-light vi-light-text">{{ \Carbon\Carbon::parse($sale->created_at)->format('Y-m-d') }}</span></h4>
-            <h4 class="fw-bold vi-bold-text">{{ getLoginUserLanguage() == 'cn' ? 'Number' : __('messages.pdf.number') }}: <span
-                        class="fw-light vi-light-text">{{ $sale->reference_code }}</span></h4>
-            <h4 class="fw-bold vi-bold-text">{{ getLoginUserLanguage() == 'cn' ? 'Payment Status' : __('messages.pdf.payment_status') }}: <span
-                        class="fw-light vi-light-text">{{ $sale->payment_status == \App\Models\Sale::PAID ? 'Paid' : 'Unpaid' }}</span>
+       <td style="width: 100px; vertical-align: top;">
+        <img src="{{ getLogo() }}" alt="Company Logo" width="80px">
+       </td>
+    
+        <td style="text-align: right; line-height: 5px; vertical-align: top;">
+            <h2 class="fw-bold vi-bold-text">Invoice</h2>
+            <h4>Order ID: <span>{{ $sale->order_no }}</span></h4>
+            <h4>Order Date: <span>{{ \Carbon\Carbon::parse($sale->created_at)->format('Y-m-d') }}</span></h4>
+            <h4>
+                Payment Status:
+                <span>{{ $sale->payment_status == \App\Models\Sale::PAID ? 'Paid' : 'Unpaid' }}</span>
             </h4>
         </td>
     </tr>
@@ -71,8 +69,8 @@
     <tr style="vertical-align: top;">
         <td style="width: 50%;">
             <table width="95%" cellpadding="0">
-                <tr style="background-color: dodgerblue;">
-                    <td style="color: #fff;padding: 10px;font-size: 18px;">{{ getLoginUserLanguage() == 'cn' ? 'Customer Info' : __('messages.pdf.customer_info') }}</td>
+                <tr style="background-color: #f5f3f3;">
+                    <td style="color: #000000; padding: 10px;font-size: 18px;">{{ getLoginUserLanguage() == 'cn' ? 'Shipping Info' : __('messages.pdf.customer_info') }}</td>
                 </tr>
                 <tr style="background-color: #f5f3f3;">
                     <td style="padding: 10px;">
@@ -94,7 +92,7 @@
                 </tr>
             </table>
         </td>
-        <td style="width: 50%;">
+        {{--<td style="width: 50%;">
             <table width="95%" align="right">
                 <tr style="background-color: dodgerblue;">
                     <td style="color: #fff;padding: 10px;font-size: 18px;">{{ getLoginUserLanguage() == 'cn' ? 'Company Info' : __('messages.pdf.company_info') }}</td>
@@ -111,18 +109,18 @@
                     </td>
                 </tr>
             </table>
-        </td>
+        </td> --}}
     </tr>
 </table>
 <table width="100%" cellspacing="0" cellpadding="10" style="margin-top: 40px;">
     <thead>
-    <tr style="background-color: dodgerblue;">
-        <th style="color: #fff;">{{ getLoginUserLanguage() == 'cn' ? 'Product' : __('messages.pdf.product') }}</th>
-        <th style="color: #fff;">{{ getLoginUserLanguage() == 'cn' ? 'UNIT PRICE' : __('messages.pdf.unit_price') }}</th>
-        <th style="color: #fff;">{{ getLoginUserLanguage() == 'cn' ? 'QUANTITY' : __('messages.pdf.quantity') }}</th>
-        <th style="color: #fff;">{{ getLoginUserLanguage() == 'cn' ? 'DISCOUNT' : __('messages.heading_discount') }}</th>
-        <th style="color: #fff;">{{ getLoginUserLanguage() == 'cn' ? 'TAX' : __('messages.pdf.tax') }}</th>
-        <th style="color: #fff;">{{ getLoginUserLanguage() == 'cn' ? 'TOTAL' : __('messages.heading_total') }}</th>
+    <tr style="background-color: #f5f3f3;">
+        <th style="color: #000000;">{{ getLoginUserLanguage() == 'cn' ? 'PRODUCT' : __('messages.pdf.product') }}</th>
+        <th style="color: #000000;">{{ getLoginUserLanguage() == 'cn' ? 'UNIT PRICE' : __('messages.pdf.unit_price') }}</th>
+        <th style="color: #000000;">{{ getLoginUserLanguage() == 'cn' ? 'QUANTITY' : __('messages.pdf.quantity') }}</th>
+        <th style="color: #000000;">{{ getLoginUserLanguage() == 'cn' ? 'DISCOUNT' : __('messages.heading_discount') }}</th>
+        <th style="color: #000000;">{{ getLoginUserLanguage() == 'cn' ? 'TAX' : __('messages.pdf.tax') }}</th>
+        <th style="color: #000000;">{{ getLoginUserLanguage() == 'cn' ? 'TOTAL' : __('messages.heading_total') }}</th>
     </tr>
     </thead>
     <tbody style="background-color: #f5f3f3;">

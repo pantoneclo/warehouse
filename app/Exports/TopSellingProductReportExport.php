@@ -21,7 +21,7 @@ class TopSellingProductReportExport implements FromView
                 ->groupBy('products.id')
                 ->orderBy('total_quantity', 'desc')
                 ->latest()
-                ->take(10)
+    
                 ->get();
         } else {
             $topSelling = Product::leftJoin('sale_items', 'products.id', '=', 'sale_items.product_id')
@@ -30,7 +30,7 @@ class TopSellingProductReportExport implements FromView
                 ->groupBy('products.id')
                 ->orderBy('total_quantity', 'desc')
                 ->latest()
-                ->take(10)
+                
                 ->get();
         }
 

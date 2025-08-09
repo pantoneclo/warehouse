@@ -97,7 +97,7 @@ class SaleRepository extends BaseRepository
      */
     public function storeSale($input): Sale
     {
-
+        dd($input);
         try {
             DB::beginTransaction();
 
@@ -115,15 +115,19 @@ class SaleRepository extends BaseRepository
                 'city' => $input['city'],
                 'country' => $input['country'],
             ];
-            $customer = Customer::where('email', $input['email'])->first();
-            if ($customer) {
-                $customerId = $customer->id;
-            } else {
-                $customer = Customer::create($customerData);
-                $customerId = $customer->id;
+           
+            $customer = Customer::create($customerData);
+            $customerId = $customer->id;
+          
+
+            // Generate order_no if not provided
+            if (empty($input['order_no'])) {
+                do {
+                    $generatedOrderNo = str_pad(mt_rand(0, 99999999), 8, '0', STR_PAD_LEFT); // 8-digit number
+                } while (Sale::where('order_no', $generatedOrderNo)->exists());
+
+                $input['order_no'] = $generatedOrderNo;
             }
-
-
 
 
             // Step 2: Prepare sale input array
@@ -246,7 +250,7 @@ class SaleRepository extends BaseRepository
                     throw new \Exception('Invoice upload failed: ' . $e->getMessage());
                 }
             }
-// invoice upload End
+         // invoice upload End
 
 
             if ($input['is_sale_created'] && $QuotationId) {
@@ -342,169 +346,7 @@ class SaleRepository extends BaseRepository
                     'form_params' => [$data],
                 ]);
             }
-            if (isset($input['parcel_number'])) {
-                $this->ParcelStatusCreate($input, $sale);
-
-                // $parcel = Shipment::create([
-                //     'sale_id' => $sale->id,
-                //     'parcel_company_id' => $input['parcel_company_id'],
-                //     'parcel_number' => $input['parcel_number'],
-
-                // ]);
-
-                // if ($input['status'] == 2 && $parcel->parcel_company_id == 1) {
-
-                //     $credential = ['gls_username', 'gls_password'];
-                //     $credentials = Setting::whereIn('key', $credential)->pluck('value', 'key')->toArray();
-                //     $pwd = $credentials['gls_password'];
-                //     $username = $credentials['gls_username'];
-                //     $password = json_decode("[" . implode(',', unpack('C*', hash('sha512', $pwd, true))) . "]");
-
-                //     $credentials = [
-                //         'username' => $username,
-                //         'password' => $password,
-                //     ];
-                //     $url = 'https://api.mygls.si/ParcelService.svc/json/GetParcelStatuses';
-                //     $tracking_number = $parcel->parcel_number;
-
-                //     $glsParcel = new GlsParcel($credentials, null, null, null);
-                //     $response = $glsParcel->fetch($tracking_number, $url);
-
-                //     if ($response) {
-
-                //         $parcel = Shipment::whereId($parcel->id)->first();
-                //         $reponse = $response->json();
-                //         // dd ($reponse);
-
-                //         $parcel->update([
-
-                //             'weight' => $reponse['Weight'],
-                //         ]);
-
-                //         $responseArray = json_decode($response, true);
-
-                //         if (isset($responseArray['ParcelStatusList']) && !empty($responseArray['ParcelStatusList'])) {
-                //             // Sort the array based on the "StatusDate" field in descending order
-                //             usort($responseArray['ParcelStatusList'], function ($a, $b) {
-                //                 return strtotime($b['StatusDate']) - strtotime($a['StatusDate']);
-                //             });
-
-                //             $latestStatus = $responseArray['ParcelStatusList'][0];
-                //             $parcel->update([
-
-                //                 'status_date' => $latestStatus['StatusDate'],
-                //                 'status_description' => $latestStatus['StatusDescription'],
-                //                 'depot_city' => $latestStatus['DepotCity'],
-                //             ]);
-
-                //         }
-                //         // dd($parcel);
-                //     }
-
-                // }
-
-            }
-
-            // if (isset($input['parcel_list'])) {
-            //     //  dd ($input['parcel_list'][0]['delivery_address']['name']);
-            //     $deliveryAddressArray = [
-
-            //         'name' => $input['parcel_list'][0]['delivery_address']['name'],
-            //         'street' => $input['parcel_list'][0]['delivery_address']['street'],
-            //         'house_number' => $input['parcel_list'][0]['delivery_address']['house_number'],
-            //         'house_number_info' => $input['parcel_list'][0]['delivery_address']['house_number_info'],
-            //         'zip_code' => $input['parcel_list'][0]['delivery_address']['zip_code'],
-            //         'city' => $input['parcel_list'][0]['delivery_address']['city'],
-            //         'country_iso_code' => $input['parcel_list'][0]['delivery_address']['country_iso_code'],
-            //         'contact_name' => $input['parcel_list'][0]['delivery_address']['contact_name'],
-            //         'contact_phone' => $input['parcel_list'][0]['delivery_address']['contact_phone'],
-            //         'contact_email' => $input['parcel_list'][0]['delivery_address']['contact_email'],
-            //     ];
-            //     // dd ('hi');
-
-            //     $pickupAddressArray = [
-            //         'name' => $input['parcel_list'][0]['pickup_address']['name'],
-            //         'street' => $input['parcel_list'][0]['pickup_address']['street'],
-            //         'house_number' => $input['parcel_list'][0]['pickup_address']['house_number'],
-            //         'house_number_info' => $input['parcel_list'][0]['pickup_address']['house_number_info'],
-            //         'zip_code' => $input['parcel_list'][0]['pickup_address']['zip_code'],
-            //         'city' => $input['parcel_list'][0]['pickup_address']['city'],
-            //         'country_iso_code' => $input['parcel_list'][0]['pickup_address']['country_iso_code'],
-            //         'contact_name' => $input['parcel_list'][0]['pickup_address']['contact_name'],
-            //         'contact_phone' => $input['parcel_list'][0]['pickup_address']['contact_phone'],
-            //         'contact_email' => $input['parcel_list'][0]['pickup_address']['contact_email'],
-            //     ];
-
-            //     $shipment = new Shipment();
-            //     $shipment->sale_id = $sale->id;
-            //     $shipment->parcel_company_id = $input['parcel_list'][0]['parcel_company_id'];
-            //     $shipment->cod_amount = $input['parcel_list'][0]['cod_amount'];
-            //     $shipment->cod_reference = $input['parcel_list'][0]['cod_reference'];
-            //     $shipment->count = $input['parcel_list'][0]['count'];
-            //     $shipment->content = $input['parcel_list'][0]['content'];
-            //     $shipment->pickup_date = $input['parcel_list'][0]['pickup_date'];
-            //     // $shipment->pickup_date = "/Date(" . (strtotime($input['parcel_list'][0]['pickup_date']) * 1000) . ")/";
-
-            //     if ($input['parcel_list'][0]['delivery_address']) {
-
-            //         $address = ShipmentAddress::create($deliveryAddressArray);
-
-            //         $shipment->delivery_address_id = $address->id;
-
-            //     }
-            //     if ($input['parcel_list'][0]['pickup_address']) {
-
-            //         $address = ShipmentAddress::create($pickupAddressArray);
-            //         $address->save();
-            //         $shipment->pickup_address_id = $address->id;
-
-            //     }
-            //     $shipment->save();
-
-            //     if ($input['parcel_list'][0]['parcel_company_id'] == 1 && $input['status'] == 2) {
-
-            //         $credential = ['gls_username', 'gls_password'];
-            //         $credentials = Setting::whereIn('key', $credential)->pluck('value', 'key')->toArray();
-            //         $pwd = $credentials['gls_password'];
-            //         $username = $credentials['gls_username'];
-            //         $password = json_decode("[" . implode(',', unpack('C*', hash('sha512', $pwd, true))) . "]");
-
-            //         $credentials = [
-            //             'username' => $username,
-            //             'password' => $password,
-            //         ];
-            //         $url = 'https://api.mygls.si/ParcelService.svc/json/PrintLabels';
-            //         $pickupDate = "/Date(" . (strtotime("2023-11-25 23:59:59") * 1000) . ")/";
-
-            //         $clientNumber = 492380936;
-            //         $count = $input['parcel_list'][0]['count'];
-            //         $codAmount = $input['parcel_list'][0]['cod_amount'];
-
-            //         $additionInfo = array(
-            //             "clientNumber" => $clientNumber,
-            //             "pickupDate" => $pickupDate,
-            //             'url' => $url,
-            //             'Count' => $count,
-            //             'CODAmount' => $codAmount,
-
-            //         );
-            //         $data = $additionInfo;
-            //         $ref = [
-            //             'CODReference' => "COD TEST REFETRENCE",
-            //             "ClientReference" => "TEST REFETRENCE",
-            //         ];
-            //         $deliveryAddress = new Address($deliveryAddressArray);
-
-            //         $pickupAddress = new Address($pickupAddressArray);
-
-            //         $glsParcel = new GlsParcel($credentials, $pickupAddress, $deliveryAddress, $ref);
-            //         $response = $glsParcel->create($data);
-
-            //         return $response;
-
-            //     }
-
-            // }
+           
 
             DB::commit();
 
