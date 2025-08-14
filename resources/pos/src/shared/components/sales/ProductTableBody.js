@@ -40,6 +40,7 @@ const ProductTableBody = (props) => {
     }, [singleProduct.sub_total]);
 
     const onProductUpdateInCart = (item) => {
+        console.log(item);
         setUpdateProductData(item);
     };
 
