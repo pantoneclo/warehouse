@@ -153,6 +153,8 @@ class ProductAbstractRepository extends BaseRepository
     public function updateAbstract($input, $id)
     {
 
+
+ 
         try {
 
 
@@ -264,6 +266,7 @@ class ProductAbstractRepository extends BaseRepository
                     $product->product_abstract_id = $productAbstract->id;
                     $product->product_cost = $input['base_cost'];
                     $product->product_price = $input['base_price'];
+                    $product->code = $productData['code'];
                     $product->stock_alert = $productData['stock_alert'];
                     $product->quantity_limit = $productData['quantity_limit'];
                     $product->save();

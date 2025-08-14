@@ -399,6 +399,7 @@ console.log("Currencies", currencies);
     })
 
 console.log("Defalut Currency Option", currencyNameDefault)
+console.log("Updated Items all Properties", updateProducts)
 
     const prepareFormData = (prepareData) => {
         const formValue = {

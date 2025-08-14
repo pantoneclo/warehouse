@@ -97,7 +97,7 @@ class SaleRepository extends BaseRepository
      */
     public function storeSale($input): Sale
     {
-     
+      
         try {
             DB::beginTransaction();
 
@@ -141,10 +141,12 @@ class SaleRepository extends BaseRepository
             $saleInputArray['customer_id'] = $customerId; // Use the customer_id
             $saleInputArray['order_process_fee'] = 0.85; //order_process_fee
             $saleInputArray['conversion_rate'] = Currency::where('code', $input['currency'])->value('conversion_rate')??1;
+            
             //conversion_rate
             $saleInputArray['selling_value_eur'] =$input['grand_total'] * $saleInputArray['conversion_rate'];
             // Step 4: Create the sale
             /** @var Sale $sale */
+
             $sale = Sale::create($saleInputArray);
 
             if($input['market_place'] == "MIMOVRSTE" && $input['payment_type'] == "5"){
@@ -388,17 +390,17 @@ class SaleRepository extends BaseRepository
 
         //discount calculation
         $perItemDiscountAmount = 0;
-        $saleItem['net_unit_price'] = $saleItem['product_price'];
+        $saleItem['net_unit_price'] = $saleItem['net_unit_price'];
         if ($saleItem['discount_type'] == Sale::PERCENTAGE) {
             if ($saleItem['discount_value'] <= 100 && $saleItem['discount_value'] >= 0) {
-                $saleItem['discount_amount'] = ($saleItem['discount_value'] * $saleItem['product_price'] / 100) * $saleItem['quantity'];
+                $saleItem['discount_amount'] = ($saleItem['discount_value'] * $saleItem['net_unit_price'] / 100) * $saleItem['quantity'];
                 $perItemDiscountAmount = $saleItem['discount_amount'] / $saleItem['quantity'];
                 $saleItem['net_unit_price'] -= $perItemDiscountAmount;
             } else {
                 throw new UnprocessableEntityHttpException('Please enter discount value between 0 to 100.');
             }
         } elseif ($saleItem['discount_type'] == Sale::FIXED) {
-            if ($saleItem['discount_value'] <= $saleItem['product_price'] && $saleItem['discount_value'] >= 0) {
+            if ($saleItem['discount_value'] <= $saleItem['net_unit_price'] && $saleItem['discount_value'] >= 0) {
                 $saleItem['discount_amount'] = $saleItem['discount_value'] * $saleItem['quantity'];
                 $perItemDiscountAmount = $saleItem['discount_amount'] / $saleItem['quantity'];
                 $saleItem['net_unit_price'] -= $perItemDiscountAmount;
@@ -433,35 +435,36 @@ class SaleRepository extends BaseRepository
      */
     public function storeSaleItems($sale, $input)
     {
-        foreach ($input['sale_items'] as $saleItem) {
-            $product = Product::whereId($saleItem['product_id'])->first();
+            foreach ($input['sale_items'] as $saleItem) {
+                $product = Product::whereId($saleItem['product_id'])->first();
 
-            if (!empty($product) && isset($product->quantity_limit) && $saleItem['quantity'] > $product->quantity_limit) {
-                throw new UnprocessableEntityHttpException('Please enter less than ' . $product->quantity_limit . ' quantity of ' . $product->name . ' product.');
+                if (!empty($product) && isset($product->quantity_limit) && $saleItem['quantity'] > $product->quantity_limit) {
+                    throw new UnprocessableEntityHttpException('Please enter less than ' . $product->quantity_limit . ' quantity of ' . $product->name . ' product.');
+                }
+                $item = $this->calculationSaleItems($saleItem);
+
+                $saleItem = new SaleItem($item);
+                $sale->saleItems()->save($saleItem);
             }
-            $item = $this->calculationSaleItems($saleItem);
-            $saleItem = new SaleItem($item);
-            $sale->saleItems()->save($saleItem);
-        }
 
-        $subTotalAmount = $sale->saleItems()->sum('sub_total');
+             $subTotalAmount = $sale->saleItems()->sum('sub_total');
 
-//        if ($input['discount'] <= $subTotalAmount) {
-//            $input['grand_total'] = $subTotalAmount - $input['discount'];
-//        } else {
-//            throw new UnprocessableEntityHttpException('Discount amount should not be greater than total.');
-//        }
-//        if ($input['tax_rate'] <= 100 && $input['tax_rate'] >= 0) {
-//            $input['tax_amount'] = $input['grand_total'] * $input['tax_rate'] / 100;
-//        } else {
-//            throw new UnprocessableEntityHttpException('Please enter tax value between 0 to 100.');
-//        }
-//        $input['grand_total'] += $input['tax_amount'];
-//        if ($input['shipping'] <= $input['grand_total'] && $input['shipping'] >= 0) {
-//            $input['grand_total'] += $input['shipping'];
-//        } else {
-//            throw new UnprocessableEntityHttpException('Shipping amount should not be greater than total.');
-//        }
+            //        if ($input['discount'] <= $subTotalAmount) {
+            //            $input['grand_total'] = $subTotalAmount - $input['discount'];
+            //        } else {
+            //            throw new UnprocessableEntityHttpException('Discount amount should not be greater than total.');
+            //        }
+            //        if ($input['tax_rate'] <= 100 && $input['tax_rate'] >= 0) {
+            //            $input['tax_amount'] = $input['grand_total'] * $input['tax_rate'] / 100;
+            //        } else {
+            //            throw new UnprocessableEntityHttpException('Please enter tax value between 0 to 100.');
+            //        }
+            //        $input['grand_total'] += $input['tax_amount'];
+            //        if ($input['shipping'] <= $input['grand_total'] && $input['shipping'] >= 0) {
+            //            $input['grand_total'] += $input['shipping'];
+            //        } else {
+            //            throw new UnprocessableEntityHttpException('Shipping amount should not be greater than total.');
+            //        }
 
         if ($input['payment_status'] == Sale::PAID) {
             $input['paid_amount'] = $input['grand_total'];

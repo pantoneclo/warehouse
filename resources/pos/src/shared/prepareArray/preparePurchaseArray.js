@@ -27,6 +27,7 @@ export const preparePurchaseProductArray = (products, isBarcode) => {
             id: product?.attributes?.product_id,
             purchase_item_id: '',
             product_price: product.attributes.product_price,
+            net_unit_price: product.attributes.product_price,
           
         })
     });

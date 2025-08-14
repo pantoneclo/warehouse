@@ -34,7 +34,7 @@ export const taxAmountMultiply = (cartItem) => {
 }
 
 export const amountBeforeTax = (cartItem) => {
-    let price = +cartItem.fix_net_unit;
+    let price = +cartItem.net_unit_price;
     const unitCost = +price - discountAmount(cartItem);
     const inclusiveTax = +unitCost - taxAmount(cartItem);
     let finalCalPrice = cartItem.tax_type === '1' || cartItem.tax_type === 1 ? +unitCost : +inclusiveTax;

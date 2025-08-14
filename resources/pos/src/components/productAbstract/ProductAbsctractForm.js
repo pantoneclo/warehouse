@@ -573,6 +573,11 @@ const ProductAbsctractForm = (props) => {
                 product.product_price
             );
             formData.append(
+                `products[${product_index}][code]`,
+                product.code
+            );
+
+            formData.append(
                 `products[${product_index}][stock_alert]`,
                 product.stock_alert
             );

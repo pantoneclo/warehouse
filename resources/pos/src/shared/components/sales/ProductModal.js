@@ -21,7 +21,7 @@ const ProductModal = (props) => {
     } = props;
 
     const [productModalData, setProductModalData] = useState(product);
-    const [netUnit, setNetUnit] = useState(product.fix_net_unit);
+    const [netUnit, setNetUnit] = useState(product.net_unit_price);
     const [taxValue, setTaxValue] = useState(product.tax_value);
     const [taxType, setTaxType] = useState(product.tax_type);
     const [discountValue, setDiscountValue] = useState(product.discount_value);
@@ -61,7 +61,7 @@ const ProductModal = (props) => {
 
     useEffect(() => {
         setProductModalData(product);
-        setNetUnit(netUnit ? (netUnit).toFixed(2) : parseFloat(product.fix_net_unit.toFixed(2)));
+        setNetUnit(netUnit ? (netUnit).toFixed(2) : parseFloat(product.net_unit_price.toFixed(2)));
         setTaxValue(product.tax_value ? parseFloat(product.tax_value).toFixed(2) : '0.00')
         setTaxType(product.tax_type === '1' || product.tax_type === 1 ? {value: taxTypeFilterOptions[0].id, label: taxTypeFilterOptions[0].name} : {
             value: taxTypeFilterOptions[1].id, label: taxTypeFilterOptions[1].name
