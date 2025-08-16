@@ -119,7 +119,7 @@
         <th style="color: #000000;">{{ getLoginUserLanguage() == 'cn' ? 'UNIT PRICE' : __('messages.pdf.unit_price') }}</th>
         <th style="color: #000000;">{{ getLoginUserLanguage() == 'cn' ? 'QUANTITY' : __('messages.pdf.quantity') }}</th>
         <th style="color: #000000;">{{ getLoginUserLanguage() == 'cn' ? 'DISCOUNT' : __('messages.heading_discount') }}</th>
-        <th style="color: #000000;">{{ getLoginUserLanguage() == 'cn' ? 'TAX' : __('messages.pdf.tax') }}</th>
+        <th style="color: #000000;">{{ getLoginUserLanguage() == 'cn' ? 'ITEM TAX' : __('messages.pdf.item_tax') }}</th>
         <th style="color: #000000;">{{ getLoginUserLanguage() == 'cn' ? 'TOTAL' : __('messages.heading_total') }}</th>
     </tr>
     </thead>
@@ -130,7 +130,7 @@
             <td>{{$sale->currency}} {{  number_format((float)$saleItem->net_unit_price, 2) }}</td>
             <td>{{$saleItem->quantity}}</td>
             <td>{{$sale->currency}} {{ (number_format((float)$saleItem->discount_amount, 2))}}</td>
-            <td>{{$sale->currency}} {{ (number_format((float)$saleItem->tax_amount, 2))}}</td>
+            <td>{{$sale->currency}} {{ (number_format((float)$saleItem->tax_amount, 2))}} {{ $saleItem->tax_type == 1 ? 'exc' : ($saleItem->tax_type == 2 ? 'inc' : '') }}</td>
             <td>{{$sale->currency}} {{ (number_format((float)$saleItem->sub_total, 2))}}</td>
         </tr>
     @endforeach
@@ -138,17 +138,22 @@
 </table>
 <table width="60%" align="right" cellspacing="0" cellpadding="10" style="margin-top: 40px;">
     <tbody style="background-color: #f5f3f3;">
-    <tr>
-        <td>{{ getLoginUserLanguage() == 'cn' ? 'Order Tax' : __('messages.pdf.order_tax') }}</td>
-        <td>{{$sale->currency}} {{ (number_format((float)$sale->tax_amount, 2))}}</td>
-    </tr>
+   
     <tr>
         <td>{{ getLoginUserLanguage() == 'cn' ? 'Discount' : __('messages.pdf.discount') }}</td>
         <td>{{$sale->currency}} {{ (number_format((float)$sale->discount, 2))}}</td>
     </tr>
+     <tr>
+        <td>{{ getLoginUserLanguage() == 'cn' ? 'COD' : __('messages.pdf.cod') }}</td>
+        <td>{{$sale->currency}} {{(number_format((float)$sale->cod, 2))}}</td>
+    </tr>
     <tr>
         <td>{{ getLoginUserLanguage() == 'cn' ? 'Shipping' : __('messages.pdf.shipping') }}</td>
         <td>{{$sale->currency}} {{(number_format((float)$sale->shipping, 2))}}</td>
+    </tr>
+     <tr>
+        <td>{{ getLoginUserLanguage() == 'cn' ? 'Order Tax ' : __('messages.pdf.order_tax') }} <span>{{ '(' . $sale->tax_rate . '% ' . 'inc' . ')' }}</span></td>
+        <td>{{$sale->currency}} {{ (number_format((float)$sale->tax_amount, 2))}}</td>
     </tr>
     <tr>
         <td>{{ getLoginUserLanguage() == 'cn' ? 'Total' : __('messages.pdf.total') }}</td>

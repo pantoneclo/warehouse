@@ -51,13 +51,13 @@ const ProductModal = (props) => {
     const perUnitTax = (item) => {
         const base = (+item.fix_net_unit - perUnitDiscount(item));
         const tval = +item.tax_value || 0;
-
+        
         if (item.tax_type === '2' || item.tax_type === 2) {
             // inclusive: extract the tax portion
             return (base * tval) / (100 + tval);
         } else if (item.tax_type === '1' || item.tax_type === 1) {
             // exclusive: tax on top
-            return (base * tval) / 100;
+            return (base * tval) / (100 + tval);
         }
         // no tax type -> no tax
         return 0;
@@ -201,8 +201,13 @@ const ProductModal = (props) => {
             updateDiscount(Number(discountValue));
             updateSaleUnit(newProduct.sale_unit = (productUnit.value ? productUnit.value : productUnit));
             updateSubTotal(subTotalCount(newProduct));
+            
         }
+       
     };
+
+
+    
 
     const clearField = () => {
         setIsShowModal(!isShowModal);

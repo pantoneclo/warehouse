@@ -97,7 +97,7 @@ class SaleRepository extends BaseRepository
      */
     public function storeSale($input): Sale
     {
-      
+    
         try {
             DB::beginTransaction();
 
@@ -389,41 +389,41 @@ class SaleRepository extends BaseRepository
         }
 
         //discount calculation
-        $perItemDiscountAmount = 0;
-        $saleItem['net_unit_price'] = $saleItem['net_unit_price'];
-        if ($saleItem['discount_type'] == Sale::PERCENTAGE) {
-            if ($saleItem['discount_value'] <= 100 && $saleItem['discount_value'] >= 0) {
-                $saleItem['discount_amount'] = ($saleItem['discount_value'] * $saleItem['net_unit_price'] / 100) * $saleItem['quantity'];
-                $perItemDiscountAmount = $saleItem['discount_amount'] / $saleItem['quantity'];
-                $saleItem['net_unit_price'] -= $perItemDiscountAmount;
-            } else {
-                throw new UnprocessableEntityHttpException('Please enter discount value between 0 to 100.');
-            }
-        } elseif ($saleItem['discount_type'] == Sale::FIXED) {
-            if ($saleItem['discount_value'] <= $saleItem['net_unit_price'] && $saleItem['discount_value'] >= 0) {
-                $saleItem['discount_amount'] = $saleItem['discount_value'] * $saleItem['quantity'];
-                $perItemDiscountAmount = $saleItem['discount_amount'] / $saleItem['quantity'];
-                $saleItem['net_unit_price'] -= $perItemDiscountAmount;
-            } else {
-                throw new UnprocessableEntityHttpException("Please enter  discount's value between product's price.");
-            }
-        }
+        // $perItemDiscountAmount = 0;
+        // $saleItem['net_unit_price'] = $saleItem['net_unit_price'];
+        // if ($saleItem['discount_type'] == Sale::PERCENTAGE) {
+        //     if ($saleItem['discount_value'] <= 100 && $saleItem['discount_value'] >= 0) {
+        //         $saleItem['discount_amount'] = ($saleItem['discount_value'] * $saleItem['net_unit_price'] / 100) * $saleItem['quantity'];
+        //         $perItemDiscountAmount = $saleItem['discount_amount'] / $saleItem['quantity'];
+        //         $saleItem['net_unit_price'] -= $perItemDiscountAmount;
+        //     } else {
+        //         throw new UnprocessableEntityHttpException('Please enter discount value between 0 to 100.');
+        //     }
+        // } elseif ($saleItem['discount_type'] == Sale::FIXED) {
+        //     if ($saleItem['discount_value'] <= $saleItem['net_unit_price'] && $saleItem['discount_value'] >= 0) {
+        //         $saleItem['discount_amount'] = $saleItem['discount_value'] * $saleItem['quantity'];
+        //         $perItemDiscountAmount = $saleItem['discount_amount'] / $saleItem['quantity'];
+        //         $saleItem['net_unit_price'] -= $perItemDiscountAmount;
+        //     } else {
+        //         throw new UnprocessableEntityHttpException("Please enter  discount's value between product's price.");
+        //     }
+        // }
 
-        //tax calculation
-        $perItemTaxAmount = 0;
-        if ($saleItem['tax_value'] <= 100 && $saleItem['tax_value'] >= 0) {
-            if ($saleItem['tax_type'] == Sale::EXCLUSIVE) {
-                $saleItem['tax_amount'] = (($saleItem['net_unit_price'] * $saleItem['tax_value']) / 100) * $saleItem['quantity'];
-                $perItemTaxAmount = $saleItem['tax_amount'] / $saleItem['quantity'];
-            } elseif ($saleItem['tax_type'] == Sale::INCLUSIVE) {
-                $saleItem['tax_amount'] = ($saleItem['net_unit_price'] * $saleItem['tax_value']) / (100 + $saleItem['tax_value']) * $saleItem['quantity'];
-                $perItemTaxAmount = $saleItem['tax_amount'] / $saleItem['quantity'];
-                $saleItem['net_unit_price'] -= $perItemTaxAmount;
-            }
-        } else {
-            throw new UnprocessableEntityHttpException('Please enter tax value between 0 to 100 ');
-        }
-        $saleItem['sub_total'] = ($saleItem['net_unit_price'] + $perItemTaxAmount) * $saleItem['quantity'];
+        // //tax calculation
+        // $perItemTaxAmount = 0;
+        // if ($saleItem['tax_value'] <= 100 && $saleItem['tax_value'] >= 0) {
+        //     if ($saleItem['tax_type'] == Sale::EXCLUSIVE) {
+        //         $saleItem['tax_amount'] = (($saleItem['net_unit_price'] * $saleItem['tax_value']) / 100) * $saleItem['quantity'];
+        //         $perItemTaxAmount = $saleItem['tax_amount'] / $saleItem['quantity'];
+        //     } elseif ($saleItem['tax_type'] == Sale::INCLUSIVE) {
+        //         $saleItem['tax_amount'] = ($saleItem['net_unit_price'] * $saleItem['tax_value']) / (100 + $saleItem['tax_value']) * $saleItem['quantity'];
+        //         $perItemTaxAmount = $saleItem['tax_amount'] / $saleItem['quantity'];
+        //         $saleItem['net_unit_price'] -= $perItemTaxAmount;
+        //     }
+        // } else {
+        //     throw new UnprocessableEntityHttpException('Please enter tax value between 0 to 100 ');
+        // }
+        // $saleItem['sub_total'] = ($saleItem['net_unit_price'] + $perItemTaxAmount) * $saleItem['quantity'];
 
         return $saleItem;
     }

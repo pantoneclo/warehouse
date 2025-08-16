@@ -25,6 +25,7 @@ return [
         'quantity' => 'QUANTITY',
         'discount' => 'Discount',
         'tax' => 'TAX',
+        'item_tax' => 'ITEM TAX',
         'total' => 'TOTAL',
         'order_tax' => 'Order Tax',
         'shipping' => 'Shipping',
@@ -98,6 +99,7 @@ return [
         'fob_price'=>'FOB',
         'total_fob'=>'TOTAL FOB',
         'conversion_rate'=>'CONVERSION RATE',
+        'cod'=>'COD',
     ],
 
     'error' => [

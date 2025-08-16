@@ -21,7 +21,7 @@ export const taxAmount = (cartItem) => {
     if (cartItem.tax_type === '2' || cartItem.tax_type === 2) {
         return ((+cartItem.fix_net_unit - discountAmount(cartItem)) * +cartItem.tax_value) / (100 + +cartItem.tax_value);
     } else if (cartItem.tax_type === '1' || cartItem.tax_type === 1) {
-        return ((+cartItem.fix_net_unit - discountAmount(cartItem)) * +cartItem.tax_value) / 100;
+        return ((+cartItem.fix_net_unit - discountAmount(cartItem)) * +cartItem.tax_value) / (100 + +cartItem.tax_value);
     }
 
     const taxAmount = cartItem.tax_amount != null ? cartItem.tax_amount : 0;

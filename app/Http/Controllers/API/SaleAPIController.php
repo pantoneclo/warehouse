@@ -330,23 +330,31 @@ class SaleAPIController extends AppBaseController
             return $this->sendResponse($data, 'pdf retrieved Successfully');
         }elseif(in_array($marketplace, ['pantoneclo whm'])){
              $sale = $sale->load('customer', 'saleItems.product', 'payments');
-            
-            $data = [];
-            if (Storage::exists('pdf/Sale-'.$sale->country.'-'. $sale->order_no . '.pdf')) {
-                Storage::delete('pdf/Sale-'.$sale->country.'-'. $sale->order_no . '.pdf');
+
+            $disk = Storage::disk(config('app.media_disc')); // use same disk everywhere
+            $path = 'pdf/Sale-'.$sale->country.'-'.$sale->order_no.'.pdf';
+
+            if ($disk->exists($path)) {
+                $disk->delete($path);
             }
+
             $companyLogo = getLogoUrl();
             $pdf = PDF::loadView('pdf.sale-pdf', compact('sale', 'companyLogo'))->setOptions([
                 'tempDir' => public_path(),
-                'chroot' => public_path(),
+                'chroot'  => public_path(),
             ]);
-            Storage::disk(config('app.media_disc'))->put('pdf/Sale-'.$sale->country.'-'. $sale->order_no . '.pdf', $pdf->output());
-            $data['sale_pdf_url'] = Storage::url('pdf/Sale-'.$sale->country.'-'. $sale->order_no . '.pdf');
+
+            // ensure visibility if using public/local or S3
+            $disk->put($path, $pdf->output(), 'public');
+
+            // return the SAME key used by other branches
+            $data['sale_invoice_url'] = $disk->url($path);
+            $data['country'] = $sale->country;
+            $data['invoice_no'] = $sale->order_no;
 
             return $this->sendResponse($data, 'pdf retrieved Successfully');
-        }
-        
-        else{
+            
+        } else{
 
             $fileName = $sale->file;
             $fileUrl = url('uploads/sales/invoices/' . $fileName);
