@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, {useState, useEffect} from 'react';
 import Form from 'react-bootstrap/Form';
 import {getFormattedMessage, placeholderText} from '../../shared/sharedMethod';
 import ReactSelectInventory from "../../shared/select/reactSelectInventory";
@@ -8,7 +8,7 @@ import {connect, useDispatch} from 'react-redux';
 
 
 const CreateInventoryForm = (props) => {
-    const {products, addInventoryData} = props;
+    const {products, addInventoryData, singleInventory, id} = props;
     const dispatch = useDispatch();
 
     const [fields, setFields] = useState([{
@@ -22,6 +22,67 @@ const CreateInventoryForm = (props) => {
         net_wt: 0,
         carton_no: 0
     }]);
+
+    // Populate form when editing
+    useEffect(() => {
+        if (singleInventory && singleInventory.length > 0) {
+            const inventoryData = singleInventory[0];
+            console.log('CreateInventoryForm - inventoryData:', inventoryData);
+            console.log('CreateInventoryForm - inventoryData.product:', inventoryData.product);
+            console.log('CreateInventoryForm - products available:', products);
+
+            // Transform the product data to match the select component format
+            const transformedProducts = inventoryData.product.map((productItem, index) => {
+                console.log(`CreateInventoryForm - Processing product ${index}:`, productItem);
+
+                if (productItem.product && productItem.product.id) {
+                    // Find the matching product in the products list to get the correct format
+                    const matchingProduct = products.find(p => p.id === productItem.product.id);
+                    console.log(`CreateInventoryForm - Matching product for ID ${productItem.product.id}:`, matchingProduct);
+
+                    if (matchingProduct) {
+                        const size = matchingProduct.attributes.variant?.size || '';
+                        const color = matchingProduct.attributes.variant?.color || '';
+                        const transformed = {
+                            product: {
+                                value: matchingProduct.id,
+                                label: matchingProduct.attributes.pan_style + '-' + size + '-' + color,
+                                variant: matchingProduct.attributes.variant,
+                                variant_id: matchingProduct.attributes.variant_id,
+                                style: matchingProduct.attributes.pan_style
+                            },
+                            item_per_box: productItem.item_per_box || 0
+                        };
+                        console.log(`CreateInventoryForm - Transformed product ${index}:`, transformed);
+                        return transformed;
+                    }
+                }
+
+                // Fallback for products that don't match
+                const fallback = {
+                    product: productItem.product,
+                    item_per_box: productItem.item_per_box || 0
+                };
+                console.log(`CreateInventoryForm - Fallback product ${index}:`, fallback);
+                return fallback;
+            });
+
+            console.log('CreateInventoryForm - Final transformedProducts:', transformedProducts);
+
+            // Transform the inventory data to match the form structure
+            setFields([{
+                no_of_items_per_box: inventoryData.no_of_items_per_box || 0,
+                sticker_meas_unit: inventoryData.sticker_meas_unit || 'PCS',
+                product_id: inventoryData.product_id || null,
+                product: transformedProducts,
+                no_boxes: inventoryData.no_boxes || 0,
+                carton_meas: inventoryData.carton_meas || 0,
+                gross_wt: inventoryData.gross_wt || 0,
+                net_wt: inventoryData.net_wt || 0,
+                carton_no: inventoryData.carton_no || 0
+            }]);
+        }
+    }, [singleInventory, products]);
 
     const disabled = true;
     const handleInputChange = (index, event) => {
@@ -213,7 +274,9 @@ const CreateInventoryForm = (props) => {
                                     <div>
                                         <select
                                             onChange={(event) => handleInputChange(index, event)}
-                                            name="sticker_meas_unit" id="" className="form-control">
+                                            name="sticker_meas_unit"
+                                            value={field.sticker_meas_unit}
+                                            className="form-control">
                                             <option value="PCS">PCS</option>
                                             <option value="Pack">Pack</option>
                                         </select>

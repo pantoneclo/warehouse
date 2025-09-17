@@ -105,6 +105,7 @@ import VariantDetails from "./components/variant/VariantDetails";
 
 import Inventory from "./components/inventory/Inventory";
 import CreateInventory from "./components/inventory/CreateInventory";
+import EditInventory from "./components/inventory/EditInventory";
 import InventoryCreatedList from "./components/inventory/InventoryCreatedList";
 
 import Combo from "./components/comboProduct/Combo";
@@ -130,6 +131,11 @@ export const route = [
     {
         path: "inventory/create",
         ele: <CreateInventory />,
+        permission: "",
+    },
+    {
+        path: "inventory/edit/:insert_key",
+        ele: <EditInventory />,
         permission: "",
     },
     {

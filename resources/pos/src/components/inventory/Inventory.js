@@ -75,6 +75,11 @@ const Inventory = () => {
         window.location.href = '#/app/inventory/' + row.insert_key;
     };
 
+    const goToEditProduct = (item) => {
+        console.log('edit inventory item', item);
+        window.location.href = '#/app/inventory/edit/' + item.insert_key;
+    };
+
     const onChange = (filter) => {
         fetchInventories(filter, true)
     };
@@ -117,8 +122,9 @@ const Inventory = () => {
                 <ActionButton
                     isViewIcon={true}
                     goToDetailScreen={() => goToProductDetailPage(row)} // Pass the entire row object
+                    goToEditProduct={goToEditProduct}
                     item={row}
-                    isEditMode={false}
+                    isEditMode={true}
                     isDeleteMode={true}
                     onClickDeleteModel={onClickDeleteModel}
                 />

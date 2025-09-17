@@ -176,7 +176,103 @@ class InventoryAPIController extends AppBaseController
 
     public function show($id)
     {
-        return $id;
+        $inventory = $this->inventoryRepository->with(['combo', 'combo.product'])->find($id);
+
+        if (!$inventory) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Inventory not found'
+            ], 404);
+        }
+
+        InventoryResource::withoutWrapping();
+        return new InventoryResource($inventory);
+    }
+
+    public function update($insert_key, Request $request)
+    {
+        try {
+            DB::beginTransaction();
+
+            $validator = Validator::make($request->all(), [
+                'inventories' => 'required|array',
+                'inventories.*.id' => 'required|integer',
+                'inventories.*.sticker_meas_unit' => 'required|string',
+                'inventories.*.no_of_boxes' => 'required|integer|min:0',
+                'inventories.*.net_wt' => 'required|string',
+                'inventories.*.gross_wt' => 'required|string',
+                'inventories.*.carton_meas' => 'required|string',
+                'inventories.*.combos' => 'required|array',
+                'inventories.*.combos.*.id' => 'required|integer',
+                'inventories.*.combos.*.item_per_box' => 'required|integer|min:0',
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Validation failed',
+                    'errors' => $validator->errors()
+                ], 422);
+            }
+
+            $inventoriesData = $request->input('inventories');
+
+            // Verify that all inventories belong to the same insert_key
+            $allInventories = Inventory::where('insert_key', $insert_key)->get();
+            if ($allInventories->isEmpty()) {
+                throw new \Exception("No inventories found for insert_key: {$insert_key}");
+            }
+
+            foreach ($inventoriesData as $inventoryData) {
+                // Update inventory record
+                $inventory = Inventory::find($inventoryData['id']);
+                if (!$inventory) {
+                    throw new \Exception("Inventory not found: {$inventoryData['id']}");
+                }
+
+                // Verify this inventory belongs to the correct insert_key
+                if ($inventory->insert_key !== $insert_key) {
+                    throw new \Exception("Inventory {$inventoryData['id']} does not belong to insert_key {$insert_key}");
+                }
+
+                $inventory->update([
+                    'sticker_meas_unit' => $inventoryData['sticker_meas_unit'],
+                    'no_of_boxes' => $inventoryData['no_of_boxes'],
+                    'net_wt' => $inventoryData['net_wt'],
+                    'gross_wt' => $inventoryData['gross_wt'],
+                    'carton_meas' => $inventoryData['carton_meas'],
+                ]);
+
+                // Update inventory combos
+                foreach ($inventoryData['combos'] as $comboData) {
+                    $combo = InventoryCombo::find($comboData['id']);
+                    if (!$combo) {
+                        throw new \Exception("Inventory combo not found: {$comboData['id']}");
+                    }
+
+                    $combo->update([
+                        'item_per_box' => $comboData['item_per_box'],
+                    ]);
+                }
+            }
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Inventory updated successfully'
+            ]);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Error updating inventory: ' . $e->getMessage());
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Error updating inventory',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 
     public function invoiceList($id, Request $request)

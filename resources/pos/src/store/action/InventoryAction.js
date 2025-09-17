@@ -90,6 +90,36 @@ export const addInventory = (inventory, navigate) => async (dispatch) => {
 //         });
 // };
 
+export const fetchInventory = (inventoryId) => async (dispatch) => {
+    dispatch(setLoading(true));
+    apiConfig.post(apiBaseURL.INVENTORY + '/' + inventoryId)
+        .then((response) => {
+            dispatch({type: inventoryActionType.FETCH_INVENTORY, payload: response.data.data || response.data});
+            dispatch(setLoading(false));
+        })
+        .catch(({response}) => {
+            dispatch(setLoading(false));
+            dispatch(addToast(
+                {text: response?.data?.message || 'Error fetching inventory', type: toastType.ERROR}));
+        });
+};
+
+export const editInventory = (inventoryId, inventory, navigate) => async (dispatch) => {
+    dispatch(setSavingButton(true));
+    await apiConfig.post(apiBaseURL.INVENTORY + '/' + inventoryId, inventory)
+        .then((response) => {
+            dispatch({type: inventoryActionType.EDIT_INVENTORY, payload: response.data.data});
+            dispatch(addToast({text: getFormattedMessage('inventory.success.edit.message')}));
+            navigate('/app/inventory');
+            dispatch(setSavingButton(false));
+        })
+        .catch(({response}) => {
+            dispatch(setSavingButton(false));
+            dispatch(addToast(
+                {text: response.data.message, type: toastType.ERROR}));
+        });
+};
+
 export const deleteSticker = (stickerId) => async (dispatch) => {
     apiConfig.post(apiBaseURL.INVENTORY +'/delete'+ '/' + stickerId)
         .then((response) => {

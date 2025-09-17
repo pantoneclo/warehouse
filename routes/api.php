@@ -344,10 +344,12 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('inventory/invoice/{id}', [InventoryAPIController::class, 'invoiceList']);
     Route::post('inventory', [InventoryAPIController::class, 'store']);
     Route::post('inventory/delete/{id}', [InventoryAPIController::class, 'delete']);
-
-    Route::post('inventory/{id}', [InventoryAPIController::class, 'show'])->name('inventory.show');
     Route::post('download-inventory', [InventoryAPIController::class, 'downloadInventory']);
     Route::get('/no-paginate/product-list', [InventoryAPIController::class, 'noPaginateProductList']);
+
+    // Update route - must come before the generic {id} route
+    Route::match(['PUT', 'POST'], 'inventory/update/{insert_key}', [InventoryAPIController::class, 'update']);
+    Route::post('inventory/{id}', [InventoryAPIController::class, 'show'])->name('inventory.show');
 
 
     // Combo

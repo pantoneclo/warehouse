@@ -104,6 +104,7 @@ import warehouseProductsSearchReducer from "./warehouseProductsSearchReducer";
 
 // Added By Atiqur Rahman
 import comboProductReducer from "./comboProductReducer";
+import inventoryReducer from "./inventoryReducer";
 
 export default combineReducers({
     loginUser: loginReducers,
@@ -123,6 +124,7 @@ export default combineReducers({
     expenseCategories: expenseCategoryReducer,
     expenses: expenseReducer,
     products: productReducers,
+    inventory: inventoryReducer,
 
     combos: comboProductReducer,
 

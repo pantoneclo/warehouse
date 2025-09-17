@@ -740,7 +740,9 @@ export const productActionType = {
 
 export const inventoryActionType = {
     FETCH_INVENTORIES: 'FETCH_INVENTORIES',
+    FETCH_INVENTORY: 'FETCH_INVENTORY',
     ADD_INVENTORY: 'ADD_INVENTORY',
+    EDIT_INVENTORY: 'EDIT_INVENTORY',
     DELETE_INVENTORY: 'DELETE_INVENTORY',
 };
 
@@ -942,6 +944,9 @@ export const shippingCompanyNames = [
     {id : 5, label: 'PACKETA' },
     {id : 6, label: 'PATHAO' },
     {id : 7, label: 'FAN COURIER' },
+    {id : 8, label: 'FEDEX' },
+    {id : 9, label: 'OVERSEAS' },
+    {id : 10, label: 'WAREHOUSE' },
 ]
 
 export const getLabelById = (id) => {
@@ -981,5 +986,6 @@ export const countryOptions = [
     { id: 17, code:'EE', currency:"EUR", name: 'Estonia', vat:22},
     { id: 18, code:'LV', currency:"EUR", name: 'Latvia', vat:21},
     { id: 19, code:'IN', currency:"RUP", name: 'India', vat:0},
+    { id: 20, code:'BE', currency:"EUR", name: 'Belgium', vat:21},
     // Add more countries as needed
 ];
