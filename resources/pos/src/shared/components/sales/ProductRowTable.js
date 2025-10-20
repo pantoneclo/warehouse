@@ -6,7 +6,7 @@ import {getFormattedMessage} from '../../sharedMethod';
 const ProductRowTable = (props) => {
     const {
         updateProducts, setUpdateProducts, updatedQty, updateCost, updateDiscount, updateTax,
-        frontSetting, updateSubTotal, updateSaleUnit, isSaleReturn
+        frontSetting, updateSubTotal, updateSaleUnit, isSaleReturn, currencySymbol
     } = props;
 
     useEffect(() => {
@@ -34,7 +34,8 @@ const ProductRowTable = (props) => {
                                          setUpdateProducts={setUpdateProducts} frontSetting={frontSetting}
                                          updateQty={updatedQty} updateCost={updateCost}
                                          updateDiscount={updateDiscount} updateTax={updateTax}
-                                         updateSubTotal={updateSubTotal} updateSaleUnit={updateSaleUnit}/>
+                                         updateSubTotal={updateSubTotal} updateSaleUnit={updateSaleUnit}
+                                         currencySymbol={currencySymbol}/>
                 })}
             {!updateProducts.length &&
                 <tr>

@@ -112,6 +112,37 @@ export const currencySymbolHendling = (isRightside, currency, value, is_forment)
     }
 }
 
+// Enhanced currency handling with country-based currency symbols
+export const smartCurrencySymbolHendling = (isRightside, item, value, is_forment, fallbackCurrency) => {
+    // Import getCurrencySymbol dynamically to avoid circular imports
+    let currencySymbol = fallbackCurrency;
+
+    // Try to get currency symbol from item's country or currency
+    if (item?.country) {
+        // If we have access to countryOptions, find the currency symbol
+        try {
+            const { countryOptions, getCurrencySymbol } = require('../constants');
+            const country = countryOptions.find(c => c.code === item.country);
+            currencySymbol = country?.currencySymbol || getCurrencySymbol(item.currency) || fallbackCurrency;
+        } catch (e) {
+            // Fallback if constants are not available
+            currencySymbol = item.currencySymbol || fallbackCurrency;
+        }
+    } else if (item?.currency) {
+        // Try to get symbol from currency code
+        try {
+            const { getCurrencySymbol } = require('../constants');
+            currencySymbol = getCurrencySymbol(item.currency) || fallbackCurrency;
+        } catch (e) {
+            currencySymbol = item.currencySymbol || fallbackCurrency;
+        }
+    } else if (item?.currencySymbol) {
+        currencySymbol = item.currencySymbol;
+    }
+
+    return currencySymbolHendling(isRightside, currencySymbol, value, is_forment);
+}
+
 export const getFormattedDate = (date, config) => {
     const format = config && config.date_format
     if (format === "d-m-y") {

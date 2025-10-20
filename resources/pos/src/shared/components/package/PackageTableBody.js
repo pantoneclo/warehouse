@@ -8,6 +8,7 @@ import {
 import PackageModal from './PackageModal';
 import {productSalesDropdown} from '../../../store/action/productSaleUnitAction';
 import {currencySymbolHendling, decimalValidate, getFormattedMessage, numValidate} from '../../sharedMethod';
+import {getCurrencySymbol} from '../../../constants';
 import {FontAwesomeIcon} from '@fortawesome/react-fontawesome';
 import {faPencil, faTrash} from '@fortawesome/free-solid-svg-icons';
 import {addToast} from "../../../store/action/toastAction";
@@ -25,11 +26,14 @@ const PackageTableBody = (props) => {
         updateDiscount,
         updateTax,
         updateSubTotal,
-        updateSaleUnit, frontSetting, allConfigData
+        updateSaleUnit, frontSetting, allConfigData, currencySymbol
     } = props;
     const [isShowModal, setIsShowModal] = useState(false);
     const [updateProductData, setUpdateProductData] = useState([]);
     const dispatch = useDispatch()
+
+    // Get currency symbol - prioritize passed currencySymbol, fallback to global setting
+    const currencySymbolToUse = currencySymbol || (frontSetting.value && frontSetting.value.currency_symbol);
 
     useEffect(() => {
         singleProduct.newItem !== '' && productSalesDropdown(singleProduct.product_unit)
@@ -165,7 +169,7 @@ const PackageTableBody = (props) => {
                         </span>}
                 </div>
             </td>
-            <td>{currencySymbolHendling(allConfigData, frontSetting.value && frontSetting.value.currency_symbol, amountBeforeTax(singleProduct).toFixed(2))}</td>
+            <td>{currencySymbolHendling(allConfigData, currencySymbolToUse, amountBeforeTax(singleProduct).toFixed(2))}</td>
             <td>{singleProduct.pan_style}</td>
             
             <td>

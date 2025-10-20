@@ -3,10 +3,16 @@ import {
     calculateCartTotalAmount,
     calculateSubTotal
 } from '../../shared/calculation/calculation';
-import { currencySymbolHendling, getFormattedMessage } from '../../shared/sharedMethod';
+import { currencySymbolHendling, smartCurrencySymbolHendling, getFormattedMessage } from '../../shared/sharedMethod';
+import {getCurrencySymbol} from '../../constants';
 
 const ProductMainCalculation = (props) => {
     const { inputValues, updateProducts, frontSetting, allConfigData } = props;
+
+    // Get currency symbol from country or fallback to global setting
+    const currencySymbolToUse = inputValues?.currencySymbol ||
+                               getCurrencySymbol(inputValues?.currency) ||
+                               (frontSetting?.value?.currency_symbol);
 
     // Utility to safely parse numbers or fallback to 0
     const parseOrZero = (value) => {
@@ -57,13 +63,13 @@ const ProductMainCalculation = (props) => {
                             <tr>
                                 <td className='py-3'>{getFormattedMessage('purchase.input.shipping.label')}</td>
                                 <td className='py-3'>
-                                    {currencySymbolHendling(allConfigData, frontSetting?.value?.currency_symbol, shipping)}
+                                    {currencySymbolHendling(allConfigData, currencySymbolToUse, shipping)}
                                 </td>
                             </tr>
                             <tr>
                                 <td className='py-3'>{getFormattedMessage('purchase.input.cod.label')}</td>
                                 <td className='py-3'>
-                                    {currencySymbolHendling(allConfigData, frontSetting?.value?.currency_symbol, cod)}
+                                    {currencySymbolHendling(allConfigData, currencySymbolToUse, cod)}
                                 </td>
                             </tr>
                             <tr>
@@ -71,7 +77,7 @@ const ProductMainCalculation = (props) => {
                                 <td className='py-3 text-primary'>
                                     {currencySymbolHendling(
                                         allConfigData,
-                                        frontSetting?.value?.currency_symbol,
+                                        currencySymbolToUse,
                                         calculateCartTotalAmount(updateProducts, safeInputValues)
                                     )}
                                 </td>

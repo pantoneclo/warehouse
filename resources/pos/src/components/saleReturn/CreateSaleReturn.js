@@ -13,6 +13,7 @@ import {fetchSale} from "../../store/action/salesAction";
 import TopProgressBar from "../../shared/components/loaders/TopProgressBar";
 import Spinner from "../../shared/components/loaders/Spinner";
 import saleReturnStatus from "./saleReturnStatus.json";
+import {countryOptions, getCurrencySymbol} from '../../constants';
 
 const CreateSaleReturn = (props) => {
     const {addSaleReturn, customers, sales,isLoading, fetchSale, fetchAllCustomer, warehouses, fetchAllWarehouses} = props;
@@ -83,6 +84,9 @@ const CreateSaleReturn = (props) => {
         // },
         note:sales.attributes.note,
         sale_reference: sales.attributes.reference_code,
+        country: sales.attributes.country,
+        currency: sales.attributes.currency,
+        currencySymbol: getCurrencySymbol(sales.attributes.currency),
         isCreateSaleReturn: true,
     };
     console.log('Sales Return', itemsValue)

@@ -79,6 +79,9 @@ class SaleReturnItem extends BaseModel implements JsonResourceful
         'quantity',
         'sold_quantity',
         'sub_total',
+        'is_approved',
+        'approved_at',
+        'approved_by',
     ];
 
     /**
@@ -109,6 +112,8 @@ class SaleReturnItem extends BaseModel implements JsonResourceful
         'discount_amount' => 'double',
         'quantity' => 'double',
         'sub_total' => 'double',
+        'is_approved' => 'boolean',
+        'approved_at' => 'datetime',
     ];
 
     /**
@@ -154,6 +159,9 @@ class SaleReturnItem extends BaseModel implements JsonResourceful
             'quantity' => $this->quantity,
             'sold_quantity' => $this->sold_quantity,
             'sub_total' => $this->sub_total,
+            'is_approved' => $this->is_approved,
+            'approved_at' => $this->approved_at,
+            'approved_by' => $this->approved_by,
         ];
 
         return $fields;
@@ -165,6 +173,14 @@ class SaleReturnItem extends BaseModel implements JsonResourceful
     public function saleReturn(): BelongsTo
     {
         return $this->belongsTo(SaleReturn::class, 'sale_return_id', 'id');
+    }
+
+    /**
+     * @return BelongsTo
+     */
+    public function approvedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'approved_by', 'id');
     }
 
     /**

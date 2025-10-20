@@ -99,11 +99,14 @@ class Sale extends BaseModel implements HasMedia, JsonResourceful
         'date',
         'customer_id',
         'warehouse_id',
+        'country_id',
+        'currency_id',
         'tax_rate',
         'tax_amount',
         'discount',
         'shipping',
         'grand_total',
+        'grand_total_original',
         'received_amount',
         'paid_amount',
         'payment_type',
@@ -301,6 +304,22 @@ class Sale extends BaseModel implements HasMedia, JsonResourceful
     public function payments(): HasMany
     {
         return $this->hasMany(SalesPayment::class, 'sale_id', 'id');
+    }
+
+    /**
+     * @return BelongsTo
+     */
+    public function country(): BelongsTo
+    {
+        return $this->belongsTo(Country::class, 'country_id', 'id');
+    }
+
+    /**
+     * @return BelongsTo
+     */
+    public function currencyRelation(): BelongsTo
+    {
+        return $this->belongsTo(Currency::class, 'currency_id', 'id');
     }
 
     /**

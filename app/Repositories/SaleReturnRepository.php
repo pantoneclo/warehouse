@@ -103,35 +103,17 @@ class SaleReturnRepository extends BaseRepository
                 'status' => 8,
                 'payment_status' => 4,
             ]);
+            // Set initial return status as pending approval
+            $saleReturn->update([
+                'return_status' => SaleReturn::RETURN_STATUS_PENDING,
+                'stock_updated' => false
+            ]);
+
             $saleReturn = $this->storeSaleReturnItems($saleReturn, $input);
 
-            foreach ($input['sale_return_items'] as $purchaseItem) {
-                $product = ManageStock::whereWarehouseId($input['warehouse_id'])
-                    ->whereProductId($purchaseItem['product_id'])
-                    ->first();
-                $saleExist = SaleItem::where('product_id', $purchaseItem['product_id'])->whereHas('sale',
-                    function (Builder $q) use ($input) {
-                        $q->where('customer_id', $input['customer_id'])->where('warehouse_id',
-                            $input['warehouse_id'])->where('id', $input['sale_id']);
-                    })->exists();
-                if ($saleExist) {
-                    if ($product) {
-                        if ($product->quantity >= $purchaseItem['quantity']) {
-                            $product->update([
-                                'quantity' => $product->quantity + $purchaseItem['quantity'],
-                            ]);
-                        }
-                    } else {
-                        ManageStock::create([
-                            'warehouse_id' => $input['warehouse_id'],
-                            'product_id' => $purchaseItem['product_id'],
-                            'quantity' => $purchaseItem['quantity'],
-                        ]);
-                    }
-                } else {
-                    throw new UnprocessableEntityHttpException('Sale Does Not exist');
-                }
-            }
+            // NOTE: Stock quantities are NOT updated here anymore
+            // Stock will only be updated when the return is approved (full or partial)
+            // This ensures proper approval workflow and audit trail
 
             $mailTemplate = MailTemplate::where('type', MailTemplate::MAIL_TYPE_SALE_RETURN)->first();
             $smsTemplate = SmsTemplate::where('type', SmsTemplate::SMS_TYPE_SALE_RETURN)->first();

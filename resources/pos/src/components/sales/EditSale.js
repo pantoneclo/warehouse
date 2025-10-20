@@ -13,7 +13,7 @@ import paymentStatus from '../../shared/option-lists/paymentStatus.json';
 import paymentType from '../../shared/option-lists/paymentType.json';
 import Spinner from "../../shared/components/loaders/Spinner";
 import TopProgressBar from "../../shared/components/loaders/TopProgressBar";
-import { saleStatusOptions ,eccomercePlatform } from '../../constants';
+import { saleStatusOptions ,eccomercePlatform, countryOptions, getCurrencySymbol } from '../../constants';
 import { useIntl } from 'react-intl';
 const EditSale = (props) => {
     const {fetchSale, sales, customers, fetchAllCustomer, warehouses, fetchAllWarehouses, isLoading} = props;
@@ -34,6 +34,11 @@ const EditSale = (props) => {
     const selectedPaymentType = sales.attributes && sales.attributes.payment_type && paymentType.filter((item) => item.value === sales.attributes.payment_type)
     const test =sales.attributes?.market_place;
     console.log(test, 'Market Place Value')
+
+    // Find the country from countryOptions based on the sale's country
+    const saleCountryCode = sales.attributes?.country;
+    const selectedCountryFromOptions = countryOptions.find(country => country.code === saleCountryCode);
+    console.log("Sale Country Code:", saleCountryCode, "Selected Country:", selectedCountryFromOptions);
     const selectMarketPlace =
         sales.attributes?.market_place &&
         marketplaceFilterOptions.filter((option) =>
@@ -98,7 +103,13 @@ console.log(sales.attributes , 'this is from sales attributes')
         is_Partial : sales.attributes.payment_status,
         parcel_number: sales.attributes?.shipment?.parcel_number? sales.attributes?.shipment?.parcel_number : '',
         parcel_company_id: sales.attributes?.shipment?.parcel_company_id ? sales.attributes?.shipment?.parcel_company_id : '',
-        country:sales.attributes?.country? sales.attributes?.country : '',
+        country: selectedCountryFromOptions ? {
+            value: selectedCountryFromOptions.code,
+            label: selectedCountryFromOptions.name,
+            vat: selectedCountryFromOptions.vat,
+            currency: selectedCountryFromOptions.currency,
+            currencySymbol: selectedCountryFromOptions.currencySymbol || getCurrencySymbol(selectedCountryFromOptions.currency)
+        } : sales.attributes?.country,
         order_no:sales.attributes?.order_no? sales.attributes?.order_no : '',
         // market_place:sales.attributes?.market_place?sales.attributes?.market_place:'',
 
@@ -122,9 +133,11 @@ console.log(sales.attributes , 'this is from sales attributes')
             label: statusDefaultValue && statusDefaultValue[0] && statusDefaultValue[0].name,
             value: statusDefaultValue && statusDefaultValue[0] && statusDefaultValue[0].id
         },
-        currency:sales.attributes?.currency
+        currency: selectedCountryFromOptions ? selectedCountryFromOptions.currency : sales.attributes?.currency,
+        currencySymbol: selectedCountryFromOptions ? selectedCountryFromOptions.currencySymbol : getCurrencySymbol(sales.attributes?.currency)
     };
 console.log(itemsValue,'itemsValue')
+console.log("Final Currency Set:", selectedCountryFromOptions ? selectedCountryFromOptions.currency : sales.attributes?.currency);
     return (
         <MasterLayout>
             <TopProgressBar/>

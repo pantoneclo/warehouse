@@ -14,7 +14,7 @@ import ModelFooter from '../../shared/components/modelFooter';
 import {editSaleReturn} from '../../store/action/salesReturnAction';
 import {fetchFrontSetting} from '../../store/action/frontSettingAction';
 import {addToast} from '../../store/action/toastAction';
-import {toastType} from '../../constants';
+import {toastType, getCurrencySymbol} from '../../constants';
 import { saleReturnStatusOptions } from '../../constants';
 import ReactSelect from '../../shared/select/reactSelect';
 
@@ -353,7 +353,7 @@ const SaleReturnForm = (props) => {
                                        onKeyPress={(event) => decimalValidate(event)}
                                        onChange={(e) => onChangeInput(e)}
                                 />
-                                <InputGroup.Text>{frontSetting.value && frontSetting.value.currency_symbol}</InputGroup.Text>
+                                <InputGroup.Text>{singleSale?.currencySymbol || getCurrencySymbol(singleSale?.currency) || (frontSetting.value && frontSetting.value.currency_symbol)}</InputGroup.Text>
                             </InputGroup>
                         </div>
                         <div className='col-md-4 mb-5'>
@@ -367,7 +367,7 @@ const SaleReturnForm = (props) => {
                                        onKeyPress={(event) => decimalValidate(event)}
                                        onChange={(e) => onChangeInput(e)}
                                 />
-                                <InputGroup.Text>{frontSetting.value && frontSetting.value.currency_symbol}</InputGroup.Text>
+                                <InputGroup.Text>{singleSale?.currencySymbol || getCurrencySymbol(singleSale?.currency) || (frontSetting.value && frontSetting.value.currency_symbol)}</InputGroup.Text>
                             </InputGroup>
                         </div>
                         <div className='mb-5'>

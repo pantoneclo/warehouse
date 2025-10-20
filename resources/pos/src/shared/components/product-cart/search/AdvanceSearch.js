@@ -6,7 +6,7 @@ import { toastType } from '../../../../constants';
 import { searchPurchaseProduct } from '../../../../store/action/purchaseProductAction';
 import { getFormattedMessage, placeholderText } from '../../../sharedMethod';
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faSearch } from "@fortawesome/free-solid-svg-icons";
+import { faSearch, faSpinner } from "@fortawesome/free-solid-svg-icons";
 import { isArray, set } from 'lodash';
 import { use } from 'echarts';
 
@@ -25,7 +25,9 @@ const AdvanceSearch = (props) => {
         fetchAdvancedSearch
     } = props;
     const [searchString, setSearchString] = useState("");
+    const [isSearching, setIsSearching] = useState(false);
     const dispatch = useDispatch();
+    const isLoading = useSelector(state => state.isLoading);
 
     // const filterProducts = products.data ? products.data.filter((item) => {
     //     const attributes = item.attributes;
@@ -55,17 +57,18 @@ const AdvanceSearch = (props) => {
     const onProductSearch = async (code) => {
         try {
             if (code.length >= 2) {
-                  dispatch(fetchAdvancedSearch({ search: code }));
+                setIsSearching(true);
+                dispatch(fetchAdvancedSearch({ search: code }));
 
-            console.log(code, 'code');
-          
-            setSearchString(code);  
+                console.log(code, 'code');
+
+                setSearchString(code);
+            } else {
+                setIsSearching(false);
             }
-        
-  
-
         } catch (error) {
             console.error('Error in onProductSearch:', error);
+            setIsSearching(false);
         }
     };
  
@@ -106,8 +109,10 @@ const AdvanceSearch = (props) => {
                         }));
                         setSearchString ('');
                     }
-                } 
-              
+                }
+
+                // Clear searching state when products are loaded
+                setIsSearching(false);
     }, [ products]);
 
     
@@ -166,8 +171,10 @@ const AdvanceSearch = (props) => {
 
 
             />
-            <FontAwesomeIcon icon={faSearch}
-                className='d-flex align-items-center top-0 bottom-0 react-search-icon my-auto text-gray-600 position-absolute' />
+            <FontAwesomeIcon
+                icon={isSearching || isLoading ? faSpinner : faSearch}
+                className={`d-flex align-items-center top-0 bottom-0 react-search-icon my-auto text-gray-600 position-absolute ${isSearching || isLoading ? 'fa-spin' : ''}`}
+            />
         </div>
     );
 }

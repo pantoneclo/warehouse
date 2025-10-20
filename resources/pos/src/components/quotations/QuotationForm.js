@@ -305,6 +305,7 @@ const QuotationForm = (props) => {
                                              updateCost={updateCost} updateDiscount={updateDiscount}
                                              updateTax={updateTax} updateSubTotal={updateSubTotal}
                                              updateSaleUnit={updateSaleUnit}
+                                             currencySymbol={saleValue?.currencySymbol}
                             />
                         </div>
                         <div className='col-12'>

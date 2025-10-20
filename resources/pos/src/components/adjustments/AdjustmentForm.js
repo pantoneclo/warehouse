@@ -17,6 +17,7 @@ import ReactSelect from '../../shared/select/reactSelect';
 import AdvanceSearch from '../../shared/components/product-cart/search/AdvanceSearch';
 import {fetchAdvancedSearch} from '../../store/action/advancedSearchAction';
 import {setWarehouseId} from "../../store/action/warehouseAction";
+import {setLoading} from '../../store/action/loadingAction';
 
 const AdjustmentForm = (props) => {
     const {
@@ -48,6 +49,7 @@ const AdjustmentForm = (props) => {
         warehouse_id: '',
         AdjustmentType: ''
     });
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     useEffect(() => {
         setUpdateProducts(updateProducts)
@@ -149,15 +151,31 @@ const AdjustmentForm = (props) => {
         return formValue
     };
 
-    const onSubmit = (event) => {
+    const onSubmit = async (event) => {
         event.preventDefault();
         const valid = handleValidation();
         if (valid) {
-            if (singleAdjustMent) {
-                editAdjustment(id, prepareFormData(adjustMentValue), navigate);
-            } else {
-                addAdjustmentData(prepareFormData(adjustMentValue));
-                setAdjustMentValue(adjustMentValue);
+            // Set loading states
+            setIsSubmitting(true);
+            dispatch(setLoading(true));
+
+            try {
+                if (singleAdjustMent) {
+                    await editAdjustment(id, prepareFormData(adjustMentValue), navigate);
+                } else {
+                    await addAdjustmentData(prepareFormData(adjustMentValue));
+                    setAdjustMentValue(adjustMentValue);
+                }
+            } catch (error) {
+                console.error('Error submitting adjustment:', error);
+                dispatch(addToast({
+                    text: getFormattedMessage('adjustment.submit.error.message'),
+                    type: toastType.ERROR
+                }));
+            } finally {
+                // Clear loading states
+                setIsSubmitting(false);
+                dispatch(setLoading(false));
             }
         }
     };
@@ -201,7 +219,7 @@ const AdjustmentForm = (props) => {
                                                 updatedQty={updatedQty} frontSetting={frontSetting} warehouse={adjustMentValue.warehouse_id}
                             />
                         </div>
-                        <ModelFooter onEditRecord={singleAdjustMent} onSubmit={onSubmit} link='/app/adjustments'/>
+                        <ModelFooter onEditRecord={singleAdjustMent} onSubmit={onSubmit} link='/app/adjustments' isSubmitting={isSubmitting}/>
                     </div>
                 {/*</Form>*/}
             </div>

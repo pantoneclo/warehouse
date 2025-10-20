@@ -9,6 +9,7 @@ import {fetchSalesReturn} from '../../store/action/salesReturnAction';
 import {currencySymbolHendling, getFormattedDate, getFormattedMessage, placeholderText} from '../../shared/sharedMethod';
 import {fetchFrontSetting} from '../../store/action/frontSettingAction';
 import ActionDropDownButton from '../../shared/action-buttons/ActionDropDownButton';
+import {countryOptions, getCurrencySymbol} from '../../constants';
 import {downloadSaleReturnPdf} from '../../store/action/downloadSaleReturnPdfAction';
 import ShowPayment from '../../shared/showPayment/ShowPayment';
 import TopProgressBar from "../../shared/components/loaders/TopProgressBar";
@@ -67,23 +68,29 @@ const SaleReturn = (props) => {
 
     console.log ("salesReturn", view_permission, edit_permission, delete_permission, create_sale_return_permission)
 
-    const itemsValue = currencySymbol && salesReturn.length >= 0 && salesReturn.map(sale => ({
-        created_at: getFormattedDate(sale.attributes.date, allConfigData && allConfigData),
-        time: moment(sale.attributes.created_at).format('LT'),
-        reference_code: sale.attributes.reference_code,
-        customer_name: sale.attributes.customer_name,
-        warehouse_name: sale.attributes.warehouse_name,
-        status: sale.attributes.status,
-        payment_status: sale.attributes.payment_status,
-        grand_total: sale.attributes.grand_total,
-        paid_amount: sale.attributes.paid_amount ? sale.attributes.paid_amount : 0.00.toFixed(2),
-        id: sale.id,
-        currency: currencySymbol,
-        view_permission: view_permission,
-        edit_permission: edit_permission,
-        delete_permission: delete_permission,
-        
-    }));
+    const itemsValue = currencySymbol && salesReturn.length >= 0 && salesReturn.map(sale => {
+        // Get currency symbol from country mapping first, fallback to global currency symbol
+        const country = countryOptions.find(country => country.code === sale.attributes?.country);
+        const currencySymbolToUse = country?.currencySymbol || getCurrencySymbol(sale.attributes?.currency) || currencySymbol;
+
+        return {
+            created_at: getFormattedDate(sale.attributes.date, allConfigData && allConfigData),
+            time: moment(sale.attributes.created_at).format('LT'),
+            reference_code: sale.attributes.reference_code,
+            customer_name: sale.attributes.customer_name,
+            warehouse_name: sale.attributes.warehouse_name,
+            status: sale.attributes.status,
+            payment_status: sale.attributes.payment_status,
+            grand_total: sale.attributes.grand_total,
+            paid_amount: sale.attributes.paid_amount ? sale.attributes.paid_amount : 0.00.toFixed(2),
+            id: sale.id,
+            currency: currencySymbolToUse,
+            country: sale.attributes.country,
+            view_permission: view_permission,
+            edit_permission: edit_permission,
+            delete_permission: delete_permission,
+        };
+    });
 
     const columns = [
         {

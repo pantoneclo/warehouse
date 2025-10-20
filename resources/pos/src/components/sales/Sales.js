@@ -17,7 +17,7 @@ import { fetchSalePayments } from "../../store/action/salePaymentAction";
 import { callSaleApi } from "../../store/action/saleApiAction";
 import TopProgressBar from "../../shared/components/loaders/TopProgressBar";
 import usePermission from '../../shared/utils/usePermission';
-import { Permissions } from '../../constants';
+import { Permissions, countryOptions, getCurrencySymbol } from '../../constants';
 import {fetchCurrencies} from '../../store/action/currencyAction';
 const Sales = (props) => {
     const {
@@ -105,7 +105,10 @@ const Sales = (props) => {
 
 
     const itemsValue = currencySymbol && sales.length >= 0 && sales.map(sale => {
+        // Get currency symbol from country mapping first, fallback to database currency
+        const country = countryOptions.find(country => country.code === sale.attributes?.country);
         const currency = currencies.find(currency => currency.attributes.code === sale.attributes?.currency);
+        const currencySymbolToUse = country?.currencySymbol || getCurrencySymbol(sale.attributes?.currency) || currency?.attributes?.symbol || '';
 
         return{
         date: getFormattedDate(sale.attributes.date, allConfigData && allConfigData),
@@ -120,7 +123,7 @@ const Sales = (props) => {
         grand_total: sale.attributes.grand_total,
         paid_amount: sale.attributes.paid_amount ? sale.attributes.paid_amount : 0.00.toFixed(2),
         id: sale.id,
-        currency: currency?.attributes?.symbol || '',
+        currency: currencySymbolToUse,
         country:sale.attributes.country,
         is_return: sale.attributes.is_return,
         view_permission: view_permission,

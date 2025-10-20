@@ -27,11 +27,16 @@ import {
     faAngleDown,
     faBell,
     faLanguage,
+    faArrowsRotate,
+    faSpinner,
 } from "@fortawesome/free-solid-svg-icons";
 import { Dropdown, Row } from "react-bootstrap";
 import { productQuantityReportAction } from "../../store/action/paymentQuantityReport";
 import { Filters } from "../../constants";
 import LanguageModel from "../user-profile/LanguageModel";
+import { triggerStockUpdateScheduler } from "../../store/action/stockUpdateAction";
+import { addToast } from "../../store/action/toastAction";
+import { toastType } from "../../constants";
 
 const Header = (props) => {
     const {
@@ -41,6 +46,7 @@ const Header = (props) => {
         selectedLanguage,
         productQuantityReportAction,
         productQuantityReport,
+        triggerStockUpdateScheduler,
     } = props;
     const navigate = useNavigate();
     const users = localStorage.getItem(Tokens.USER);
@@ -56,6 +62,7 @@ const Header = (props) => {
     const [deleteModel, setDeleteModel] = useState(false);
     const [languageModel, setLanguageModel] = useState(false);
     const [isFullscreen, setIsFullscreen] = useState(false);
+    const [isStockUpdating, setIsStockUpdating] = useState(false);
     const [warehouseValue, setWarehouseValue] = useState({
         label: "All",
         value: null,
@@ -85,6 +92,21 @@ const Header = (props) => {
 
     const onProfileClick = () => {
         window.location.href = "#/app/profile/edit";
+    };
+
+    const onStockUpdateClick = async () => {
+        if (isStockUpdating) return; // Prevent multiple clicks
+
+        setIsStockUpdating(true);
+        try {
+            await triggerStockUpdateScheduler();
+            // Success message is handled by the action
+        } catch (error) {
+            // Error message is handled by the action
+            console.error('Stock update failed:', error);
+        } finally {
+            setIsStockUpdating(false);
+        }
     };
 
     // const changeLanguage = (language) => {
@@ -170,6 +192,17 @@ const Header = (props) => {
                                 />
                             </li>
                         )}
+                        <li
+                            className="px-sm-3 px-2"
+                            onClick={onStockUpdateClick}
+                            style={{ cursor: isStockUpdating ? 'not-allowed' : 'pointer' }}
+                            title={isStockUpdating ? 'Updating stock...' : 'Update stock quantities in PostgreSQL'}
+                        >
+                            <FontAwesomeIcon
+                                icon={isStockUpdating ? faSpinner : faArrowsRotate}
+                                className={`text-primary fs-2 ${isStockUpdating ? 'fa-spin' : ''}`}
+                            />
+                        </li>
                     </ul>
                     {/*<Dropdown className='d-flex align-items-stretch me-3'>*/}
                     {/*    <Dropdown.Toggle className='hide-arrow bg-transparent border-0 p-0 d-flex align-items-center'*/}
@@ -439,4 +472,5 @@ export default connect(mapStateToProps, {
     logoutAction,
     updateLanguage,
     productQuantityReportAction,
+    triggerStockUpdateScheduler,
 })(Header);

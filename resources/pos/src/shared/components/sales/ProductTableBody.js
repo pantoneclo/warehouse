@@ -9,6 +9,7 @@ import ProductModal from './ProductModal';
 import { productSalesDropdown } from '../../../store/action/productSaleUnitAction';
 import { currencySymbolHendling, decimalValidate, getFormattedMessage, numValidate } from '../../sharedMethod';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import {getCurrencySymbol} from '../../../constants';
 import { faPencil, faTrash } from '@fortawesome/free-solid-svg-icons';
 import { addToast } from "../../../store/action/toastAction";
 import { toastType } from "../../../constants";
@@ -25,11 +26,14 @@ const ProductTableBody = (props) => {
         updateDiscount,
         updateTax,
         updateSubTotal,
-        updateSaleUnit, frontSetting, allConfigData
+        updateSaleUnit, frontSetting, allConfigData, currencySymbol
     } = props;
     const [isShowModal, setIsShowModal] = useState(false);
     const [updateProductData, setUpdateProductData] = useState([]);
     const dispatch = useDispatch()
+
+    // Get currency symbol - prioritize passed currencySymbol, fallback to global setting
+    const currencySymbolToUse = currencySymbol || (frontSetting.value && frontSetting.value.currency_symbol);
 
     useEffect(() => {
         singleProduct.newItem !== '' && productSalesDropdown(singleProduct.product_unit)
@@ -157,7 +161,7 @@ const ProductTableBody = (props) => {
                     </div>
 
                 </td>
-                <td>{currencySymbolHendling(allConfigData, frontSetting.value && frontSetting.value.currency_symbol, amountBeforeTax(singleProduct).toFixed(2))}</td>
+                <td>{currencySymbolHendling(allConfigData, currencySymbolToUse, amountBeforeTax(singleProduct).toFixed(2))}</td>
                 <td>{singleProduct?.pan_style}</td>
 
                 <td>
@@ -196,9 +200,9 @@ const ProductTableBody = (props) => {
                         </InputGroup>
                     </div>
                 </td>
-                <td>{currencySymbolHendling(allConfigData, frontSetting.value && frontSetting.value.currency_symbol, discountAmountMultiply(singleProduct))}</td>
-                <td>{currencySymbolHendling(allConfigData, frontSetting.value && frontSetting.value.currency_symbol, taxAmountMultiply(singleProduct))}</td>
-                <td>{currencySymbolHendling(allConfigData, frontSetting.value && frontSetting.value.currency_symbol, subTotalCount(singleProduct))}</td>
+                <td>{currencySymbolHendling(allConfigData, currencySymbolToUse, discountAmountMultiply(singleProduct))}</td>
+                <td>{currencySymbolHendling(allConfigData, currencySymbolToUse, taxAmountMultiply(singleProduct))}</td>
+                <td>{currencySymbolHendling(allConfigData, currencySymbolToUse, subTotalCount(singleProduct))}</td>
                 {singleProduct.isSaleReturn || singleProduct.isSaleReturnEdit ? null : <td className='text-start'>
                     <button className='btn px-2 text-danger fs-3'>
                         <FontAwesomeIcon icon={faTrash} onClick={() => onDeleteCartItem(singleProduct.id)} />

@@ -24,7 +24,7 @@ import { calculateCartTotalAmount, calculateCartTotalTaxAmount } from '../../sha
 import { prepareSaleProductArray } from '../../shared/prepareArray/prepareSaleArray';
 import ModelFooter from '../../shared/components/modelFooter';
 import { addToast } from '../../store/action/toastAction';
-import { paymentMethodOptions, salePaymentStatusOptions, saleStatusOptions, statusOptions, toastType, eccomercePlatform, countryOptions} from '../../constants';
+import { paymentMethodOptions, salePaymentStatusOptions, saleStatusOptions, statusOptions, toastType, eccomercePlatform, countryOptions, getCurrencySymbol} from '../../constants';
 import { fetchFrontSetting } from '../../store/action/frontSettingAction';
 import ReactSelect from '../../shared/select/reactSelect';
 import AdvanceSearch from '../../shared/components/product-cart/search/AdvanceSearch';
@@ -99,6 +99,7 @@ const SalesForm = (props) => {
         country:'',
         market_place:'',
         currency:'',
+        currencySymbol:'',
         name:'',
         email:'',
         phone:'',
@@ -149,6 +150,7 @@ console.log("Currencies", currencies);
                 order_no:singleSale?singleSale.order_no:'',
                 market_place:singleSale?singleSale.market_place:'',
                 currency:singleSale?singleSale.currency:'',
+                currencySymbol:singleSale?singleSale.currencySymbol:'',
                 name:singleSale?singleSale.name:'',
                 email:singleSale?singleSale.email:'',
                 phone:singleSale?singleSale.phone:'',
@@ -178,6 +180,7 @@ console.log("Currencies", currencies);
                 order_no:singleSale?singleSale.order_no:'',
                 market_place:singleSale?singleSale.market_place:'',
                 currency:singleSale?singleSale.currency:'',
+                currencySymbol:singleSale?singleSale.currencySymbol:'',
                 name:singleSale?singleSale.name:'',
                 email:singleSale?singleSale.email:'',
                 phone:singleSale?singleSale.phone:'',
@@ -197,6 +200,42 @@ console.log("Currencies", currencies);
     useEffect(() => {
         saleValue.warehouse_id.value && fetchProductsByWarehouse(saleValue?.warehouse_id?.value)
     }, [saleValue.warehouse_id.value])
+
+    // Add useEffect to ensure currency symbol is set when country changes
+    useEffect(() => {
+        if (saleValue.country && !saleValue.currencySymbol) {
+            let countryCode;
+            if (typeof saleValue.country === 'object' && saleValue.country.value) {
+                countryCode = saleValue.country.value;
+            } else if (typeof saleValue.country === 'string') {
+                countryCode = saleValue.country;
+            }
+
+            if (countryCode) {
+                const country = countryOptions.find(c => c.code === countryCode);
+                if (country && country.currencySymbol) {
+                    setSaleValue(prev => ({
+                        ...prev,
+                        currencySymbol: country.currencySymbol,
+                        currency: country.currency
+                    }));
+                }
+            }
+        }
+    }, [saleValue.country])
+
+    // Add useEffect to set default country and currency for new sales
+    useEffect(() => {
+        if (!singleSale && !saleValue.country && countryNamesDefault.length > 0) {
+            const defaultCountry = countryNamesDefault[0];
+            setSaleValue(prev => ({
+                ...prev,
+                country: defaultCountry,
+                currency: defaultCountry.currency,
+                currencySymbol: defaultCountry.currencySymbol
+            }));
+        }
+    }, [countryNamesDefault, singleSale])
 
     const handleValidation = () => {
         let error = {};
@@ -336,7 +375,8 @@ console.log("Currencies", currencies);
             ...inputs,
             country: fullCountry,
             tax_rate: fullCountry?.vat ?? 0,
-            currency: fullCountry.currency
+            currency: fullCountry.currency,
+            currencySymbol: fullCountry.currencySymbol
         }));
 
         onCurrencyChange(fullCountry.currency)
@@ -377,7 +417,8 @@ console.log("Currencies", currencies);
             value:option.code,
             label:option.name,
             vat:option.vat,
-            currency:option.currency
+            currency:option.currency,
+            currencySymbol: option.currencySymbol || getCurrencySymbol(option.currency)
         }
 
     })
@@ -471,20 +512,45 @@ console.log("Updated Items all Properties", updateProducts)
     const parcel_company_id = { label: label, value: singleSale?.parcel_company_id }
     let currencyToFilterBy;
     if (singleSale) {
-        // Update case - use the currency from singleSale
-        console.log("Edit Currency Option", singleSale.currency);
-        currencyToFilterBy = singleSale.currency;
+        // Edit case - prioritize currency from selected country, fallback to singleSale.currency
+        if (selectedCountry && selectedCountry.currency) {
+            currencyToFilterBy = selectedCountry.currency;
+            console.log("Edit Currency from Selected Country:", currencyToFilterBy);
+        } else {
+            currencyToFilterBy = singleSale.currency;
+            console.log("Edit Currency from SingleSale:", currencyToFilterBy);
+        }
     } else {
         // Create case - use the currency from saleValue.country
         currencyToFilterBy = saleValue.country?.currency;
+        console.log("Create Currency from SaleValue:", currencyToFilterBy);
     }
     const filtredCurrency = currencyNameDefault.find(
         currency => currency.value === currencyToFilterBy
     );
 
+    console.log("Currency to Filter By:", currencyToFilterBy, "Filtered Currency:", filtredCurrency);
+    console.log("Currency Name Default:", currencyNameDefault);
+
 // Find the selected marketplace based on shipment_id
     const selectMarketplace = marketplaceNamesDefault.find(market=> market.label == saleValue.label)
-    const selectedCountry = countryNamesDefault.find(c => c.value === saleValue.country);
+
+    // Fix country selection logic for both create and edit modes
+    let selectedCountry;
+    if (singleSale && saleValue.country) {
+        // Edit mode: saleValue.country is an object with value, label, etc.
+        if (typeof saleValue.country === 'object' && saleValue.country.value) {
+            selectedCountry = countryNamesDefault.find(c => c.value === saleValue.country.value);
+        } else if (typeof saleValue.country === 'string') {
+            // Fallback: if country is still a string (country code)
+            selectedCountry = countryNamesDefault.find(c => c.value === saleValue.country);
+        }
+    } else {
+        // Create mode: use the country from saleValue
+        selectedCountry = countryNamesDefault.find(c => c.value === saleValue.country?.value || saleValue.country);
+    }
+
+    console.log("SaleValue Country:", saleValue.country, "Selected Country:", selectedCountry);
 
 
 
@@ -514,7 +580,17 @@ console.log(saleValue.market_place, "saleValue Marketplace")
                                      isWarehouseDisable={true}
                                      placeholder={placeholderText('purchase.select.warehouse.placeholder.label')}/>
                     </div>
-
+                     <div className='col-md-4'>
+                        <ReactSelect
+                            data={countryNamesDefault}
+                            onChange={handleCountryChange}
+                            name='country'
+                            title={getFormattedMessage('globally.input.country.label')}
+                            value={selectedCountry}
+                            // errors={errors['payment_status']}
+                            defaultValue={countryNamesDefault[0]}
+                            placeholder={placeholderText('globally.input.country.placeholder.label')}/>
+                    </div>
 
                     <div className='col-md-4 mb-5'>
                         <label className='form-label'>
@@ -609,6 +685,7 @@ console.log(saleValue.market_place, "saleValue Marketplace")
                                          updateCost={updateCost} updateDiscount={updateDiscount}
                                          updateTax={updateTax} updateSubTotal={updateSubTotal}
                                          updateSaleUnit={updateSaleUnit}
+                                         currencySymbol={saleValue?.currencySymbol}
                         />
                     </div>
                     <div className='col-12'>
@@ -720,17 +797,7 @@ console.log(saleValue.market_place, "saleValue Marketplace")
                         </InputGroup>
                     </div>
 
-                    <div className='col-md-4'>
-                        <ReactSelect
-                            data={countryNamesDefault}
-                            onChange={handleCountryChange}
-                            name='country'
-                            title={getFormattedMessage('globally.input.country.label')}
-                            value={selectedCountry}
-                            // errors={errors['payment_status']}
-                            defaultValue={countryNamesDefault[0]}
-                            placeholder={placeholderText('globally.input.country.placeholder.label')}/>
-                    </div>
+                   
 
                     <div className='col-md-4 mb-3'>
                         <label

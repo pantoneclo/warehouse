@@ -135,10 +135,11 @@ const AdjustmentTableBody = (props) => {
                         </InputGroup.Text>
                         <Form.Control aria-label='Product Quantity'
                                       onKeyPress={(event) => decimalValidate(event)}
+                                      onWheel={(e) => e.target.blur()} // Prevent scroll from changing value
                                       className='text-center px-0 py-2 rounded-0 hide-arrow'
-                                      value={singleProduct.quantity}
+                                      value={singleProduct.quantity || 0} // Default to 0 if undefined
                                       type="number"
-                                      step={0.01}
+                                      step={1} // Changed from 0.01 to 1 for +/- buttons
                                       min={0.00}
                                       onChange={(e) => handleChange(e)}
                         />

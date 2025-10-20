@@ -72,6 +72,12 @@ class SaleReturn extends BaseModel implements HasMedia, JsonResourceful
 
     public const SALE_RETURN_PDF = 'sale_return_pdf';
 
+    // Return status constants
+    const RETURN_STATUS_PENDING = 'Pending';
+    const RETURN_STATUS_APPROVED = 'Approved';
+    const RETURN_STATUS_PARTIALLY_APPROVED = 'Partially Approved';
+    const RETURN_STATUS_REJECTED = 'Rejected';
+
     /**
      * @var string[]
      */
@@ -90,6 +96,16 @@ class SaleReturn extends BaseModel implements HasMedia, JsonResourceful
         'status',
         'reference_code',
         'sale_id',
+        'order_number',
+        'return_status',
+        'approved_at',
+        'approved_by',
+        'currency',
+        'conversion_rate',
+        'grand_total_original',
+        'webhook_data',
+        'stock_updated',
+        'stock_updated_at',
     ];
 
     /**
@@ -122,6 +138,12 @@ class SaleReturn extends BaseModel implements HasMedia, JsonResourceful
         'shipping' => 'double',
         'grand_total' => 'double',
         'paid_amount' => 'double',
+        'conversion_rate' => 'decimal:4',
+        'grand_total_original' => 'decimal:4',
+        'approved_at' => 'datetime',
+        'stock_updated_at' => 'datetime',
+        'stock_updated' => 'boolean',
+        'webhook_data' => 'array',
     ];
 
     //tax type  const
@@ -176,6 +198,9 @@ class SaleReturn extends BaseModel implements HasMedia, JsonResourceful
             'reference_code' => $this->reference_code,
             'sale_return_items' => $this->saleReturnItems,
             'created_at' => $this->created_at,
+            // Include country and currency from related sale or direct fields
+            'country' => $this->sale ? $this->sale->country : null,
+            'currency' => $this->currency ?? ($this->sale ? $this->sale->currency : null),
         ];
 
         return $fields;
@@ -211,5 +236,58 @@ class SaleReturn extends BaseModel implements HasMedia, JsonResourceful
     public function sale(): BelongsTo
     {
         return $this->belongsTo(Sale::class, 'sale_id', 'id');
+    }
+
+    /**
+     * @return BelongsTo
+     */
+    public function approvedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'approved_by', 'id');
+    }
+
+    /**
+     * Check if return is pending approval
+     */
+    public function isPending(): bool
+    {
+        return $this->return_status === self::RETURN_STATUS_PENDING;
+    }
+
+    /**
+     * Check if return is approved
+     */
+    public function isApproved(): bool
+    {
+        return $this->return_status === self::RETURN_STATUS_APPROVED;
+    }
+
+    /**
+     * Approve the return
+     */
+    public function approve($userId = null): bool
+    {
+        $this->return_status = self::RETURN_STATUS_APPROVED;
+        $this->approved_at = now();
+        $this->approved_by = $userId;
+        return $this->save();
+    }
+
+    /**
+     * Check if stock has been updated
+     */
+    public function isStockUpdated(): bool
+    {
+        return $this->stock_updated === true;
+    }
+
+    /**
+     * Mark stock as updated
+     */
+    public function markStockUpdated(): bool
+    {
+        $this->stock_updated = true;
+        $this->stock_updated_at = now();
+        return $this->save();
     }
 }

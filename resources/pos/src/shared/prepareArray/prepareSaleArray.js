@@ -23,7 +23,7 @@ export const prepareSaleProductArray = (products, warehouseId) => {
             discount_value: 0.00,
             discount_amount: 0.00,
             sale_unit: product.attributes.sale_unit.id ? Number(product.attributes.sale_unit.id) : Number(product.attributes.sale_unit),
-            quantity: 1,
+            quantity: 0,
             sub_total: 0.00,
             id: product.id,
             sale_item_id: '',

@@ -92,3 +92,51 @@ export const deleteSaleReturn = (userId) => async (dispatch) => {
                 {text: response.data.message, type: toastType.ERROR}));
         });
 };
+
+// Approve full sale return
+export const approveSaleReturn = (saleReturnId, navigate) => async (dispatch) => {
+    dispatch(setLoading(true));
+    await apiConfig.post(apiBaseURL.SALE_RETURN + '/' + saleReturnId + '/approve')
+        .then((response) => {
+            dispatch(addToast({
+                text: 'Sale return approved and stock updated successfully',
+                type: toastType.SUCCESS
+            }));
+            dispatch(setLoading(false));
+            if (navigate) {
+                navigate('/app/sale-return');
+            }
+        })
+        .catch(({response}) => {
+            dispatch(setLoading(false));
+            dispatch(addToast({
+                text: response.data.message,
+                type: toastType.ERROR
+            }));
+        });
+};
+
+// Approve partial sale return (specific items)
+export const approvePartialSaleReturn = (saleReturnId, itemIds, navigate) => async (dispatch) => {
+    dispatch(setLoading(true));
+    await apiConfig.post(apiBaseURL.SALE_RETURN + '/' + saleReturnId + '/approve-partial', {
+        item_ids: itemIds
+    })
+        .then((response) => {
+            dispatch(addToast({
+                text: 'Selected items approved and stock updated successfully',
+                type: toastType.SUCCESS
+            }));
+            dispatch(setLoading(false));
+            if (navigate) {
+                navigate('/app/sale-return');
+            }
+        })
+        .catch(({response}) => {
+            dispatch(setLoading(false));
+            dispatch(addToast({
+                text: response.data.message,
+                type: toastType.ERROR
+            }));
+        });
+};

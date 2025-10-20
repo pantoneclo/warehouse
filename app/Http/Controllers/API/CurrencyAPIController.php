@@ -8,6 +8,7 @@ use App\Http\Requests\UpdateCurrencyRequest;
 use App\Http\Resources\CurrencyCollection;
 use App\Http\Resources\CurrencyResource;
 use App\Repositories\CurrencyRepository;
+use App\Models\Country;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Prettus\Validator\Exceptions\ValidatorException;
@@ -90,5 +91,33 @@ class CurrencyAPIController extends AppBaseController
         $this->currencyRepository->delete($id);
 
         return $this->sendSuccess('Currency deleted successfully');
+    }
+
+    /**
+     * Get currency by country ID
+     *
+     * @param int $countryId
+     * @return JsonResponse
+     */
+    public function getCurrencyByCountry($countryId): JsonResponse
+    {
+        $country = Country::with('currency')->find($countryId);
+
+        if (!$country) {
+            return $this->sendError('Country not found', 404);
+        }
+
+        if (!$country->currency) {
+            return $this->sendError('No currency assigned to this country', 404);
+        }
+
+        return $this->sendResponse([
+            'currency' => new CurrencyResource($country->currency),
+            'country' => [
+                'id' => $country->id,
+                'name' => $country->name,
+                'short_code' => $country->short_code,
+            ]
+        ], 'Currency retrieved successfully');
     }
 }

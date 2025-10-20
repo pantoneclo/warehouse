@@ -22,6 +22,14 @@ class Kernel extends ConsoleKernel
         //          ->everyMinute();
         // $schedule->command('inspire')->hourly();
         $schedule->command('stock:update')->everyMinute();
+
+        // Scheduled stock update for all warehouses
+        // Runs daily at 3 AM BDT
+        $schedule->command('stock:scheduled-update')
+                 ->dailyAt('03:00')
+                 ->timezone('Asia/Dhaka')
+                 ->withoutOverlapping()
+                 ->runInBackground();
     }
 
     /**

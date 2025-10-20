@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
@@ -40,6 +41,8 @@ class Country extends Model
         'name',
         'short_code',
         'phone_code',
+        'currency_id',
+        'currency_code',
     ];
 
     /**
@@ -71,5 +74,13 @@ class Country extends Model
     public function states(): HasMany
     {
         return $this->hasMany(State::class, 'country_id');
+    }
+
+    /**
+     * @return BelongsTo
+     */
+    public function currency(): BelongsTo
+    {
+        return $this->belongsTo(Currency::class, 'currency_id', 'id');
     }
 }

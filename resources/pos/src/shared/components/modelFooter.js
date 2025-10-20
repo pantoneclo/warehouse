@@ -5,8 +5,9 @@ import {getFormattedMessage, placeholderText} from "../sharedMethod";
 import {useSelector} from "react-redux";
 
 const ModelFooter = (props) => {
-    const {onEditRecord, onSubmit, editDisabled, clearField, addDisabled, link, ref, modelhide, cancelNotShow} = props;
-    const {isSaving} = useSelector(state => state)
+    const {onEditRecord, onSubmit, editDisabled, clearField, addDisabled, link, ref, modelhide, cancelNotShow, isSubmitting} = props;
+    const {isSaving} = useSelector(state => state);
+    const isLoading = isSubmitting || isSaving;
 
     return (
         <>
@@ -14,13 +15,13 @@ const ModelFooter = (props) => {
                 link ? <div className='d-flex mt-5 justify-content-end'>
                         {onEditRecord ?
                             <button onClick={(event) => onSubmit(event)} className='btn btn-primary me-3' type='submit'
-                                    disabled={editDisabled || isSaving} ref={ref}>
-                                {isSaving  ? placeholderText("globally-saving-btn-label") : placeholderText("globally.save-btn")}
+                                    disabled={editDisabled || isLoading} ref={ref}>
+                                {isLoading  ? placeholderText("globally-saving-btn-label") : placeholderText("globally.save-btn")}
                             </button>
                             :
                             <button onClick={(event) => onSubmit(event)} className='btn btn-primary me-3' type='submit'
-                                    disabled={addDisabled || isSaving} ref={ref}>
-                                {isSaving  ? placeholderText("globally-saving-btn-label") : placeholderText("globally.save-btn")}
+                                    disabled={addDisabled || isLoading} ref={ref}>
+                                {isLoading  ? placeholderText("globally-saving-btn-label") : placeholderText("globally.save-btn")}
                             </button>
                         }
                         {modelhide ?

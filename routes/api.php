@@ -108,6 +108,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::resource('currencies', CurrencyAPIController::class);
     //    });
     Route::get('currencies', [CurrencyAPIController::class, 'index']);
+    Route::get('currencies/by-country/{countryId}', [CurrencyAPIController::class, 'getCurrencyByCountry']);
 
     // warehouses route
     //    Route::middleware('permission:manage.warehouses')->group(function () {
@@ -220,6 +221,8 @@ Route::middleware('auth:sanctum')->group(function () {
     //    Route::middleware('permission:manage_sale_return')->group(function () {
     Route::resource('sales-return', SaleReturnAPIController::class);
     Route::get('sales-return-edit/{id}', [SaleReturnAPIController::class, 'editBySale']);
+    Route::post('sales-return/{id}/approve', [SaleReturnAPIController::class, 'approve'])->name('sales-return.approve');
+    Route::post('sales-return/{id}/approve-partial', [SaleReturnAPIController::class, 'approvePartial'])->name('sales-return.approve-partial');
     Route::get('sale-return-info/{sales_return}', [SaleReturnAPIController::class, 'saleReturnInfo'])->name('sale-return-info');
     Route::get('sale-return-pdf-download/{sale_return}', [SaleReturnAPIController::class, 'pdfDownload'])->name('sale-return-pdf-download');
     //    });
@@ -361,6 +364,9 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::get('config', [UserAPIController::class, 'config']);
 
+    // Manual stock update scheduler trigger
+    Route::post('stock/trigger-update-scheduler', [StockManagementAPIController::class, 'triggerStockUpdateScheduler']);
+
 
 
 
@@ -376,6 +382,7 @@ Route::middleware('checkApiKey')->group(function (){
      Route::post('/webhook/order/return', [StockManagementAPIController::class, 'webHookOrderReturn'])->name('webhook.order.return');
     Route::post('/webhook/manage-status', [StockManagementAPIController::class, 'webHookUpdateSellStatus']);
     Route::post('/webhook/order/statuschanged', [StockManagementAPIController::class, 'webHookOrderStatusUpdate']);
+    Route::post('/webhook/order/return/status-changed', [StockManagementAPIController::class, 'webHookOrderReturnStatusChanged']);
     Route::post('/webhook/order/courier-assign', [StockManagementAPIController::class, 'webHookOrderCourierAssign']);
 
 });

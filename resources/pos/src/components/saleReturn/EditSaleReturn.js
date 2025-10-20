@@ -11,6 +11,7 @@ import saleReturnStatus from './saleReturnStatus.json';
 import {getFormattedMessage} from '../../shared/sharedMethod';
 import Spinner from "../../shared/components/loaders/Spinner";
 import TopProgressBar from "../../shared/components/loaders/TopProgressBar";
+import {countryOptions, getCurrencySymbol} from '../../constants';
 
 const EditSaleReturn = (props) => {
     const {fetchSaleReturn, salesReturn, customers, fetchAllCustomer, warehouses, fetchAllWarehouses, isLoading} = props;
@@ -94,6 +95,9 @@ const EditSaleReturn = (props) => {
         isSaleReturnEdit: true,
         sale_id: salesReturn.attributes.sale_id,
         sale_reference: salesReturn.attributes.reference_code,
+        country: salesReturn.attributes.country,
+        currency: salesReturn.attributes.currency,
+        currencySymbol: getCurrencySymbol(salesReturn.attributes.currency),
     };
     console.log ('itemsValue', itemsValue)
 

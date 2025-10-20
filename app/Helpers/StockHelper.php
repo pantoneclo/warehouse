@@ -97,42 +97,60 @@ class StockHelper
 
     public static function updateProductMetaQuantity($code, $quantity, $warehouseId)
     {
-        $countryCondition = ($warehouseId == 3) ? '=' : '!=';
+        try {
+            $countryCondition = ($warehouseId == 3) ? '=' : '!=';
 
-        $productMetaItems = DB::connection('pgsql')->table('product_meta')
-            ->select('id', 'variants')
-            ->whereRaw("country_id $countryCondition 1")
-            ->whereRaw("variants::jsonb @> ?", [json_encode([['variantDetails' => [['sku' => $code]]]])])
-            ->orderBy('id')
-            ->get();
+            Log::info("Updating PostgreSQL for SKU: $code, Quantity: $quantity, Warehouse: $warehouseId, Country condition: $countryCondition");
 
-        foreach ($productMetaItems as $item) {
-            $variants = json_decode($item->variants, true);
+            $productMetaItems = DB::connection('pgsql')->table('product_meta')
+                ->select('id', 'variants')
+                ->where('country_id', $countryCondition, 1)
+                ->whereRaw("variants::jsonb @> ?", [json_encode([['variantDetails' => [['sku' => $code]]]])])
+                ->orderBy('id')
+                ->get();
 
-            if (!is_array($variants)) {
-                continue;
-            }
+            Log::info("Found " . $productMetaItems->count() . " product_meta items for SKU: $code");
 
-            $updated = false;
+            foreach ($productMetaItems as $item) {
+                $variants = json_decode($item->variants, true);
 
-            foreach ($variants as &$variant) {
-                foreach ($variant['variantDetails'] as &$variantDetail) {
-                    if ($variantDetail['sku'] === $code) {
-                        if ($variantDetail['quantity'] != $quantity) {
-                            $variantDetail['quantity'] = $quantity;
-                            $updated = true;
+                if (!is_array($variants)) {
+                    Log::warning("Invalid variants JSON for product_meta ID: {$item->id}");
+                    continue;
+                }
+
+                $updated = false;
+
+                foreach ($variants as &$variant) {
+                    if (isset($variant['variantDetails']) && is_array($variant['variantDetails'])) {
+                        foreach ($variant['variantDetails'] as &$variantDetail) {
+                            if (isset($variantDetail['sku']) && $variantDetail['sku'] === $code) {
+                                $oldQuantity = $variantDetail['quantity'] ?? 0;
+                                if ($oldQuantity != $quantity) {
+                                    $variantDetail['quantity'] = $quantity;
+                                    $updated = true;
+                                    Log::info("Updated SKU: $code from $oldQuantity to $quantity in product_meta ID: {$item->id}");
+                                }
+                            }
                         }
                     }
                 }
+
+                if ($updated) {
+                    DB::connection('pgsql')->table('product_meta')
+                        ->where('id', $item->id)
+                        ->update(['variants' => json_encode($variants)]);
+
+                    Log::info("Successfully updated PostgreSQL product_meta ID: {$item->id} for SKU: $code");
+                }
             }
 
-            if ($updated) {
-                DB::connection('pgsql')->table('product_meta')
-                    ->where('id', $item->id)
-                    ->update(['variants' => json_encode($variants)]);
-
-                Log::info("Updated quantity for SKU: $code to $quantity in product_meta ID: {$item->id}");
-            }
+        } catch (\Exception $e) {
+            Log::error("Error updating PostgreSQL for SKU: $code", [
+                'error' => $e->getMessage(),
+                'warehouse_id' => $warehouseId,
+                'quantity' => $quantity
+            ]);
         }
     }
 }

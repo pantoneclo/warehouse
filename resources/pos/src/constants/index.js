@@ -76,6 +76,7 @@ export const apiBaseURL = {
     STOCK_DETAILS_WAREHOUSE: 'get-product-count',
     TOP_SELLING_PRODUCT_REPORT: 'top-selling-product-report',
     STOCK_ALERT: 'stock-alerts',
+    STOCK_TRIGGER_UPDATE_SCHEDULER: 'stock/trigger-update-scheduler',
     VALIDATE_AUTH_TOKEN: "validate-auth-token",
     CONFIG: "config",
     EMAIL_TEMPLATES: "mail-templates",
@@ -494,6 +495,11 @@ export const topCustomersActionType = {
 
 export const weekSalePurchasesActionType = {
     WEEK_SALE_PURCHASES: 'WEEK_SALE_PURCHASES'
+};
+
+export const stockUpdateActionType = {
+    TRIGGER_STOCK_UPDATE_SUCCESS: 'TRIGGER_STOCK_UPDATE_SUCCESS',
+    TRIGGER_STOCK_UPDATE_FAILURE: 'TRIGGER_STOCK_UPDATE_FAILURE'
 };
 
 export const yearTopProductActionType = {
@@ -963,29 +969,57 @@ export const eccomercePlatform = [
     { id: 6, name: 'eccomerce.label.6' },
     { id: 7, name: 'eccomerce.label.7' },
     { id: 8, name: 'eccomerce.label.8' },
+    { id: 9, name: 'eccomerce.label.9' },
 ];
 
+
+// Currency symbols mapping
+export const currencySymbols = {
+    'BDT': '৳',    // Bangladesh Taka
+    'EUR': '€',    // Euro
+    'USD': '$',    // US Dollar
+    'PLN': 'zł',   // Polish Zloty
+    'HUF': 'Ft',   // Hungarian Forint
+    'BGN': 'лв',   // Bulgarian Lev
+    'RON': 'lei',  // Romanian Leu
+    'CZK': 'Kč',   // Czech Koruna
+    'RUP': '₹',    // Indian Rupee
+    'GBP': '£',    // British Pound
+    'JPY': '¥',    // Japanese Yen
+    'CNY': '¥',    // Chinese Yuan
+    'CAD': 'C$',   // Canadian Dollar
+    'AUD': 'A$',   // Australian Dollar
+    'CHF': 'CHF',  // Swiss Franc
+    'SEK': 'kr',   // Swedish Krona
+    'NOK': 'kr',   // Norwegian Krone
+    'DKK': 'kr',   // Danish Krone
+};
 
 export const countryOptions = [
-    { id: 1, code:'BD', currency:"BDT", name: 'Bangladesh', vat:0 },
-    { id: 2, code:'SI', currency:"EUR", name: 'Slovenia', vat:22},
-    { id: 3, code:'IT', currency:"EUR", name: 'Italy', vat:22},
-    { id: 4, code:'SK', currency:"EUR", name: 'Slovakia', vat:20},
-    { id: 5, code:'PL', currency:"PLN", name: 'Poland', vat:23},
-    { id: 6, code:'GR', currency:"EUR", name: 'Greece', vat:24},
-    { id: 7, code:'RO', currency:"RON", name: 'Romania', vat:19},
-    { id: 8, code:'LT', currency:"EUR", name: 'Lithuania', vat:21},
-    { id: 9, code:'BG', currency:"BGN", name: 'Bulgaria', vat:20},
-    { id: 10, code:'AT', currency:"EUR", name: 'Austria', vat:20},
-    { id: 11, code:'ES', currency:"EUR", name: 'Spain', vat:21},
-    { id: 12, code:'PT', currency:"EUR", name: 'Portugal', vat:23},
-    { id: 13, code:'DE', currency:"EUR", name: 'Germany', vat:19},
-    { id: 14, code:'HR', currency:"EUR", name: 'Croatia', vat:25},
-    { id: 15, code:'CZ', currency:"CZK", name: 'Czech Republic', vat:21},
-    { id: 16, code:'HU', currency:"HUF", name: 'Hungry', vat:27},
-    { id: 17, code:'EE', currency:"EUR", name: 'Estonia', vat:22},
-    { id: 18, code:'LV', currency:"EUR", name: 'Latvia', vat:21},
-    { id: 19, code:'IN', currency:"RUP", name: 'India', vat:0},
-    { id: 20, code:'BE', currency:"EUR", name: 'Belgium', vat:21},
+    { id: 1, code:'BD', currency:"BDT", currencySymbol: currencySymbols.BDT, name: 'Bangladesh', vat:0 },
+    { id: 2, code:'SI', currency:"EUR", currencySymbol: currencySymbols.EUR, name: 'Slovenia', vat:22},
+    { id: 3, code:'IT', currency:"EUR", currencySymbol: currencySymbols.EUR, name: 'Italy', vat:22},
+    { id: 4, code:'SK', currency:"EUR", currencySymbol: currencySymbols.EUR, name: 'Slovakia', vat:20},
+    { id: 5, code:'PL', currency:"PLN", currencySymbol: currencySymbols.PLN, name: 'Poland', vat:23},
+    { id: 6, code:'GR', currency:"EUR", currencySymbol: currencySymbols.EUR, name: 'Greece', vat:24},
+    { id: 7, code:'RO', currency:"RON", currencySymbol: currencySymbols.RON, name: 'Romania', vat:19},
+    { id: 8, code:'LT', currency:"EUR", currencySymbol: currencySymbols.EUR, name: 'Lithuania', vat:21},
+    { id: 9, code:'BG', currency:"BGN", currencySymbol: currencySymbols.BGN, name: 'Bulgaria', vat:20},
+    { id: 10, code:'AT', currency:"EUR", currencySymbol: currencySymbols.EUR, name: 'Austria', vat:20},
+    { id: 11, code:'ES', currency:"EUR", currencySymbol: currencySymbols.EUR, name: 'Spain', vat:21},
+    { id: 12, code:'PT', currency:"EUR", currencySymbol: currencySymbols.EUR, name: 'Portugal', vat:23},
+    { id: 13, code:'DE', currency:"EUR", currencySymbol: currencySymbols.EUR, name: 'Germany', vat:19},
+    { id: 14, code:'HR', currency:"EUR", currencySymbol: currencySymbols.EUR, name: 'Croatia', vat:25},
+    { id: 15, code:'CZ', currency:"CZK", currencySymbol: currencySymbols.CZK, name: 'Czech Republic', vat:21},
+    { id: 16, code:'HU', currency:"HUF", currencySymbol: currencySymbols.HUF, name: 'Hungry', vat:27},
+    { id: 17, code:'EE', currency:"EUR", currencySymbol: currencySymbols.EUR, name: 'Estonia', vat:22},
+    { id: 18, code:'LV', currency:"EUR", currencySymbol: currencySymbols.EUR, name: 'Latvia', vat:21},
+    { id: 19, code:'IN', currency:"RUP", currencySymbol: currencySymbols.RUP, name: 'India', vat:0},
+    { id: 20, code:'BE', currency:"EUR", currencySymbol: currencySymbols.EUR, name: 'Belgium', vat:21},
     // Add more countries as needed
 ];
+
+// Helper function to get currency symbol by currency code
+export const getCurrencySymbol = (currencyCode) => {
+    return currencySymbols[currencyCode] || currencyCode;
+};

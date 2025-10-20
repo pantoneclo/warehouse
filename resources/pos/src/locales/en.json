@@ -643,6 +643,7 @@
     "eccomerce.label.6":"MIMOVRSTE",
     "eccomerce.label.7":"ALLEGRO",
     "eccomerce.label.8":"PANTONECLO WHM",
+    "eccomerce.label.9":"TEMU",
     "excel.btn.label": "EXCEL",
     "cash.label": "Cash",
     "no-option.label": "No options",
@@ -886,6 +887,8 @@
     "add-stock.title": "Add Stock",
     "product-quantity.add.title": "Add Product Quantity",
     "edit-translation.title": "Edit Translation",
+    "stock.update.scheduler.success.message": "Stock quantities updated successfully in PostgreSQL database",
+    "stock.update.scheduler.error.message": "Failed to update stock quantities. Please try again.",
     "globally.variant.add.label": "Add Variant",
 
 
