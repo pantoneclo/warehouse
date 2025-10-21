@@ -89,6 +89,7 @@ import EditLanguageData from "./components/languages/EditLanguageData";
 import BaseUnits from "./components/base-unit/BaseUnits";
 import VariantForm from "./components/product/VariantForm";
 import CreateVarient from "./components/product/CreateVarient";
+import JobMonitoring from "./components/jobMonitoring/JobMonitoring";
 
 import PackageForm from "./components/package/PackageForm";
 import CreatePackage from "./components/package/CreatePackage";
@@ -121,6 +122,11 @@ export const route = [
     {
         path: "dashboard",
         ele: <Dashboard />,
+        permission: "",
+    },
+    {
+        path: "job-monitoring",
+        ele: <JobMonitoring />,
         permission: "",
     },
     {

@@ -78,6 +78,8 @@ export const apiBaseURL = {
     STOCK_ALERT: 'stock-alerts',
     STOCK_TRIGGER_UPDATE_SCHEDULER: 'stock/trigger-update-scheduler',
     STOCK_UPDATE_STATUS: 'stock/update-status',
+    JOB_STATUS: 'jobs/status',
+    SCHEDULED_JOBS: 'jobs/scheduled',
     VALIDATE_AUTH_TOKEN: "validate-auth-token",
     CONFIG: "config",
     EMAIL_TEMPLATES: "mail-templates",

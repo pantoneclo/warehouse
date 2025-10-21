@@ -30,7 +30,7 @@ import ReactSelect from '../../shared/select/reactSelect';
 import AdvanceSearch from '../../shared/components/product-cart/search/AdvanceSearch';
 import { fetchAdvancedSearch } from '../../store/action/advancedSearchAction';
 import { preparePurchaseProductArray } from '../../shared/prepareArray/preparePurchaseArray';
-import { shippingCompanyNames ,getLabelById} from '../../constants'
+import { shippingCompanyNames } from '../../constants'
 import { get } from 'lodash';
 import {fetchCurrencies} from "../../store/action/currencyAction";
 import { useIntl } from 'react-intl';
@@ -65,13 +65,21 @@ const SalesForm = (props) => {
     const [isPaymentType, setIsPaymentType] = useState(false)
 
     const [uploadedFile, setUploadedFile] = useState(null);
+    const [currentFileName, setCurrentFileName] = useState('');
+    const [originalFileName, setOriginalFileName] = useState('');
 
     const handleFileChange = (e) => {
         const file = e.target.files[0];
         if (file) {
             const reader = new FileReader();
             reader.onloadend = () => {
-                setSaleValue(prev => ({ ...prev, file: reader.result })); // base64 string
+                setSaleValue(prev => ({
+                    ...prev,
+                    file: reader.result,
+                    fileName: file.name // Store the file name
+                }));
+                setUploadedFile(file);
+                setCurrentFileName(file.name);
             };
             reader.readAsDataURL(file);
         }
@@ -105,7 +113,8 @@ const SalesForm = (props) => {
         phone:'',
         address:'',
         city:'',
-        file:null
+        file:null,
+        fileName:''
     });
     const [errors, setErrors] = useState({
         date: '',
@@ -157,7 +166,19 @@ console.log("Currencies", currencies);
                 address:singleSale?singleSale.address:'',
                 city:singleSale?singleSale.city:'',
                 file:singleSale?singleSale.file:'',
+                fileName:singleSale?singleSale.fileName:'',
             })
+
+            // Set payment type visibility based on payment status
+            if (singleSale.payment_status && singleSale.payment_status.value !== 2) {
+                setIsPaymentType(true);
+            }
+
+            // Set original file name if file exists
+            if (singleSale.file) {
+                setCurrentFileName('');  // Reset to show "Existing file"
+                setOriginalFileName(singleSale.fileName || 'Existing file'); // Store original file name
+            }
         }
         if (singleSale && isQuotation) {
             setSaleValue({
@@ -516,9 +537,6 @@ console.log("Updated Items all Properties", updateProducts)
         }
     }
     console.log(saleValue?.parcel_company_id, 'saleValue.parcel_company_id')
-    const label = getLabelById(singleSale?.parcel_company_id);
-    console.log(label, 'label')
-    const parcel_company_id = { label: label, value: singleSale?.parcel_company_id }
     let currencyToFilterBy;
     if (singleSale) {
         // Edit case - prioritize currency from selected country, fallback to singleSale.currency
@@ -791,8 +809,7 @@ console.log(saleValue.market_place, "saleValue Marketplace")
                                      data={shippingCompanyNames}
                                      onChange={onParcelCompanyChange}
                                      placeholder={placeholderText('pacel.company.select.label')}
-                                     defaultValue={parcel_company_id}
-
+                                     value={saleValue.parcel_company_id}
                                      name='parcel_company_id'
                         />
                     </div>
@@ -880,7 +897,9 @@ console.log(saleValue.market_place, "saleValue Marketplace")
                         />
                     </div>
                     <div className='col-md-4'>
-                        <label htmlFor="uploadFile" className='form-label'>Upload File</label>
+                        <label htmlFor="uploadFile" className='form-label'>
+                            {getFormattedMessage('globally.input.upload.file.label')}
+                        </label>
                         <input
                             type="file"
                             id="uploadFile"
@@ -889,6 +908,24 @@ console.log(saleValue.market_place, "saleValue Marketplace")
                             accept=".pdf,.ppt,.pptx,.doc,.docx,image/*"
                             onChange={handleFileChange}
                         />
+                        {saleValue.file && (
+                            <div className="mt-2">
+                                <small className="text-muted">
+                                    <strong>File: </strong>
+                                    {currentFileName ? (
+                                        <>
+                                            {currentFileName}
+                                            <span className="text-success"> (New file selected - will replace existing)</span>
+                                        </>
+                                    ) : (
+                                        <>
+                                            {originalFileName || saleValue.fileName || 'Existing file'}
+                                            <span className="text-info"> (Current file)</span>
+                                        </>
+                                    )}
+                                </small>
+                            </div>
+                        )}
                     </div>
 
                     <div className='mb-3'>

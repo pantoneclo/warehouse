@@ -4,7 +4,7 @@ import {FontAwesomeIcon} from '@fortawesome/react-fontawesome';
 import {
     faWarehouse, faPieChart, faUser, faTruck, faUserGroup, faHome, faBoxes,faDropbox, faPrint, faBookmark, faBoxOpen,
     faMoneyCheckDollar, faMoneyBills, faQuoteRight, faDollarSign, faReceipt, faArrowRight, faArrowLeft,
-    faEnvelope, faCartShopping, faChartColumn, faGear, faMapLocation, faBasketShopping, faSms, faCube, faFile, faRuler, faRulerCombined, faRulerHorizontal, faLanguage
+    faEnvelope, faCartShopping, faChartColumn, faGear, faMapLocation, faBasketShopping, faSms, faCube, faFile, faRuler, faRulerCombined, faRulerHorizontal, faLanguage, faTasks
 } from '@fortawesome/free-solid-svg-icons';
 import {getFormattedMessage} from '../shared/sharedMethod';
 import {ShieldLock} from "react-bootstrap-icons";
@@ -21,6 +21,20 @@ export default [
             {
                 title: getFormattedMessage('dashboard.title'),
                 to: '/app/dashboard',
+            },
+        ],
+    },
+    {
+        title: 'job.monitoring',
+        name: "job-monitoring",
+        fontIcon: <FontAwesomeIcon icon={faTasks}/>,
+        to: '/app/job-monitoring',
+        class: 'd-flex',
+        permission: '',
+        items: [
+            {
+                title: 'job.monitoring',
+                to: '/app/job-monitoring',
             },
         ],
     },

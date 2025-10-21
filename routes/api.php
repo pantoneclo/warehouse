@@ -370,8 +370,15 @@ Route::middleware('auth:sanctum')->group(function () {
     // Check stock update status
     Route::get('stock/update-status', [StockManagementAPIController::class, 'getStockUpdateStatus']);
 
-
-
+    // Job Status and Monitoring Routes
+    Route::prefix('jobs')->group(function () {
+        Route::get('status', [\App\Http\Controllers\API\JobStatusController::class, 'index']);
+        Route::get('scheduled', [\App\Http\Controllers\API\JobStatusController::class, 'getScheduledJobs']);
+        Route::post('scheduled', [\App\Http\Controllers\API\JobStatusController::class, 'storeScheduledJob']);
+        Route::put('scheduled/{id}', [\App\Http\Controllers\API\JobStatusController::class, 'updateScheduledJob']);
+        Route::delete('scheduled/{id}', [\App\Http\Controllers\API\JobStatusController::class, 'deleteScheduledJob']);
+        Route::post('cleanup', [\App\Http\Controllers\API\JobStatusController::class, 'cleanup']);
+    });
 
 });
 

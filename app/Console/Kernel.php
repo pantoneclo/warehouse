@@ -23,13 +23,30 @@ class Kernel extends ConsoleKernel
         // $schedule->command('inspire')->hourly();
         $schedule->command('stock:update')->everyMinute();
 
-        // Scheduled stock update for all warehouses
-        // Runs daily at 3 AM BDT
+        // Run scheduled jobs every minute
+        $schedule->command('jobs:run-scheduled')
+                 ->everyMinute()
+                 ->withoutOverlapping()
+                 ->runInBackground();
+
+        // Clean up old job statuses daily at 2 AM
+        $schedule->call(function () {
+            \App\Models\JobStatus::cleanup();
+        })->dailyAt('02:00');
+
+        // Legacy: Keep the original scheduled stock update as fallback
+        // This will be replaced by the dynamic scheduled jobs system
         $schedule->command('stock:scheduled-update')
                  ->dailyAt('03:00')
                  ->timezone('Asia/Dhaka')
                  ->withoutOverlapping()
-                 ->runInBackground();
+                 ->runInBackground()
+                 ->skip(function () {
+                     // Skip if there's an active scheduled job for stock updates
+                     return \App\Models\ScheduledJob::where('is_active', true)
+                         ->where('job_class', 'App\\Jobs\\ProcessStockUpdate')
+                         ->exists();
+                 });
     }
 
     /**

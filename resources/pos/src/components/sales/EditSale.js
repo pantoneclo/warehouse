@@ -134,7 +134,9 @@ console.log(sales.attributes , 'this is from sales attributes')
             value: statusDefaultValue && statusDefaultValue[0] && statusDefaultValue[0].id
         },
         currency: selectedCountryFromOptions ? selectedCountryFromOptions.currency : sales.attributes?.currency,
-        currencySymbol: selectedCountryFromOptions ? selectedCountryFromOptions.currencySymbol : getCurrencySymbol(sales.attributes?.currency)
+        currencySymbol: selectedCountryFromOptions ? selectedCountryFromOptions.currencySymbol : getCurrencySymbol(sales.attributes?.currency),
+        file: sales.attributes?.file || null,
+        fileName: sales.attributes?.fileName || ''
     };
 console.log(itemsValue,'itemsValue')
 console.log("Final Currency Set:", selectedCountryFromOptions ? selectedCountryFromOptions.currency : sales.attributes?.currency);
