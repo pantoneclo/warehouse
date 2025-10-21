@@ -1709,9 +1709,8 @@ class StockManagementAPIController extends AppBaseController
     }
 
     /**
-     * Trigger manual stock update scheduler
-     * This endpoint allows frontend to trigger the same stock update logic
-     * that runs automatically at scheduled times
+     * Trigger manual stock update scheduler via queue
+     * This endpoint queues the stock update process to avoid web timeout issues
      */
     public function triggerStockUpdateScheduler(Request $request)
     {
@@ -1728,36 +1727,92 @@ class StockManagementAPIController extends AppBaseController
                 ], 400);
             }
 
-            // Run the scheduled stock update command
-            $exitCode = Artisan::call('stock:scheduled-update', [
-                '--warehouse-id' => $warehouseId
-            ]);
+            // Check if a stock update job is already running
+            $runningJobs = \DB::table('jobs')
+                ->where('queue', 'stock-updates')
+                ->where('payload', 'like', '%ProcessStockUpdate%')
+                ->count();
 
-            if ($exitCode === 0) {
-                Log::info('Manual stock update scheduler completed successfully');
-
-                return response()->json([
-                    'success' => true,
-                    'message' => 'Stock update scheduler completed successfully',
-                    'warehouse_id' => $warehouseId ?: 'all warehouses'
-                ]);
-            } else {
-                Log::error('Manual stock update scheduler failed with exit code: ' . $exitCode);
-
+            if ($runningJobs > 0) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Stock update scheduler failed to complete'
-                ], 500);
+                    'message' => 'A stock update is already in progress. Please wait for it to complete.',
+                    'status' => 'already_running'
+                ], 409);
             }
 
+            // Dispatch the stock update job to queue
+            \App\Jobs\ProcessStockUpdate::dispatch($warehouseId)
+                ->onQueue('stock-updates')
+                ->delay(now()->addSeconds(2)); // Small delay to ensure response is sent first
+
+            Log::info('Stock update job queued successfully', [
+                'warehouse_id' => $warehouseId ?: 'all warehouses'
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Stock update has been queued and will run in the background. You will see a notification when it completes.',
+                'warehouse_id' => $warehouseId ?: 'all warehouses',
+                'status' => 'queued'
+            ]);
+
         } catch (Exception $e) {
-            Log::error('Error triggering manual stock update scheduler: ' . $e->getMessage(), [
+            Log::error('Error queuing stock update job: ' . $e->getMessage(), [
                 'trace' => $e->getTraceAsString()
             ]);
 
             return response()->json([
                 'success' => false,
-                'message' => 'An error occurred while triggering stock update: ' . $e->getMessage()
+                'message' => 'An error occurred while queuing stock update: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Check stock update status
+     * Returns the current status of stock update jobs
+     */
+    public function getStockUpdateStatus(Request $request)
+    {
+        try {
+            // Check for running jobs
+            $runningJobs = \DB::table('jobs')
+                ->where('queue', 'stock-updates')
+                ->where('payload', 'like', '%ProcessStockUpdate%')
+                ->count();
+
+            // Check for failed jobs in the last hour
+            $failedJobs = \DB::table('failed_jobs')
+                ->where('queue', 'stock-updates')
+                ->where('failed_at', '>=', now()->subHour())
+                ->count();
+
+            $status = 'idle';
+            $message = 'No stock update is currently running';
+
+            if ($runningJobs > 0) {
+                $status = 'running';
+                $message = 'Stock update is currently running in the background';
+            } elseif ($failedJobs > 0) {
+                $status = 'failed';
+                $message = 'Recent stock update jobs have failed. Check logs for details.';
+            }
+
+            return response()->json([
+                'success' => true,
+                'status' => $status,
+                'message' => $message,
+                'running_jobs' => $runningJobs,
+                'failed_jobs' => $failedJobs
+            ]);
+
+        } catch (Exception $e) {
+            Log::error('Error checking stock update status: ' . $e->getMessage());
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Error checking stock update status'
             ], 500);
         }
     }

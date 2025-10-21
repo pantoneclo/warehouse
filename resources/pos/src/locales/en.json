@@ -888,6 +888,7 @@
     "product-quantity.add.title": "Add Product Quantity",
     "edit-translation.title": "Edit Translation",
     "stock.update.scheduler.success.message": "Stock quantities updated successfully in PostgreSQL database",
+    "stock.update.scheduler.queued.message": "Stock update has been queued and will run in the background. You will be notified when it completes.",
     "stock.update.scheduler.error.message": "Failed to update stock quantities. Please try again.",
     "globally.variant.add.label": "Add Variant",
 

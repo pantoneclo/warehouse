@@ -99,12 +99,17 @@ const Header = (props) => {
 
         setIsStockUpdating(true);
         try {
-            await triggerStockUpdateScheduler();
+            const result = await triggerStockUpdateScheduler();
+
+            // If the update was queued, we can stop the loading state immediately
+            // since it will run in the background
+            if (result.status === 'queued') {
+                setIsStockUpdating(false);
+            }
             // Success message is handled by the action
         } catch (error) {
             // Error message is handled by the action
             console.error('Stock update failed:', error);
-        } finally {
             setIsStockUpdating(false);
         }
     };
@@ -196,7 +201,7 @@ const Header = (props) => {
                             className="px-sm-3 px-2"
                             onClick={onStockUpdateClick}
                             style={{ cursor: isStockUpdating ? 'not-allowed' : 'pointer' }}
-                            title={isStockUpdating ? 'Updating stock...' : 'Update stock quantities in PostgreSQL'}
+                            title={isStockUpdating ? 'Queuing stock update...' : 'Update stock quantities in PostgreSQL (runs in background)'}
                         >
                             <FontAwesomeIcon
                                 icon={isStockUpdating ? faSpinner : faArrowsRotate}

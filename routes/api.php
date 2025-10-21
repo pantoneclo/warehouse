@@ -367,6 +367,9 @@ Route::middleware('auth:sanctum')->group(function () {
     // Manual stock update scheduler trigger
     Route::post('stock/trigger-update-scheduler', [StockManagementAPIController::class, 'triggerStockUpdateScheduler']);
 
+    // Check stock update status
+    Route::get('stock/update-status', [StockManagementAPIController::class, 'getStockUpdateStatus']);
+
 
 
 

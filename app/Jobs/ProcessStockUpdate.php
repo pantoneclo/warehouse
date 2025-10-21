@@ -2,60 +2,64 @@
 
 namespace App\Jobs;
 
-use App\Helpers\StockHelper;
 use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldBeUnique;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Artisan;
 
 class ProcessStockUpdate implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
-    public $timeout = 3600; // 1 hour timeout
-    public $tries = 3;
+    public $timeout = 7200; // 2 hours timeout for large datasets
+    public $tries = 2; // Reduced tries since this is a full process
+    public $maxExceptions = 1;
 
-    protected $code;
     protected $warehouseId;
 
     /**
      * Create a new job instance.
      *
-     * @return void
+     * @param int|null $warehouseId Optional warehouse ID, null for all warehouses
      */
-    public function __construct($code, $warehouseId)
+    public function __construct($warehouseId = null)
     {
-        $this->code = $code;
         $this->warehouseId = $warehouseId;
     }
 
     /**
      * Execute the job.
-     *
-     * @return void
+     * Runs the same logic as the scheduled stock update command
      */
     public function handle()
     {
         try {
-            Log::info("Processing stock update job for code: {$this->code}, warehouse: {$this->warehouseId}");
+            Log::info("Starting background stock update job", [
+                'warehouse_id' => $this->warehouseId ?: 'all warehouses',
+                'job_id' => $this->job->getJobId()
+            ]);
 
-            $visitedProductCodes = [];
-            $visitedComboCodes = [];
+            // Run the scheduled stock update command in the background
+            $exitCode = Artisan::call('stock:scheduled-update', [
+                '--warehouse-id' => $this->warehouseId
+            ]);
 
-            StockHelper::manageStockForCodeAndWarehouse(
-                $this->code,
-                $this->warehouseId,
-                $visitedProductCodes,
-                $visitedComboCodes
-            );
-
-            Log::info("Completed stock update job for code: {$this->code}, warehouse: {$this->warehouseId}");
+            if ($exitCode === 0) {
+                Log::info("Background stock update job completed successfully", [
+                    'warehouse_id' => $this->warehouseId ?: 'all warehouses',
+                    'job_id' => $this->job->getJobId()
+                ]);
+            } else {
+                throw new \Exception("Stock update command failed with exit code: {$exitCode}");
+            }
 
         } catch (\Exception $e) {
-            Log::error("Stock update job failed for code: {$this->code}, warehouse: {$this->warehouseId}", [
+            Log::error("Background stock update job failed", [
+                'warehouse_id' => $this->warehouseId ?: 'all warehouses',
+                'job_id' => $this->job->getJobId(),
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString()
             ]);
@@ -72,8 +76,27 @@ class ProcessStockUpdate implements ShouldQueue
      */
     public function failed(\Throwable $exception)
     {
-        Log::error("Stock update job permanently failed for code: {$this->code}, warehouse: {$this->warehouseId}", [
-            'error' => $exception->getMessage()
+        Log::error("Stock update job permanently failed", [
+            'warehouse_id' => $this->warehouseId ?: 'all warehouses',
+            'error' => $exception->getMessage(),
+            'trace' => $exception->getTraceAsString()
         ]);
+
+        // You could add notification logic here to alert administrators
+        // For example, send an email or Slack notification about the failure
+    }
+
+    /**
+     * Get the tags that should be assigned to the job.
+     *
+     * @return array
+     */
+    public function tags()
+    {
+        return [
+            'stock-update',
+            'warehouse:' . ($this->warehouseId ?: 'all'),
+            'background-process'
+        ];
     }
 }

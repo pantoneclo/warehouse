@@ -365,21 +365,30 @@ console.log("Currencies", currencies);
         setSaleValue(inputs => ({ ...inputs, market_place: obj }));
     };
 
-    handleCountryChange
-
     const handleCountryChange = (obj) => {
-        console.log("Selected Country Object Before Fix:", obj); // Debugging
-        const fullCountry = countryNamesDefault.find(c => c.value === obj.value);
-        console.log("Full Country Object After Fix:", fullCountry); // Debugging
-        setSaleValue(inputs => ({
-            ...inputs,
-            country: fullCountry,
-            tax_rate: fullCountry?.vat ?? 0,
-            currency: fullCountry.currency,
-            currencySymbol: fullCountry.currencySymbol
-        }));
+        console.log("Selected Country Object:", obj); // Debugging
 
-        onCurrencyChange(fullCountry.currency)
+        if (!obj || !obj.value) {
+            console.log("Invalid country object received");
+            return;
+        }
+
+        const fullCountry = countryNamesDefault.find(c => c.value === obj.value);
+        console.log("Full Country Object Found:", fullCountry); // Debugging
+
+        if (fullCountry) {
+            setSaleValue(inputs => ({
+                ...inputs,
+                country: fullCountry,
+                tax_rate: fullCountry?.vat ?? 0,
+                currency: fullCountry.currency,
+                currencySymbol: fullCountry.currencySymbol
+            }));
+
+            onCurrencyChange(fullCountry.currency);
+        } else {
+            console.log("Country not found in countryNamesDefault");
+        }
     };
 
     console.log('saleValue',saleValue)
@@ -539,15 +548,24 @@ console.log("Updated Items all Properties", updateProducts)
     let selectedCountry;
     if (singleSale && saleValue.country) {
         // Edit mode: saleValue.country is an object with value, label, etc.
-        if (typeof saleValue.country === 'object' && saleValue.country.value) {
+        if (typeof saleValue.country === 'object' && saleValue.country && saleValue.country.value) {
             selectedCountry = countryNamesDefault.find(c => c.value === saleValue.country.value);
         } else if (typeof saleValue.country === 'string') {
             // Fallback: if country is still a string (country code)
             selectedCountry = countryNamesDefault.find(c => c.value === saleValue.country);
         }
-    } else {
+    } else if (saleValue.country) {
         // Create mode: use the country from saleValue
-        selectedCountry = countryNamesDefault.find(c => c.value === saleValue.country?.value || saleValue.country);
+        if (typeof saleValue.country === 'object' && saleValue.country && 'value' in saleValue.country) {
+            selectedCountry = countryNamesDefault.find(c => c.value === saleValue.country.value);
+        } else if (typeof saleValue.country === 'string') {
+            selectedCountry = countryNamesDefault.find(c => c.value === saleValue.country);
+        }
+    }
+
+    // If no country is selected, default to the first country (Bangladesh)
+    if (!selectedCountry && countryNamesDefault.length > 0) {
+        selectedCountry = countryNamesDefault[0];
     }
 
     console.log("SaleValue Country:", saleValue.country, "Selected Country:", selectedCountry);
@@ -588,7 +606,6 @@ console.log(saleValue.market_place, "saleValue Marketplace")
                             title={getFormattedMessage('globally.input.country.label')}
                             value={selectedCountry}
                             // errors={errors['payment_status']}
-                            defaultValue={countryNamesDefault[0]}
                             placeholder={placeholderText('globally.input.country.placeholder.label')}/>
                     </div>
 

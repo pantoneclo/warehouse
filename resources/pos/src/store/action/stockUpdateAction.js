@@ -24,10 +24,18 @@ export const triggerStockUpdateScheduler = (warehouseId = null) => async (dispat
                 payload: data
             });
 
-            dispatch(addToast({
-                text: getFormattedMessage('stock.update.scheduler.success.message'),
-                type: toastType.SUCCESS
-            }));
+            // Show different message based on status
+            if (data.status === 'queued') {
+                dispatch(addToast({
+                    text: getFormattedMessage('stock.update.scheduler.queued.message'),
+                    type: toastType.INFO
+                }));
+            } else {
+                dispatch(addToast({
+                    text: getFormattedMessage('stock.update.scheduler.success.message'),
+                    type: toastType.SUCCESS
+                }));
+            }
 
             return data;
         } else {
@@ -44,13 +52,51 @@ export const triggerStockUpdateScheduler = (warehouseId = null) => async (dispat
             payload: errorMessage
         });
 
-        dispatch(addToast({
-            text: errorMessage,
-            type: toastType.ERROR
-        }));
+        // Handle specific error cases
+        if (error.response?.status === 409) {
+            // Already running
+            dispatch(addToast({
+                text: errorMessage,
+                type: toastType.WARNING
+            }));
+        } else {
+            dispatch(addToast({
+                text: errorMessage,
+                type: toastType.ERROR
+            }));
+        }
 
         throw error;
     } finally {
         dispatch(setLoading(false));
+    }
+};
+
+// New action to check stock update status
+export const checkStockUpdateStatus = () => async (dispatch) => {
+    try {
+        const response = await apiConfig.get(apiBaseURL.STOCK_UPDATE_STATUS);
+        const data = response.data;
+
+        if (data.success) {
+            dispatch({
+                type: stockUpdateActionType.CHECK_STOCK_UPDATE_STATUS_SUCCESS,
+                payload: data
+            });
+
+            return data;
+        } else {
+            throw new Error(data.message || 'Failed to check stock update status');
+        }
+
+    } catch (error) {
+        console.error('Error checking stock update status:', error);
+
+        dispatch({
+            type: stockUpdateActionType.CHECK_STOCK_UPDATE_STATUS_FAILURE,
+            payload: error.response?.data?.message || error.message || 'Failed to check status'
+        });
+
+        throw error;
     }
 };

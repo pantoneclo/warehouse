@@ -77,6 +77,7 @@ export const apiBaseURL = {
     TOP_SELLING_PRODUCT_REPORT: 'top-selling-product-report',
     STOCK_ALERT: 'stock-alerts',
     STOCK_TRIGGER_UPDATE_SCHEDULER: 'stock/trigger-update-scheduler',
+    STOCK_UPDATE_STATUS: 'stock/update-status',
     VALIDATE_AUTH_TOKEN: "validate-auth-token",
     CONFIG: "config",
     EMAIL_TEMPLATES: "mail-templates",
@@ -499,7 +500,9 @@ export const weekSalePurchasesActionType = {
 
 export const stockUpdateActionType = {
     TRIGGER_STOCK_UPDATE_SUCCESS: 'TRIGGER_STOCK_UPDATE_SUCCESS',
-    TRIGGER_STOCK_UPDATE_FAILURE: 'TRIGGER_STOCK_UPDATE_FAILURE'
+    TRIGGER_STOCK_UPDATE_FAILURE: 'TRIGGER_STOCK_UPDATE_FAILURE',
+    CHECK_STOCK_UPDATE_STATUS_SUCCESS: 'CHECK_STOCK_UPDATE_STATUS_SUCCESS',
+    CHECK_STOCK_UPDATE_STATUS_FAILURE: 'CHECK_STOCK_UPDATE_STATUS_FAILURE'
 };
 
 export const yearTopProductActionType = {
