@@ -1,14 +1,15 @@
-export const preparePurchaseProductArray = (products, isBarcode) => {
+export const preparePurchaseProductArray = (products, warehouseId, isBarcode) => {
     let purchaseProductRowArray = [];
     products.forEach(product => {
+        const stockData = product.attributes.stocks?.find(stock => stock.warehouse_id === warehouseId);
         purchaseProductRowArray.push({
             name: product.attributes.name,
-            brand:product.attributes.brand_name,
+            brand: product.attributes.brand_name,
             code: product.attributes.code,
             pan_style: product.attributes.pan_style,
             barcode_url: product.attributes.barcode_url,
-            variant: product.attributes.variant? product.attributes.variant : '',
-            stock: product.attributes.stock ? product.attributes.stock.quantity : "",
+            variant: product.attributes.variant ? product.attributes.variant : '',
+            stock: stockData ? stockData.quantity : (product.attributes.stock ? product.attributes.stock.quantity : ""),
             short_name: product.attributes.purchase_unit_name.short_name,
             product_unit: product.attributes.product_unit,
             product_id: product?.attributes?.product_id,
@@ -22,13 +23,13 @@ export const preparePurchaseProductArray = (products, isBarcode) => {
             discount_value: 0.00,
             discount_amount: 0.00,
             purchase_unit: product.attributes.purchase_unit,
-            quantity: product.attributes.package_quantity?product.attributes.package_quantity: isBarcode? 10 : 1,
+            quantity: product.attributes.package_quantity ? product.attributes.package_quantity : isBarcode ? 10 : 1,
             sub_total: 0.00,
             id: product?.attributes?.product_id,
             purchase_item_id: '',
             product_price: product.attributes.product_price,
             net_unit_price: product.attributes.product_price,
-          
+
         })
     });
     return purchaseProductRowArray;

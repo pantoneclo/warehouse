@@ -24,15 +24,16 @@ import { calculateCartTotalAmount, calculateCartTotalTaxAmount } from '../../sha
 import { prepareSaleProductArray } from '../../shared/prepareArray/prepareSaleArray';
 import ModelFooter from '../../shared/components/modelFooter';
 import { addToast } from '../../store/action/toastAction';
-import { paymentMethodOptions, salePaymentStatusOptions, saleStatusOptions, statusOptions, toastType, eccomercePlatform, countryOptions, getCurrencySymbol} from '../../constants';
+import { paymentMethodOptions, salePaymentStatusOptions, saleStatusOptions, statusOptions, toastType, eccomercePlatform, countryOptions, getCurrencySymbol, taxMethodOptions } from '../../constants';
 import { fetchFrontSetting } from '../../store/action/frontSettingAction';
 import ReactSelect from '../../shared/select/reactSelect';
 import AdvanceSearch from '../../shared/components/product-cart/search/AdvanceSearch';
 import { fetchAdvancedSearch } from '../../store/action/advancedSearchAction';
+import { setWarehouseId } from "../../store/action/warehouseAction";
 import { preparePurchaseProductArray } from '../../shared/prepareArray/preparePurchaseArray';
 import { shippingCompanyNames } from '../../constants'
 import { get } from 'lodash';
-import {fetchCurrencies} from "../../store/action/currencyAction";
+import { fetchCurrencies } from "../../store/action/currencyAction";
 import { useIntl } from 'react-intl';
 const SalesForm = (props) => {
     const {
@@ -103,18 +104,19 @@ const SalesForm = (props) => {
         parcel_number: '',
         parcel_company_id: '',
         shipment_id: '',
-        order_no:'',
-        country:'',
-        market_place:'',
-        currency:'',
-        currencySymbol:'',
-        name:'',
-        email:'',
-        phone:'',
-        address:'',
-        city:'',
-        file:null,
-        fileName:''
+        order_no: '',
+        country: '',
+        market_place: '',
+        currency: '',
+        currencySymbol: '',
+        name: '',
+        email: '',
+        phone: '',
+        address: '',
+        city: '',
+        file: null,
+        fileName: '',
+        order_tax_type: '1' // Default Exclusive
     });
     const [errors, setErrors] = useState({
         date: '',
@@ -136,7 +138,7 @@ const SalesForm = (props) => {
         fetchFrontSetting();
         fetchCurrencies();
     }, []);
-console.log("Currencies", currencies);
+    console.log("Currencies", currencies);
     useEffect(() => {
         if (singleSale && !isQuotation) {
             setSaleValue({
@@ -155,18 +157,18 @@ console.log("Currencies", currencies);
                 parcel_number: singleSale ? singleSale.parcel_number : '',
                 parcel_company_id: singleSale ? singleSale.parcel_company_id : '',
                 shipment_id: singleSale ? singleSale.shipment_id : '',
-                country:singleSale?singleSale.country:'',
-                order_no:singleSale?singleSale.order_no:'',
-                market_place:singleSale?singleSale.market_place:'',
-                currency:singleSale?singleSale.currency:'',
-                currencySymbol:singleSale?singleSale.currencySymbol:'',
-                name:singleSale?singleSale.name:'',
-                email:singleSale?singleSale.email:'',
-                phone:singleSale?singleSale.phone:'',
-                address:singleSale?singleSale.address:'',
-                city:singleSale?singleSale.city:'',
-                file:singleSale?singleSale.file:'',
-                fileName:singleSale?singleSale.fileName:'',
+                country: singleSale ? singleSale.country : '',
+                order_no: singleSale ? singleSale.order_no : '',
+                market_place: singleSale ? singleSale.market_place : '',
+                currency: singleSale ? singleSale.currency : '',
+                currencySymbol: singleSale ? singleSale.currencySymbol : '',
+                name: singleSale ? singleSale.name : '',
+                email: singleSale ? singleSale.email : '',
+                phone: singleSale ? singleSale.phone : '',
+                address: singleSale ? singleSale.address : '',
+                city: singleSale ? singleSale.city : '',
+                file: singleSale ? singleSale.file : '',
+                fileName: singleSale ? singleSale.fileName : '',
             })
 
             // Set payment type visibility based on payment status
@@ -197,17 +199,18 @@ console.log("Currencies", currencies);
                 parcel_number: singleSale ? singleSale.parcel_number : '',
                 parcel_company_id: singleSale ? singleSale.parcel_company_id : '',
                 shipment_id: singleSale ? singleSale.shipment_id : '',
-                country:singleSale?singleSale.country:'',
-                order_no:singleSale?singleSale.order_no:'',
-                market_place:singleSale?singleSale.market_place:'',
-                currency:singleSale?singleSale.currency:'',
-                currencySymbol:singleSale?singleSale.currencySymbol:'',
-                name:singleSale?singleSale.name:'',
-                email:singleSale?singleSale.email:'',
-                phone:singleSale?singleSale.phone:'',
-                address:singleSale?singleSale.address:'',
-                city:singleSale?singleSale.city:'',
-                file:singleSale?singleSale.file:'',
+                country: singleSale ? singleSale.country : '',
+                order_no: singleSale ? singleSale.order_no : '',
+                market_place: singleSale ? singleSale.market_place : '',
+                currency: singleSale ? singleSale.currency : '',
+                currencySymbol: singleSale ? singleSale.currencySymbol : '',
+                name: singleSale ? singleSale.name : '',
+                email: singleSale ? singleSale.email : '',
+                phone: singleSale ? singleSale.phone : '',
+                address: singleSale ? singleSale.address : '',
+                city: singleSale ? singleSale.city : '',
+                file: singleSale ? singleSale.file : '',
+                order_tax_type: singleSale && singleSale.order_tax_type ? singleSale.order_tax_type : '1'
             })
         }
     }, [singleSale]);
@@ -266,7 +269,7 @@ console.log("Currencies", currencies);
             error['date'] = getFormattedMessage('globally.date.validate.label');
         } else if (!saleValue.warehouse_id) {
             error['warehouse_id'] = getFormattedMessage('product.input.warehouse.validate.label');
-        }  else if (qtyCart.length > 0) {
+        } else if (qtyCart.length > 0) {
             dispatch(addToast({ text: getFormattedMessage('globally.product-quantity.validate.message'), type: toastType.ERROR }))
         } else if (updateProducts.length < 1) {
             dispatch(addToast({ text: getFormattedMessage('purchase.product-list.validate.message'), type: toastType.ERROR }))
@@ -286,6 +289,7 @@ console.log("Currencies", currencies);
     const onWarehouseChange = (obj) => {
         setSaleValue(inputs => ({ ...inputs, warehouse_id: obj }));
         setErrors('');
+        dispatch(setWarehouseId(obj.value));
     };
 
 
@@ -297,8 +301,8 @@ console.log("Currencies", currencies);
 
     const onCurrencyChange = (obj) => {
 
-        if(singleSale){
-            singleSale.currency = obj
+        if (singleSale) {
+            singleSale.currency = obj.value
         }
 
         setSaleValue(inputs => ({ ...inputs, currency: obj }));
@@ -330,7 +334,7 @@ console.log("Currencies", currencies);
     const onChangeEmail = (e) => {
         e.preventDefault();
         const { value } = e.target;
-        setSaleValue(inputs => ({...inputs, [e.target.name]: value && value}))
+        setSaleValue(inputs => ({ ...inputs, [e.target.name]: value && value }))
     };
 
     const onNotesChangeInput = (e) => {
@@ -412,7 +416,7 @@ console.log("Currencies", currencies);
         }
     };
 
-    console.log('saleValue',saleValue)
+    console.log('saleValue', saleValue)
 
 
     const statusFilterOptions = getFormattedOptions(saleStatusOptions)
@@ -430,24 +434,24 @@ console.log("Currencies", currencies);
             label: option.name
         }
     })
-    const marketplaceFilterOption =getFormattedOptions(eccomercePlatform)
+    const marketplaceFilterOption = getFormattedOptions(eccomercePlatform)
     console.log(marketplaceFilterOption, "Marketplace Options");
-    const marketplaceNamesDefault = marketplaceFilterOption.map((option)=>{
+    const marketplaceNamesDefault = marketplaceFilterOption.map((option) => {
         return {
-            value:option.id,
-            label:option.name
+            value: option.id,
+            label: option.name
         }
 
     })
     console.log(marketplaceNamesDefault, "Marketplace NamesDefault Options");
-    const countryFilterOption =getFormattedOptions(countryOptions, intl)
+    const countryFilterOption = getFormattedOptions(countryOptions, intl)
     console.log(countryFilterOption)
-    const countryNamesDefault = countryFilterOption.map((option)=>{
+    const countryNamesDefault = countryFilterOption.map((option) => {
         return {
-            value:option.code,
-            label:option.name,
-            vat:option.vat,
-            currency:option.currency,
+            value: option.code,
+            label: option.name,
+            vat: option.vat,
+            currency: option.currency,
             currencySymbol: option.currencySymbol || getCurrencySymbol(option.currency)
         }
 
@@ -462,15 +466,15 @@ console.log("Currencies", currencies);
 
     })
 
-    const currencyNameDefault = currencies.map((option)=> {
-        return{
+    const currencyNameDefault = currencies.map((option) => {
+        return {
             value: option.attributes.code,
-            label:option.attributes.code
+            label: option.attributes.code
         }
     })
 
-console.log("Defalut Currency Option", currencyNameDefault)
-console.log("Updated Items all Properties", updateProducts)
+    console.log("Defalut Currency Option", currencyNameDefault)
+    console.log("Updated Items all Properties", updateProducts)
 
     const prepareFormData = (prepareData) => {
         const formValue = {
@@ -495,16 +499,16 @@ console.log("Updated Items all Properties", updateProducts)
             parcel_company_id: prepareData.parcel_company_id.value ? prepareData.parcel_company_id.value : prepareData.parcel_company_id,
             parcel_number: prepareData.parcel_number,
             shipment_id: prepareData.shipment_id ? prepareData.shipment_id : '',
-            country:prepareData.country.value,
-            order_no:prepareData.order_no,
-            market_place:prepareData.market_place.label,
+            country: prepareData.country.value,
+            order_no: prepareData.order_no,
+            market_place: prepareData.market_place.label,
             currency: typeof prepareData.currency === 'object' ? prepareData.currency.value : prepareData.currency || '',
-            name:prepareData.name,
-            email:prepareData.email,
-            phone:prepareData.phone,
-            address:prepareData.address,
-            city:prepareData.city,
-            file:prepareData.file,
+            name: prepareData.name,
+            email: prepareData.email,
+            phone: prepareData.phone,
+            address: prepareData.address,
+            city: prepareData.city,
+            file: prepareData.file,
         }
         return formValue
     };
@@ -538,19 +542,15 @@ console.log("Updated Items all Properties", updateProducts)
     }
     console.log(saleValue?.parcel_company_id, 'saleValue.parcel_company_id')
     let currencyToFilterBy;
-    if (singleSale) {
-        // Edit case - prioritize currency from selected country, fallback to singleSale.currency
-        if (selectedCountry && selectedCountry.currency) {
-            currencyToFilterBy = selectedCountry.currency;
-            console.log("Edit Currency from Selected Country:", currencyToFilterBy);
-        } else {
-            currencyToFilterBy = singleSale.currency;
-            console.log("Edit Currency from SingleSale:", currencyToFilterBy);
-        }
+    if (saleValue.currency) {
+        // Manual selection or loaded value
+        currencyToFilterBy = typeof saleValue.currency === 'object' ? saleValue.currency.value : saleValue.currency;
+    } else if (singleSale) {
+        // Edit case - fallback
+        currencyToFilterBy = singleSale.currency;
     } else {
-        // Create case - use the currency from saleValue.country
+        // Create case - fallback default
         currencyToFilterBy = saleValue.country?.currency;
-        console.log("Create Currency from SaleValue:", currencyToFilterBy);
     }
     const filtredCurrency = currencyNameDefault.find(
         currency => currency.value === currencyToFilterBy
@@ -559,8 +559,8 @@ console.log("Updated Items all Properties", updateProducts)
     console.log("Currency to Filter By:", currencyToFilterBy, "Filtered Currency:", filtredCurrency);
     console.log("Currency Name Default:", currencyNameDefault);
 
-// Find the selected marketplace based on shipment_id
-    const selectMarketplace = marketplaceNamesDefault.find(market=> market.label == saleValue.label)
+    // Find the selected marketplace based on shipment_id
+    const selectMarketplace = marketplaceNamesDefault.find(market => market.label == saleValue.label)
 
     // Fix country selection logic for both create and edit modes
     let selectedCountry;
@@ -590,7 +590,15 @@ console.log("Updated Items all Properties", updateProducts)
 
 
 
-console.log(saleValue.market_place, "saleValue Marketplace")
+    console.log(saleValue.market_place, "saleValue Marketplace")
+
+    const taxTypeFilterOptions = getFormattedOptions(taxMethodOptions)
+    const taxTypeDefaultValue = taxTypeFilterOptions.map((option) => {
+        return {
+            value: option.id,
+            label: option.name
+        }
+    })
 
     return (
         <div className='card'>
@@ -601,22 +609,34 @@ console.log(saleValue.market_place, "saleValue Marketplace")
                         <label className='form-label'>
                             {getFormattedMessage('react-data-table.date.column.label')}:
                         </label>
-                        <span className='required'/>
+                        <span className='required' />
                         <div className='position-relative'>
-                            <ReactDatePicker onChangeDate={handleCallback} newStartDate={saleValue.date}/>
+                            <ReactDatePicker onChangeDate={handleCallback} newStartDate={saleValue.date} />
                         </div>
                         <span
                             className='text-danger d-block fw-400 fs-small mt-2'>{errors['date'] ? errors['date'] : null}</span>
                     </div>
-                    <div className='col-md-4' style={{zIndex: 500}}>
+                    <div className='col-md-4' style={{ zIndex: 500 }}>
                         <ReactSelect name='warehouse_id' data={warehouses} onChange={onWarehouseChange}
-                                     title={getFormattedMessage('warehouse.title')} errors={errors['warehouse_id']}
-                                     defaultValue={saleValue.warehouse_id} value={saleValue.warehouse_id}
-                                     addSearchItems={singleSale}
-                                     isWarehouseDisable={true}
-                                     placeholder={placeholderText('purchase.select.warehouse.placeholder.label')}/>
+                            title={getFormattedMessage('warehouse.title')} errors={errors['warehouse_id']}
+                            defaultValue={saleValue.warehouse_id} value={saleValue.warehouse_id}
+                            addSearchItems={singleSale}
+                            isWarehouseDisable={true}
+                            placeholder={placeholderText('purchase.select.warehouse.placeholder.label')} />
                     </div>
-                     <div className='col-md-4'>
+                    <div className='col-md-4'>
+                        <ReactSelect title={getFormattedMessage('currency.label.name')}
+                            data={currencyNameDefault}
+                            onChange={onCurrencyChange}
+                            placeholder={placeholderText('currency.select.label')}
+                            defaultValue={currencyNameDefault[0]}
+                            isCurrencyDisable={false}
+                            value={filtredCurrency}
+                            name='currency'
+                        />
+                    </div>
+
+                    <div className='col-md-4'>
                         <ReactSelect
                             data={countryNamesDefault}
                             onChange={handleCountryChange}
@@ -624,18 +644,18 @@ console.log(saleValue.market_place, "saleValue Marketplace")
                             title={getFormattedMessage('globally.input.country.label')}
                             value={selectedCountry}
                             // errors={errors['payment_status']}
-                            placeholder={placeholderText('globally.input.country.placeholder.label')}/>
+                            placeholder={placeholderText('globally.input.country.placeholder.label')} />
                     </div>
 
                     <div className='col-md-4 mb-5'>
                         <label className='form-label'>
                             {getFormattedMessage("globally.input.name.label")}:
                         </label>
-                        <span className='required'/>
+                        <span className='required' />
                         <input type='text' name='name' value={saleValue.name}
-                               placeholder={placeholderText("globally.input.name.placeholder.label")}
-                               className='form-control' autoFocus={true}
-                               onChange={(e) => onChangeInput(e)}/>
+                            placeholder={placeholderText("globally.input.name.placeholder.label")}
+                            className='form-control' autoFocus={true}
+                            onChange={(e) => onChangeInput(e)} />
                         <span
                             className='text-danger d-block fw-400 fs-small mt-2'>{errors['name'] ? errors['name'] : null}</span>
                     </div>
@@ -644,11 +664,11 @@ console.log(saleValue.market_place, "saleValue Marketplace")
                             className='form-label'>
                             {getFormattedMessage("globally.input.email.label")}:
                         </label>
-                        <span className='required'/>
+                        <span className='required' />
                         <input type='email' name='email' className='form-control'
-                               placeholder={placeholderText("globally.input.email.placeholder.label")}
-                               onChange={(e) => onChangeEmail(e)}
-                               value={saleValue.email}/>
+                            placeholder={placeholderText("globally.input.email.placeholder.label")}
+                            onChange={(e) => onChangeEmail(e)}
+                            value={saleValue.email} />
                         <span
                             className='text-danger d-block fw-400 fs-small mt-2'>{errors['email'] ? errors['email'] : null}</span>
                     </div>
@@ -658,12 +678,12 @@ console.log(saleValue.market_place, "saleValue Marketplace")
                             className='form-label'>
                             {getFormattedMessage("globally.input.phone-number.label")}:
                         </label>
-                        <span className='required'/>
+                        <span className='required' />
                         <input type='text' name='phone' className='form-control' pattern='[0-9]*'
-                               placeholder={placeholderText("globally.input.phone-number.placeholder.label")}
-                               onKeyPress={(event) => numValidate(event)}
-                               onChange={(e) => onChangeInput(e)}
-                               value={saleValue.phone}/>
+                            placeholder={placeholderText("globally.input.phone-number.placeholder.label")}
+                            onKeyPress={(event) => numValidate(event)}
+                            onChange={(e) => onChangeInput(e)}
+                            value={saleValue.phone} />
                         <span
                             className='text-danger d-block fw-400 fs-small mt-2'>{errors['phone'] ? errors['phone'] : null}</span>
                     </div>
@@ -673,11 +693,11 @@ console.log(saleValue.market_place, "saleValue Marketplace")
                             className='form-label'>
                             {getFormattedMessage("globally.input.city.label")}:
                         </label>
-                        <span className='required'/>
+                        <span className='required' />
                         <input type='text' name='city' className='form-control'
-                               placeholder={placeholderText("globally.input.city.placeholder.label")}
-                               onChange={(e) => onChangeText(e)}
-                               value={saleValue.city}/>
+                            placeholder={placeholderText("globally.input.city.placeholder.label")}
+                            onChange={(e) => onChangeText(e)}
+                            value={saleValue.city} />
                         <span
                             className='text-danger d-block fw-400 fs-small mt-2'>{errors['city'] ? errors['city'] : null}</span>
                     </div>
@@ -687,11 +707,11 @@ console.log(saleValue.market_place, "saleValue Marketplace")
                             className='form-label'>
                             {getFormattedMessage("globally.input.address.label")}:
                         </label>
-                        <span className='required'/>
+                        <span className='required' />
                         <textarea type='text' rows="2" cols="50" name='address' className='form-control'
-                                  placeholder={placeholderText("globally.input.address.placeholder.label")}
-                                  onChange={(e) => onChangeText(e)}
-                                  value={saleValue.address}/>
+                            placeholder={placeholderText("globally.input.address.placeholder.label")}
+                            onChange={(e) => onChangeText(e)}
+                            value={saleValue.address} />
                         <span
                             className='text-danger d-block fw-400 fs-small mt-2'>{errors['address'] ? errors['address'] : null}</span>
                     </div>
@@ -714,18 +734,18 @@ console.log(saleValue.market_place, "saleValue Marketplace")
                         <label className='form-label'>
                             {getFormattedMessage('purchase.order-item.table.label')}:
                         </label>
-                        <span className='required'/>
+                        <span className='required' />
                         <ProductRowTable updateProducts={updateProducts} setUpdateProducts={setUpdateProducts}
-                                         updatedQty={updatedQty} frontSetting={frontSetting}
-                                         updateCost={updateCost} updateDiscount={updateDiscount}
-                                         updateTax={updateTax} updateSubTotal={updateSubTotal}
-                                         updateSaleUnit={updateSaleUnit}
-                                         currencySymbol={saleValue?.currencySymbol}
+                            updatedQty={updatedQty} frontSetting={frontSetting}
+                            updateCost={updateCost} updateDiscount={updateDiscount}
+                            updateTax={updateTax} updateSubTotal={updateSubTotal}
+                            updateSaleUnit={updateSaleUnit}
+                            currencySymbol={saleValue?.currencySymbol}
                         />
                     </div>
                     <div className='col-12'>
                         <ProductMainCalculation inputValues={saleValue} allConfigData={allConfigData}
-                                                updateProducts={updateProducts} frontSetting={frontSetting}/>
+                            updateProducts={updateProducts} frontSetting={frontSetting} />
                     </div>
 
 
@@ -734,16 +754,26 @@ console.log(saleValue.market_place, "saleValue Marketplace")
                             className='form-label'>{getFormattedMessage('purchase.input.order-tax.label')}: </label>
                         <InputGroup>
                             <input aria-label='Dollar amount (with dot and two decimal places)'
-                                   className='form-control'
-                                   disabled={true}
-                                   type='text' name='tax_rate' value={saleValue.tax_rate}
-                                   onBlur={(event) => onBlurInput(event)} onFocus={(event) => onFocusInput(event)}
-                                   onKeyPress={(event) => decimalValidate(event)}
-                                   onChange={(e) => {
-                                       onChangeInput(e)
-                                   }}/>
+                                className='form-control'
+                                type='text' name='tax_rate' value={saleValue.tax_rate}
+                                onBlur={(event) => onBlurInput(event)} onFocus={(event) => onFocusInput(event)}
+                                onKeyPress={(event) => decimalValidate(event)}
+                                onChange={(e) => {
+                                    onChangeInput(e)
+                                }} />
                             <InputGroup.Text>%</InputGroup.Text>
                         </InputGroup>
+                    </div>
+
+                    <div className='col-md-4'>
+                        <ReactSelect
+                            data={taxTypeDefaultValue}
+                            onChange={(obj) => setSaleValue(inputs => ({ ...inputs, order_tax_type: obj.value }))}
+                            name='order_tax_type'
+                            title={getFormattedMessage('product.input.tax-type.label')}
+                            value={taxTypeDefaultValue.find(opt => opt.value == saleValue.order_tax_type)}
+                            errors={''}
+                            placeholder={placeholderText('product.input.tax-type.placeholder.label')} />
                     </div>
 
                     <div className='col-md-4 mb-3'>
@@ -751,11 +781,11 @@ console.log(saleValue.market_place, "saleValue Marketplace")
                             className='form-label'>{getFormattedMessage('purchase.order-item.table.discount.column.label')}: </Form.Label>
                         <InputGroup>
                             <input aria-label='Dollar amount (with dot and two decimal places)'
-                                   className='form-control'
-                                   type='text' name='discount' value={saleValue.discount}
-                                   onBlur={(event) => onBlurInput(event)} onFocus={(event) => onFocusInput(event)}
-                                   onKeyPress={(event) => decimalValidate(event)}
-                                   onChange={(e) => onChangeInput(e)}
+                                className='form-control'
+                                type='text' name='discount' value={saleValue.discount}
+                                onBlur={(event) => onBlurInput(event)} onFocus={(event) => onFocusInput(event)}
+                                onKeyPress={(event) => decimalValidate(event)}
+                                onChange={(e) => onChangeInput(e)}
                             />
                             <InputGroup.Text>{frontSetting.value && frontSetting.value.currency_symbol}</InputGroup.Text>
                         </InputGroup>
@@ -767,11 +797,11 @@ console.log(saleValue.market_place, "saleValue Marketplace")
                             className='form-label'>{getFormattedMessage('purchase.input.cod.label')}: </label>
                         <InputGroup>
                             <input aria-label='Dollar amount (with dot and two decimal places)' type='text'
-                                   className='form-control'
-                                   name='cod' value={saleValue.cod}
-                                   onBlur={(event) => onBlurInput(event)} onFocus={(event) => onFocusInput(event)}
-                                   onKeyPress={(event) => decimalValidate(event)}
-                                   onChange={(e) => onChangeInput(e)}
+                                className='form-control'
+                                name='cod' value={saleValue.cod}
+                                onBlur={(event) => onBlurInput(event)} onFocus={(event) => onFocusInput(event)}
+                                onKeyPress={(event) => decimalValidate(event)}
+                                onChange={(e) => onChangeInput(e)}
                             />
                             <InputGroup.Text>{frontSetting.value && frontSetting.value.currency_symbol}</InputGroup.Text>
                         </InputGroup>
@@ -783,22 +813,22 @@ console.log(saleValue.market_place, "saleValue Marketplace")
                             className='form-label'>{getFormattedMessage('purchase.input.shipping.label')}: </label>
                         <InputGroup>
                             <input aria-label='Dollar amount (with dot and two decimal places)' type='text'
-                                   className='form-control'
-                                   name='shipping' value={saleValue.shipping}
-                                   onBlur={(event) => onBlurInput(event)} onFocus={(event) => onFocusInput(event)}
-                                   onKeyPress={(event) => decimalValidate(event)}
-                                   onChange={(e) => onChangeInput(e)}
+                                className='form-control'
+                                name='shipping' value={saleValue.shipping}
+                                onBlur={(event) => onBlurInput(event)} onFocus={(event) => onFocusInput(event)}
+                                onKeyPress={(event) => decimalValidate(event)}
+                                onChange={(e) => onChangeInput(e)}
                             />
                             <InputGroup.Text>{frontSetting.value && frontSetting.value.currency_symbol}</InputGroup.Text>
                         </InputGroup>
                     </div>
                     <div className='col-md-4'>
                         <ReactSelect multiLanguageOption={statusFilterOptions}
-                                     onChange={onStatusChange} name='status_id'
-                                     title={getFormattedMessage('purchase.select.status.label')}
-                                     value={saleValue.status_id} errors={errors['status_id']}
-                                     defaultValue={statusDefaultValue[0]}
-                                     placeholder={getFormattedMessage('purchase.select.status.label')}/>
+                            onChange={onStatusChange} name='status_id'
+                            title={getFormattedMessage('purchase.select.status.label')}
+                            value={saleValue.status_id} errors={errors['status_id']}
+                            defaultValue={statusDefaultValue[0]}
+                            placeholder={getFormattedMessage('purchase.select.status.label')} />
                     </div>
                     {/* parcel start */}
 
@@ -806,11 +836,11 @@ console.log(saleValue.market_place, "saleValue Marketplace")
                     <div className='col-md-4'>
 
                         <ReactSelect title={getFormattedMessage('pacel.company.label.name')}
-                                     data={shippingCompanyNames}
-                                     onChange={onParcelCompanyChange}
-                                     placeholder={placeholderText('pacel.company.select.label')}
-                                     value={saleValue.parcel_company_id}
-                                     name='parcel_company_id'
+                            data={shippingCompanyNames}
+                            onChange={onParcelCompanyChange}
+                            placeholder={placeholderText('pacel.company.select.label')}
+                            value={saleValue.parcel_company_id}
+                            name='parcel_company_id'
                         />
                     </div>
 
@@ -831,7 +861,7 @@ console.log(saleValue.market_place, "saleValue Marketplace")
                         </InputGroup>
                     </div>
 
-                   
+
 
                     <div className='col-md-4 mb-3'>
                         <label
@@ -858,42 +888,29 @@ console.log(saleValue.market_place, "saleValue Marketplace")
                             value={saleValue.market_place}
                             // errors={errors['payment_status']}
                             defaultValue={marketplaceNamesDefault[0]}
-                            placeholder={placeholderText('globally.input.marketplace.label')}/>
+                            placeholder={placeholderText('globally.input.marketplace.label')} />
                     </div>
 
 
                     {/* parcel end */}
-                    <br/>
+                    <br />
 
                     <div className='col-md-4'>
                         <ReactSelect multiLanguageOption={paymentStatusFilterOptions} onChange={onPaymentStatusChange}
-                                     name='payment_status'
-                                     title={getFormattedMessage('dashboard.recentSales.paymentStatus.label')}
-                                     value={saleValue.payment_status} errors={errors['payment_status']}
-                                     defaultValue={paymentStatusDefaultValue[0]}
-                                     placeholder={placeholderText('sale.select.payment-status.placeholder')}/>
+                            name='payment_status'
+                            title={getFormattedMessage('dashboard.recentSales.paymentStatus.label')}
+                            value={saleValue.payment_status} errors={errors['payment_status']}
+                            defaultValue={paymentStatusDefaultValue[0]}
+                            placeholder={placeholderText('sale.select.payment-status.placeholder')} />
                     </div>
                     <div className='col-md-4'>
                         <ReactSelect title={getFormattedMessage('select.payment-type.label')}
-                                     name='payment_type'
-                                     value={saleValue.payment_type} errors={errors['payment_type']}
-                                     placeholder={placeholderText('sale.select.payment-type.placeholder')}
-                                     defaultValue={paymentTypeDefaultValue[4]}
-                                     multiLanguageOption={paymentMethodOption}
-                                     onChange={onPaymentTypeChange}
-                        />
-                    </div>
-                    <div className='col-md-4'>
-
-                        <ReactSelect title={getFormattedMessage('currency.label.name')}
-                                     data={currencyNameDefault}
-                                     onChange={onCurrencyChange}
-                                     placeholder={placeholderText('currency.select.label')}
-                                     defaultValue={currencyNameDefault[0]}
-                                     isCurrencyDisable={true}
-                                     value={filtredCurrency}
-                                     name='currency'
-
+                            name='payment_type'
+                            value={saleValue.payment_type} errors={errors['payment_type']}
+                            placeholder={placeholderText('sale.select.payment-type.placeholder')}
+                            defaultValue={paymentTypeDefaultValue[4]}
+                            multiLanguageOption={paymentMethodOption}
+                            onChange={onPaymentTypeChange}
                         />
                     </div>
                     <div className='col-md-4'>
@@ -932,11 +949,11 @@ console.log(saleValue.market_place, "saleValue Marketplace")
                         <label className='form-label'>
                             {getFormattedMessage('globally.input.notes.label')}: </label>
                         <textarea name='notes' className='form-control' value={saleValue.notes}
-                                  placeholder={placeholderText('globally.input.notes.placeholder.label')}
-                                  onChange={(e) => onNotesChangeInput(e)}
+                            placeholder={placeholderText('globally.input.notes.placeholder.label')}
+                            onChange={(e) => onNotesChangeInput(e)}
                         />
                     </div>
-                    <ModelFooter onEditRecord={singleSale} onSubmit={onSubmit} link='/app/sales'/>
+                    <ModelFooter onEditRecord={singleSale} onSubmit={onSubmit} link='/app/sales' />
                 </div>
                 {/*</Form>*/}
             </div>
@@ -946,9 +963,9 @@ console.log(saleValue.market_place, "saleValue Marketplace")
 
 const mapStateToProps = (state) => {
     console.log(state, 'state from sales form')
-    const {purchaseProducts, products, advanceSearch, currencies, frontSetting, allConfigData} = state;
+    const { purchaseProducts, products, advanceSearch, currencies, frontSetting, allConfigData, warehouse_id } = state;
     return {
-        customProducts: preparePurchaseProductArray(advanceSearch),
+        customProducts: preparePurchaseProductArray(advanceSearch, warehouse_id),
         purchaseProducts,
         products,
         advanceSearch,

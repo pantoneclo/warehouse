@@ -21,7 +21,7 @@ export const taxAmount = (cartItem) => {
     if (cartItem.tax_type === '2' || cartItem.tax_type === 2) {
         return ((+cartItem.fix_net_unit - discountAmount(cartItem)) * +cartItem.tax_value) / (100 + +cartItem.tax_value);
     } else if (cartItem.tax_type === '1' || cartItem.tax_type === 1) {
-        return ((+cartItem.fix_net_unit - discountAmount(cartItem)) * +cartItem.tax_value) / (100 + +cartItem.tax_value);
+        return ((+cartItem.fix_net_unit - discountAmount(cartItem)) * +cartItem.tax_value) / 100;
     }
 
     const taxAmount = cartItem.tax_amount != null ? cartItem.tax_amount : 0;
@@ -67,6 +67,7 @@ export const calculateCartTotalTaxAmount = (carts, inputValue) => {
     let shipping = parseFloat(inputValue.shipping) || 0;
     let cod = parseFloat(inputValue.cod) || 0;
     let discount = parseFloat(inputValue.discount) || 0;
+    let taxType = inputValue.order_tax_type || '1'; // Default to Exclusive if missing
 
     let totalAmountBeforeTax = 0;
 
@@ -74,9 +75,17 @@ export const calculateCartTotalTaxAmount = (carts, inputValue) => {
         totalAmountBeforeTax += parseFloat(cartItem.sub_total || 0);
     });
 
+    // Tax is calculated on (Subtotal + Shipping + COD - Discount)
     let totalAmountAfterDiscount = totalAmountBeforeTax + shipping + cod - discount;
 
-    let totalTax = (totalAmountAfterDiscount * taxValue) / (100 + taxValue);
+    let totalTax = 0;
+    if (taxType === '2' || taxType === 2) {
+        // Inclusive: Tax = (Total * Rate) / (100 + Rate)
+        totalTax = (totalAmountAfterDiscount * taxValue) / (100 + taxValue);
+    } else {
+        // Exclusive: Tax = (Total * Rate) / 100
+        totalTax = (totalAmountAfterDiscount * taxValue) / 100;
+    }
 
     return isNaN(totalTax) ? "0.00" : totalTax.toFixed(2);
 };
@@ -94,8 +103,30 @@ export const calculateSubTotal = (carts) => {
 export const calculateCartTotalAmount = (carts, inputValue) => {
     let finalTotalAmount
     const value = inputValue && inputValue;
+    let taxType = value.order_tax_type || '1';
+
     let totalAmountAfterDiscount = calculateSubTotal(carts) - value.discount
-    let taxCal = (totalAmountAfterDiscount * inputValue.tax_rate / 100).toFixed(2)
-    finalTotalAmount = Number(totalAmountAfterDiscount)  + Number(value.shipping) + Number(value.cod)
+    let totalTax = 0;
+
+    // Recalculate tax for accuracy (mirroring calculateCartTotalTaxAmount logic)
+    // Note: totalAmountAfterDiscount here doesn't include shipping/cod yet, matching original structure?
+    // Wait, original structure:
+    // finalTotalAmount = totalAmountAfterDiscount + shipping + cod
+    // But tax was ignored in final sum?
+
+    // Correct logic:
+    // Base = Subtotal + Shipping + COD - Discount
+    let baseAmount = calculateSubTotal(carts) + Number(value.shipping) + Number(value.cod) - Number(value.discount);
+
+    if (taxType === '2' || taxType === 2) {
+        // Inclusive: Grand Total is just the Base Amount (Tax is inside)
+        finalTotalAmount = baseAmount;
+    } else {
+        // Exclusive: Grand Total = Base Amount + Tax
+        // Tax = (Base * Rate) / 100
+        let taxCal = (baseAmount * value.tax_rate / 100);
+        finalTotalAmount = baseAmount + taxCal;
+    }
+
     return (parseFloat(finalTotalAmount).toFixed(2))
 }

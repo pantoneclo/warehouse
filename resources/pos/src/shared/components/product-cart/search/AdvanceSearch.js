@@ -21,13 +21,14 @@ const AdvanceSearch = (props) => {
         searchPurchaseProduct,
         handleValidation,
         isAllProducts,
-    
+
         fetchAdvancedSearch
     } = props;
     const [searchString, setSearchString] = useState("");
     const [isSearching, setIsSearching] = useState(false);
     const dispatch = useDispatch();
     const isLoading = useSelector(state => state.isLoading);
+    console.log("AdvanceSearch props values:", values);
 
     // const filterProducts = products.data ? products.data.filter((item) => {
     //     const attributes = item.attributes;
@@ -40,10 +41,10 @@ const AdvanceSearch = (props) => {
     // })) : [];
     const filterProducts = products ? isAllProducts ?
         products.map((item) => ({
-            name: item.attributes.name, brand:item.attributes.brand_name, code: item.attributes.code, id: item.id, variant: item.attributes.variant
+            name: item.attributes.name, brand: item.attributes.brand_name, code: item.attributes.code, id: item.id, variant: item.attributes.variant
         }))
         : products.filter((qty) => qty && qty.attributes && qty.attributes.stock && qty.attributes.stock.quantity > 0).map((item) => ({
-            name: item.attributes.name, brand:item.attributes.brand_name, code: item.attributes.code, id: item.id, variant: item.attributes.variant
+            name: item.attributes.name, brand: item.attributes.brand_name, code: item.attributes.code, id: item.id, variant: item.attributes.variant
         })) : [];
 
     console.log(products, 'After filterProducts');
@@ -58,7 +59,8 @@ const AdvanceSearch = (props) => {
         try {
             if (code.length >= 2) {
                 setIsSearching(true);
-                dispatch(fetchAdvancedSearch({ search: code }));
+                const warehouseId = values?.warehouse_id?.value;
+                dispatch(fetchAdvancedSearch({ search: code, warehouse_id: warehouseId }));
 
                 console.log(code, 'code');
 
@@ -71,51 +73,51 @@ const AdvanceSearch = (props) => {
             setIsSearching(false);
         }
     };
- 
 
-    useEffect(() => {   
-        console.log(products, 'products inside of useeffect')       
-          
-                function filterOutDuplicates(products, newProducts) {
-                    return newProducts.filter((newProduct) => {
-                        return !products.find((exitId) => exitId?.product_id === newProduct?.product_id);
-                    });
-                }
 
-                if (products&&products.length > 0) {
-                    // Create a new array to store the new products
-                    const newProducts = [];
-    
-                    products.forEach((product) => {
-                        console.log(product, 'product inside of single product')
-                        const newProduct = customProducts.find(element => element?.product_id === product.attributes?.product_id );
-                        newProducts.push(newProduct); // Add each new product to the new array
-                    });
-    
-                    // Filter out duplicates and add to updateProducts
-                    console.log (updateProducts, 'updateProducts before')
-                    const filteredNewProducts = filterOutDuplicates(updateProducts, newProducts);
-                    console.log(filteredNewProducts, 'filteredNewProducts which i got')
-    
-                    if (filteredNewProducts?.length > 0) {
-                        setUpdateProducts([...updateProducts, ...filteredNewProducts]); // Spread the new products into updateProducts
-                        console.log(updateProducts, 'updateProducts after');
-                        setSearchString ('');
-                    } else {
-                        // No new products found
-                        dispatch(addToast({
-                            text: getFormattedMessage('globally.product-already-added.validate.message'),
-                            type: toastType.ERROR
-                        }));
-                        setSearchString ('');
-                    }
-                }
+    useEffect(() => {
+        console.log(products, 'products inside of useeffect')
 
-                // Clear searching state when products are loaded
-                setIsSearching(false);
-    }, [ products]);
+        function filterOutDuplicates(products, newProducts) {
+            return newProducts.filter((newProduct) => {
+                return !products.find((exitId) => exitId?.product_id === newProduct?.product_id);
+            });
+        }
 
-    
+        if (products && products.length > 0) {
+            // Create a new array to store the new products
+            const newProducts = [];
+
+            products.forEach((product) => {
+                console.log(product, 'product inside of single product')
+                const newProduct = customProducts.find(element => element?.product_id === product.attributes?.product_id);
+                newProducts.push(newProduct); // Add each new product to the new array
+            });
+
+            // Filter out duplicates and add to updateProducts
+            console.log(updateProducts, 'updateProducts before')
+            const filteredNewProducts = filterOutDuplicates(updateProducts, newProducts);
+            console.log(filteredNewProducts, 'filteredNewProducts which i got')
+
+            if (filteredNewProducts?.length > 0) {
+                setUpdateProducts([...updateProducts, ...filteredNewProducts]); // Spread the new products into updateProducts
+                console.log(updateProducts, 'updateProducts after');
+                setSearchString('');
+            } else {
+                // No new products found
+                dispatch(addToast({
+                    text: getFormattedMessage('globally.product-already-added.validate.message'),
+                    type: toastType.ERROR
+                }));
+                setSearchString('');
+            }
+        }
+
+        // Clear searching state when products are loaded
+        setIsSearching(false);
+    }, [products]);
+
+
 
     const handleOnSearch = (string) => {
         onProductSearch(string);
@@ -155,7 +157,7 @@ const AdvanceSearch = (props) => {
     }
 
     return (
-    
+
         <div className='position-relative custom-search'>
             <ReactSearchAutocomplete
                 items={filterProducts}
