@@ -79,6 +79,19 @@ class AdjustmentAPIController extends AppBaseController
             // Dispatch the job to process the adjustment items in the background
             ProcessAdjustmentItems::dispatch($input['adjustment_items'], $input['warehouse_id']);
 
+            // Trigger the queue worker in the background
+            // This implementation works for both Linux (production) and potentially Windows
+            try {
+                $command = 'php ' . base_path('artisan') . ' app:run-queue-worker > /dev/null 2>&1 &'; 
+                if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
+                    pclose(popen('start /B php ' . base_path('artisan') . ' app:run-queue-worker', "r")); 
+                } else {
+                    exec($command);
+                }
+            } catch (\Exception $e) {
+                \Log::error('Failed to trigger background queue worker: ' . $e->getMessage());
+            }
+
             // Return response immediately
             return new AdjustmentResource($adjustment);
         } catch (\Exception $e) {
