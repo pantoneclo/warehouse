@@ -103,7 +103,7 @@ class StockManagementAPIController extends AppBaseController
                 'received_amount' => 'required|numeric',
                 'paid_amount' => 'required|numeric',
                 'payment_type' => 'required|integer',
-                'currency' => 'required|string|max:3',
+                'currency' => 'nullable|string|max:3',
                 'date' => 'required|date',
                 'customer' => 'required|array',
                 'customer.name' => 'required|string|max:255',

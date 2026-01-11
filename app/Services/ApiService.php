@@ -57,7 +57,7 @@ class ApiService
                 return $content; // Return the successful response
             }
 
-            \Log::error('Login failed response:', $content);
+            \Log::error('Login failed response:', (array)$content);
             return [
                 'isSuccess' => false,
                 'message' => $content['message'] ?? 'Login failed'
