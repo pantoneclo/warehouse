@@ -22,8 +22,8 @@
         <th style="width: 250%">{{ __('messages.pdf.current_stock') }}</th>
         <th style="width: 250%">{{ __('messages.pdf.fob_price') }}</th>
         <th style="width: 250%">{{ __('messages.pdf.total_fob') }}</th>
-        <th style="width: 250%">{{ __('messages.pdf.selling_price') }}</th>
-        <th style="width: 250%">{{ __('messages.pdf.total_selling_price') }}</th>
+        <th style="width: 250%">SELLING PRICE</th>
+        <th style="width: 250%">TOTAL SELLING PRICE</th>
     </tr>
     </thead>
     <tbody>
