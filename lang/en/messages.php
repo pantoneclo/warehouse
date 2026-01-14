@@ -100,6 +100,8 @@ return [
         'total_fob'=>'TOTAL FOB',
         'conversion_rate'=>'CONVERSION RATE',
         'cod'=>'COD',
+        'selling_price'=>'SELLING PRICE',
+        'total_selling_price'=>'TOTAL SELLING PRICE',
     ],
 
     'error' => [
