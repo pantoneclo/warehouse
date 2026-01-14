@@ -264,7 +264,7 @@ class ReportAPIController extends AppBaseController
         }
         Excel::store(new StockReportExport, 'excel/stock-report-excel.xlsx');
 
-        $data['stock_report_excel_url'] = Storage::url('excel/stock-report-excel.xlsx');
+        $data['stock_report_excel_url'] = Storage::url('excel/stock-report-excel.xlsx') . '?t=' . time();
 
         return $this->sendResponse($data, 'Stock Report retrieved successfully');
     }
