@@ -1,24 +1,24 @@
-import React, {useState, useEffect, useMemo} from 'react';
-import {constants, Filters} from '../../constants';
-import {Button, Col} from 'react-bootstrap-v5';
-import {useDispatch} from 'react-redux';
+import React, { useState, useEffect, useMemo } from 'react';
+import { constants, Filters } from '../../constants';
+import { Button, Col } from 'react-bootstrap-v5';
+import { useDispatch } from 'react-redux';
 import PropTypes from 'prop-types';
 import DataTable from 'react-data-table-component';
 import FilterComponent from '../components/FilterComponent';
-import {renderSortIcons} from '../../config/sortConfig';
+import { renderSortIcons } from '../../config/sortConfig';
 import TableButton from '../action-buttons/TableButton';
 import EmptyComponent from '../../components/empty-component/EmptyComponent';
-import {getFormattedMessage} from '../sharedMethod';
+import { getFormattedMessage } from '../sharedMethod';
 import DateRangePicker from '../datepicker/DateRangePicker';
 import FilterDropdown from '../filterMenu/FilterDropdown';
-import {setProductUnitId} from "../../store/action/productUnitIdAction";
+import { setProductUnitId } from "../../store/action/productUnitIdAction";
 
 
 const ReactDataTable = (props) => {
     const {
-        columns, AddButton, items, ButtonValue, to, defaultLimit = Filters.OBJ.page, onChange, totalRows,isShowPaymentModel,isCallSaleApi,isCallBrandApi,
-        paginationRowsPerPageOptions = [10, 15, 25, 50, 100], isLoading, isShowDateRangeField, isShowFilterField,isWarehouseType,warehouseOptions,
-        isStatus, isPaymentStatus,warehouseValue, isUnitFilter, title, isPdf, isReportPdf, isEXCEL, onExcelClick, isShowSearch, isPaymentType, subHeader = true,
+        columns, AddButton, items, ButtonValue, to, defaultLimit = Filters.OBJ.page, onChange, totalRows, isShowPaymentModel, isCallSaleApi, isCallBrandApi,
+        paginationRowsPerPageOptions = [10, 15, 25, 50, 100], isLoading, isShowDateRangeField, isShowFilterField, isWarehouseType, warehouseOptions,
+        isStatus, isPaymentStatus, warehouseValue, isUnitFilter, title, isPdf, isReportPdf, isEXCEL, onExcelClick, isShowSearch, isPaymentType, subHeader = true,
         buttonImport, goToImport, isTransferStatus, isExport, customerId, onReportPdfClick, importBtnTitle, goToImportProduct, isCountry
     } = props;
     const [perPage, setPerPages] = useState(defaultLimit);
@@ -47,38 +47,38 @@ const ReactDataTable = (props) => {
     useEffect(() => {
         onChangeDidMount(currentPage);
         setAdminName(adminName);
-    }, [currentPage, status, transferStatus, productUnit,warehouseValue, tableWarehouseValue,isShowPaymentModel,isCallSaleApi, isCallBrandApi, paymentStatus, paymentType, perPage, order_By, direction, searchText, pageSize, adminName, totalRows, selectDate, country]);
+    }, [currentPage, status, transferStatus, productUnit, warehouseValue, tableWarehouseValue, isShowPaymentModel, isCallSaleApi, isCallBrandApi, paymentStatus, paymentType, perPage, order_By, direction, searchText, pageSize, adminName, totalRows, selectDate, country]);
     const onStatusChange = (obj) => {
-        dispatch({type: 'RESET_OPTION', payload: false})
+        dispatch({ type: 'RESET_OPTION', payload: false })
         setStatus(obj);
-        dispatch({type: 'ON_TOGGLE', payload: false})
+        dispatch({ type: 'ON_TOGGLE', payload: false })
     };
 
 
     const onTransferStatusChange = (obj) => {
-        dispatch({type: 'RESET_OPTION', payload: false})
+        dispatch({ type: 'RESET_OPTION', payload: false })
         setTransferStatus(obj);
         setStatus(obj);
-        dispatch({type: 'ON_TOGGLE', payload: false})
+        dispatch({ type: 'ON_TOGGLE', payload: false })
     };
 
     const onPaymentStatusChange = (obj) => {
-        dispatch({type: 'RESET_OPTION', payload: false})
+        dispatch({ type: 'RESET_OPTION', payload: false })
         setPaymentStatus(obj);
-        dispatch({type: 'ON_TOGGLE', payload: false})
+        dispatch({ type: 'ON_TOGGLE', payload: false })
     };
 
     const onProductUnitChange = (obj) => {
-        dispatch({type: 'RESET_OPTION', payload: false})
+        dispatch({ type: 'RESET_OPTION', payload: false })
         setProductUnit(obj);
         dispatch(setProductUnitId(obj.value))
-        dispatch({type: 'ON_TOGGLE', payload: false});
+        dispatch({ type: 'ON_TOGGLE', payload: false });
     };
 
     const onPaymentTypeChange = (obj) => {
-        dispatch({type: 'RESET_OPTION', payload: false})
+        dispatch({ type: 'RESET_OPTION', payload: false })
         setPaymentType(obj);
-        dispatch({type: 'ON_TOGGLE', payload: false});
+        dispatch({ type: 'ON_TOGGLE', payload: false });
     };
 
     const handleSearch = (searchText) => {
@@ -88,7 +88,7 @@ const ReactDataTable = (props) => {
 
     const onDateSelector = (date) => {
         setSelectDate(date.params);
-        dispatch({type: constants.DATE_ACTION, payload: date.params});
+        dispatch({ type: constants.DATE_ACTION, payload: date.params });
     };
 
     const customSort = (column, sortDirection) => {
@@ -99,24 +99,24 @@ const ReactDataTable = (props) => {
     };
 
     const onResetClick = () => {
-        setStatus({label: 'All', value: '0'})
-        setPaymentStatus({label: 'All', value: '0'})
-        setPaymentType({label: 'All', value: '0'})
-        setProductUnit({label: 'All', value: '0'})
-        setTableWarehouseValue({label:"All", value: "0"})
-        setCountry({label:"All", value: "0"})
-        dispatch({type: 'ON_TOGGLE', payload: false})
+        setStatus({ label: 'All', value: '0' })
+        setPaymentStatus({ label: 'All', value: '0' })
+        setPaymentType({ label: 'All', value: '0' })
+        setProductUnit({ label: 'All', value: '0' })
+        setTableWarehouseValue({ label: "All", value: "0" })
+        setCountry({ label: "All", value: "0" })
+        dispatch({ type: 'ON_TOGGLE', payload: false })
     }
 
     const onWarehouseChange = (obj) => {
         setTableWarehouseValue(obj);
-        dispatch({type: 'ON_TOGGLE', payload: false});
+        dispatch({ type: 'ON_TOGGLE', payload: false });
     };
 
     const onCountryChange = (obj) => {
-        dispatch({type: 'RESET_OPTION', payload: false})
+        dispatch({ type: 'RESET_OPTION', payload: false })
         setCountry(obj);
-        dispatch({type: 'ON_TOGGLE', payload: false})
+        dispatch({ type: 'ON_TOGGLE', payload: false })
     };
 
 
@@ -127,69 +127,69 @@ const ReactDataTable = (props) => {
     const subHeaderComponentMemo = React.useMemo(() => {
         return (
             <>
-                {isShowSearch ? '' : <FilterComponent handleSearch={handleSearch}/>}
+                {isShowSearch ? '' : <FilterComponent handleSearch={handleSearch} />}
 
                 <Col xxl={isShowSearch ? 12 : 8} className='d-flex flex-wrap align-items-center justify-content-end col-12 col-md-9 col-lg-8'>
                     {isShowFilterField ? <FilterDropdown paymentStatus={paymentStatus} status={status} title={title}
-                                                         isPaymentStatus={isPaymentStatus} productUnit={productUnit}
-                                                         paymentType={paymentType} isPaymentType={isPaymentType}
-                                                         onStatusChange={onStatusChange}
-                                                       
+                        isPaymentStatus={isPaymentStatus} productUnit={productUnit}
+                        paymentType={paymentType} isPaymentType={isPaymentType}
+                        onStatusChange={onStatusChange}
 
-                                                         isStatus={isStatus}
-                                                         isTransferStatus={isTransferStatus}
-                                                         onTransferStatusChange={onTransferStatusChange}
-                                                         transferStatus={transferStatus}
 
-                                                         show={show}
-                                                         setShow={setShow} isWarehouseType={isWarehouseType}
-                                                         onWarehouseChange={onWarehouseChange} tableWarehouseValue={tableWarehouseValue}
-                                                         onProductUnitChange={onProductUnitChange} warehouseOptions={warehouseOptions}
-                                                         isUnitFilter={isUnitFilter} onResetClick={onResetClick}
-                                                         onPaymentStatusChange={onPaymentStatusChange}
-                                                         onPaymentTypeChange={onPaymentTypeChange}
-                                                         
-                                                         isCountry={isCountry}
-                                                         country={country}
-                                                         onCountryChange={onCountryChange}
-                                                         /> : null}
+                        isStatus={isStatus}
+                        isTransferStatus={isTransferStatus}
+                        onTransferStatusChange={onTransferStatusChange}
+                        transferStatus={transferStatus}
+
+                        show={show}
+                        setShow={setShow} isWarehouseType={isWarehouseType}
+                        onWarehouseChange={onWarehouseChange} tableWarehouseValue={tableWarehouseValue}
+                        onProductUnitChange={onProductUnitChange} warehouseOptions={warehouseOptions}
+                        isUnitFilter={isUnitFilter} onResetClick={onResetClick}
+                        onPaymentStatusChange={onPaymentStatusChange}
+                        onPaymentTypeChange={onPaymentTypeChange}
+
+                        isCountry={isCountry}
+                        country={country}
+                        onCountryChange={onCountryChange}
+                    /> : null}
                     {AddButton}
                     {isPdf ?
                         <div className='text-end mb-2 '>
                             <Button type='button' variant='primary' href={to}
-                                    className='me-3 btn-light-primary'>PDF</Button>
+                                className='me-3 btn-light-primary'>PDF</Button>
                         </div> : ''}
                     {isReportPdf ?
                         <div className='text-end mb-2 '>
                             <Button type='button' variant='primary' onClick={() => onReportPdfClick()}
-                                    className='me-3 btn-light-primary'>PDF</Button>
+                                className='me-3 btn-light-primary'>PDF</Button>
                         </div>
-                    : ''}
+                        : ''}
                     {isEXCEL ?
                         <div className='text-end mb-2 '>
                             <Button type='button' variant='primary' onClick={() => onExcelClick()}
-                                    className='me-3 btn-light-primary'> {getFormattedMessage("excel.btn.label")}</Button>
+                                className='me-3 btn-light-primary'> {getFormattedMessage("excel.btn.label")}</Button>
                         </div> : ''}
                     {isExport ?
                         <div className='text-end mb-2 '>
                             <Button type='button' variant='primary' onClick={() => onExcelClick()}
-                                    className='me-3 me-md-0 btn-light-primary'> Export</Button>
+                                className='me-3 me-md-0 btn-light-primary'> Export</Button>
                         </div> : ''}
                     {isShowDateRangeField ?
-                        <DateRangePicker onDateSelector={onDateSelector} selectDate={selectDate}/>
+                        <DateRangePicker onDateSelector={onDateSelector} selectDate={selectDate} />
                         : null
                     }
                     {buttonImport ?
-                    <div className='text-end mb-2  order-2'>
-                        <Button variant="primary" className='mx-md-1 me-3 my-3 btn-light-primary' onClick={goToImport}>
-                         Import
-                        </Button>
-                    </div> :''}
-                    {ButtonValue ? <TableButton ButtonValue={ButtonValue} to={to}/> : null}
+                        <div className='text-end mb-2  order-2'>
+                            <Button variant="primary" className='mx-md-1 me-3 my-3 btn-light-primary' onClick={goToImport}>
+                                Import
+                            </Button>
+                        </div> : ''}
+                    {ButtonValue ? <TableButton ButtonValue={ButtonValue} to={to} /> : null}
                 </Col>
             </>
         );
-    }, []);
+    }, [onExcelClick, onReportPdfClick, goToImport, isShowSearch, handleSearch, isShowFilterField, paymentStatus, status, title, isPaymentStatus, productUnit, paymentType, isPaymentType, onStatusChange, isStatus, isTransferStatus, onTransferStatusChange, transferStatus, show, setShow, isWarehouseType, onWarehouseChange, tableWarehouseValue, onProductUnitChange, warehouseOptions, isUnitFilter, onResetClick, onPaymentStatusChange, onPaymentTypeChange, isCountry, country, onCountryChange, AddButton, isPdf, to, isReportPdf, isEXCEL, isExport, isShowDateRangeField, onDateSelector, selectDate, buttonImport, ButtonValue]);
 
     const onChangeDidMount = () => {
         const filters = {
@@ -200,7 +200,7 @@ const ReactDataTable = (props) => {
             adminName: adminName,
             created_at: created_at,
             search: searchText === '' ? searchText === 1 || searchText === undefined ? '' : searchText.toLowerCase() : '' ||
-            searchText !== '' ? searchText.toLowerCase() : '',
+                searchText !== '' ? searchText.toLowerCase() : '',
             start_date: selectDate ? selectDate.start_date : null,
             end_date: selectDate ? selectDate.end_date : null,
             payment_status: paymentStatus ? paymentStatus.value : null,
@@ -245,7 +245,7 @@ const ReactDataTable = (props) => {
         <div className='data-table pt-0'>
             <DataTable
                 columns={tableColumns}
-                noDataComponent={<EmptyComponent {...emptyStateProps}/>}
+                noDataComponent={<EmptyComponent {...emptyStateProps} />}
                 data={items}
                 paginationRowsPerPageOptions={paginationRowsPerPageOptions}
                 pagination={true}

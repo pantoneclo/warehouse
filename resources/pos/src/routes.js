@@ -112,6 +112,8 @@ import InventoryCreatedList from "./components/inventory/InventoryCreatedList";
 import Combo from "./components/comboProduct/Combo";
 import ComboCreate from "./components/comboProduct/ComboCreate";
 import ComboProductDetail from "./components/comboProduct/ComboProductDetail";
+import StockHistory from "./components/report/stockHistory/StockHistory";
+import SalesItemReport from "./components/report/salesItemReport/SalesItemReport";
 
 export const route = [
     // {
@@ -534,6 +536,16 @@ export const route = [
         permission: Permissions.MANAGE_REPORTS,
     },
     {
+        path: "report/stock-history",
+        ele: <StockHistory />,
+        permission: Permissions.MANAGE_REPORTS,
+    },
+    {
+        path: "report/sales-item-report",
+        ele: <SalesItemReport />,
+        permission: Permissions.MANAGE_REPORTS,
+    },
+    {
         path: "report/report-top-selling-products",
         ele: <TopSellingProductsReport />,
         permission: Permissions.MANAGE_REPORTS,
@@ -641,7 +653,7 @@ export const route = [
     {
         path: "languages",
         ele: <Language />,
-        permission:Permissions.MANAGE_LANGUAGES
+        permission: Permissions.MANAGE_LANGUAGES
     },
     {
         path: "languages/:id",

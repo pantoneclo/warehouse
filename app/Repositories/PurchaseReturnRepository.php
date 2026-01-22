@@ -97,11 +97,19 @@ class PurchaseReturnRepository extends BaseRepository
                         $q->where('supplier_id', $input['supplier_id'])->where('warehouse_id', $input['warehouse_id']);
                     })->exists();
                 if ($purchaseExist) {
+                     /** @var \App\Services\StockService $stockService */
+                     $stockService = app(\App\Services\StockService::class);
+                    
                     if ($product && $product->quantity >= $saleItem['quantity']) {
-                        $totalQuantity = $product->quantity - $saleItem['quantity'];
-                        $product->update([
-                            'quantity' => $totalQuantity,
-                        ]);
+                        $stockService->updateStock(
+                            $input['warehouse_id'],
+                            $saleItem['product_id'],
+                            -1 * $saleItem['quantity'], // Decrease stock
+                            PurchaseReturn::class,
+                            $purchaseReturn->id,
+                            'purchase_return',
+                            'Purchase Return Created'
+                        );
                     } else {
                         throw new UnprocessableEntityHttpException('Quantity must be less than Available quantity.');
                     }
@@ -254,10 +262,19 @@ class PurchaseReturnRepository extends BaseRepository
                         })->exists();
                     if ($purchaseExist) {
                         if ($product) {
-                            if ($product->quantity >= $purchaseReturnItem['quantity']) {
-                                $product->update([
-                                    'quantity' => $product->quantity - $purchaseReturnItem['quantity'],
-                                ]);
+                             /** @var \App\Services\StockService $stockService */
+                             $stockService = app(\App\Services\StockService::class);
+                             
+                             if ($product->quantity >= $purchaseReturnItem['quantity']) {
+                                $stockService->updateStock(
+                                    $input['warehouse_id'],
+                                    $purchaseReturnItem['product_id'],
+                                    -1 * $purchaseReturnItem['quantity'], // Decrease
+                                    PurchaseReturn::class,
+                                    $purchaseReturn->id,
+                                    'purchase_return_update_add',
+                                    'Purchase Return Item Added'
+                                );
                             } else {
                                 throw new UnprocessableEntityHttpException('Quantity must be less than Available quantity.');
                             }
@@ -276,16 +293,33 @@ class PurchaseReturnRepository extends BaseRepository
                     $productQuantity = ManageStock::whereWarehouseId($input['warehouse_id'])->whereProductId($oldProduct->product_id)->first();
                     if ($productQuantity) {
                         if ($oldProduct) {
-                            $productQuantity->update([
-                                'quantity' => $productQuantity->quantity + $oldProduct->quantity,
-                            ]);
+                             /** @var \App\Services\StockService $stockService */
+                             $stockService = app(\App\Services\StockService::class);
+                             
+                             // Revert: Increase stock
+                             $stockService->updateStock(
+                                $input['warehouse_id'],
+                                $oldProduct->product_id,
+                                $oldProduct->quantity, // Add back
+                                PurchaseReturn::class,
+                                $purchaseReturn->id,
+                                'purchase_return_update_remove',
+                                'Purchase Return Item Removed'
+                            );
                         }
                     } else {
-                        ManageStock::create([
-                            'warehouse_id' => $input['warehouse_id'],
-                            'product_id' => $oldProduct->product_id,
-                            'quantity' => $oldProduct->quantity,
-                        ]);
+                         // Create if missing? Original logic allowed creation.
+                         /** @var \App\Services\StockService $stockService */
+                         $stockService = app(\App\Services\StockService::class);
+                         $stockService->updateStock(
+                                $input['warehouse_id'],
+                                $oldProduct->product_id,
+                                $oldProduct->quantity, // Add back
+                                PurchaseReturn::class,
+                                $purchaseReturn->id,
+                                'purchase_return_update_remove',
+                                'Purchase Return Item Removed'
+                        );
                     }
                 }
                 PurchaseReturnItem::whereIn('id', array_values($removeItemIds))->delete();
@@ -312,30 +346,32 @@ class PurchaseReturnRepository extends BaseRepository
             $item = PurchaseReturnItem::whereId($purchaseReturnItem['purchase_return_item_id']);
             $product = ManageStock::whereWarehouseId($warehouseId)->whereProductId($purchaseReturnItem['product_id'])->first();
             $oldItem = PurchaseReturnItem::whereId($purchaseReturnItem['purchase_return_item_id'])->first();
+            
             if ($oldItem && $oldItem->quantity != $purchaseReturnItem['quantity']) {
-                $totalQuantity = 0;
-                if ($oldItem->quantity > $purchaseReturnItem['quantity']) {
-                    if ($product) {
-                        $totalQuantity = $product->quantity + ($oldItem->quantity - $purchaseReturnItem['quantity']);
-                        $product->update([
-                            'quantity' => $totalQuantity,
-                        ]);
-                    } else {
-                        ManageStock::create([
-                            'warehouse_id' => $warehouseId,
-                            'product_id' => $purchaseReturnItem['product_id'],
-                            'quantity' => $totalQuantity,
-                        ]);
-                    }
-                } elseif ($oldItem->quantity < $purchaseReturnItem['quantity']) {
-                    $totalQuantity = $product->quantity - ($purchaseReturnItem['quantity'] - $oldItem->quantity);
-                    if ($product->quantity < ($purchaseReturnItem['quantity'] - $oldItem->quantity)) {
-                        throw new UnprocessableEntityHttpException('Quantity must be less than Available quantity.');
-                    }
-                    $product->update([
-                        'quantity' => $totalQuantity,
-                    ]);
-                }
+                $diff = $purchaseReturnItem['quantity'] - $oldItem->quantity;
+                 /** @var \App\Services\StockService $stockService */
+                 $stockService = app(\App\Services\StockService::class);
+                 
+                 // diff > 0 (Increased return qty) -> Reduce stock further -> Stock - diff
+                 // diff < 0 (Decreased return qty) -> Increase stock back -> Stock - diff (since diff is neg, it adds)
+                 
+                 $stockChange = -1 * $diff;
+                 
+                 if ($stockChange < 0) { // consuming stock
+                      if (!$product || ($product->quantity + $stockChange) < 0) {
+                          throw new UnprocessableEntityHttpException('Quantity must be less than Available quantity.');
+                      }
+                 }
+                 
+                 $stockService->updateStock(
+                    $warehouseId,
+                    $purchaseReturnItem['product_id'],
+                    $stockChange,
+                    PurchaseReturn::class,
+                    $oldItem->purchase_return_id,
+                    'purchase_return_update_qty',
+                    'Purchase Return Item Quantity Changed'
+                );
             }
             unset($purchaseReturnItem['purchase_return_item_id']);
             $item->update($purchaseReturnItem);

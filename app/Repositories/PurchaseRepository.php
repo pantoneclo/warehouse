@@ -89,7 +89,18 @@ class PurchaseRepository extends BaseRepository
 
             // manage stock
             foreach ($input['purchase_items'] as $purchaseItem) {
-                manageStock($input['warehouse_id'], $purchaseItem['product_id'], $purchaseItem['quantity']);
+                // manageStock($input['warehouse_id'], $purchaseItem['product_id'], $purchaseItem['quantity']);
+                /** @var \App\Services\StockService $stockService */
+                $stockService = app(\App\Services\StockService::class);
+                $stockService->updateStock(
+                    $input['warehouse_id'],
+                    $purchaseItem['product_id'],
+                    $purchaseItem['quantity'],
+                    Purchase::class,
+                    $purchase->id,
+                    'purchase',
+                    'Purchase Created'
+                );
             }
 
             DB::commit();
@@ -224,7 +235,19 @@ class PurchaseRepository extends BaseRepository
                     ]);
                     $purchase->purchaseItems()->create($purchaseItemArr);
                     // manage new product
-                    manageStock($input['warehouse_id'], $purchaseItem['product_id'], $purchaseItem['quantity']);
+                    // manage new product
+                    // manageStock($input['warehouse_id'], $purchaseItem['product_id'], $purchaseItem['quantity']);
+                    /** @var \App\Services\StockService $stockService */
+                    $stockService = app(\App\Services\StockService::class);
+                    $stockService->updateStock(
+                        $input['warehouse_id'],
+                        $purchaseItem['product_id'],
+                        $purchaseItem['quantity'],
+                        Purchase::class,
+                        $purchase->id,
+                        'purchase_update_add',
+                        'Purchase Item Added'
+                    );
                 }
             }
             $removeItemIds = array_diff($purchaseItemIds, $purchaseItmOldIds);
@@ -236,9 +259,18 @@ class PurchaseRepository extends BaseRepository
                     $productQuantity = ManageStock::whereWarehouseId($input['warehouse_id'])->whereProductId($oldProduct->product_id)->first();
                     if ($productQuantity && $oldProduct) {
                         if ($oldProduct->quantity <= $productQuantity->quantity) {
-                            $productQuantity->update([
-                                'quantity' => $productQuantity->quantity - $oldProduct->quantity,
-                            ]);
+                             // Refactored to use StockService for removal (decrease stock)
+                             /** @var \App\Services\StockService $stockService */
+                             $stockService = app(\App\Services\StockService::class);
+                             $stockService->updateStock(
+                                 $input['warehouse_id'],
+                                 $oldProduct->product_id,
+                                 -1 * $oldProduct->quantity, // Decrease by old quantity
+                                 Purchase::class,
+                                 $id,
+                                 'purchase_update_remove',
+                                 'Purchase Item Removed'
+                             );
                         }
                     } else {
                         throw new UnprocessableEntityHttpException('Quantity must be less than Available quantity.');
@@ -307,14 +339,18 @@ class PurchaseRepository extends BaseRepository
             $oldItem = PurchaseItem::whereId($purchaseItem['purchase_item_id'])->first();
             $totalQuantity = 0;
             if ($product && $oldItem && $oldItem->quantity != $purchaseItem['quantity']) {
-                if ($oldItem->quantity > $purchaseItem['quantity']) {
-                    $totalQuantity = $product->quantity - ($oldItem->quantity - $purchaseItem['quantity']);
-                } elseif ($oldItem->quantity < $purchaseItem['quantity']) {
-                    $totalQuantity = $product->quantity + ($purchaseItem['quantity'] - $oldItem->quantity);
-                }
-                $product->update([
-                    'quantity' => $totalQuantity,
-                ]);
+                $quantityDiff = $purchaseItem['quantity'] - $oldItem->quantity;
+                /** @var \App\Services\StockService $stockService */
+                $stockService = app(\App\Services\StockService::class);
+                $stockService->updateStock(
+                    $warehouseId,
+                    $purchaseItem['product_id'],
+                    $quantityDiff,
+                    Purchase::class,
+                    $oldItem->purchase_id, 
+                    'purchase_update_qty',
+                    'Purchase Item Quantity Changed'
+                );
             }
 
             unset($purchaseItem['purchase_item_id']);

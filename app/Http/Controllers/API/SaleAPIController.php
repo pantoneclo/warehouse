@@ -76,7 +76,7 @@ class SaleAPIController extends AppBaseController
             $sales->whereBetween('date', [$request->get('start_date'), $request->get('end_date')]);
         }
 
-        if ($request->get('warehouse_id')) {
+        if ($request->get('warehouse_id') && $request->get('warehouse_id') != 'null') {
             $sales->where('warehouse_id', $request->get('warehouse_id'));
         }
 
@@ -87,6 +87,9 @@ class SaleAPIController extends AppBaseController
         if ($request->get('status') && $request->get('status') != 'null') {
             $sales->Where('status', $request->get('status'));
         }
+
+        // Log::info('Sales SQL: ' . $sales->toSql());
+        // Log::info('Sales Bindings: ' . json_encode($sales->getBindings()));
 
         if ($request->get('payment_status') && $request->get('payment_status') != 'null') {
             $sales->where('payment_status', $request->get('payment_status'));

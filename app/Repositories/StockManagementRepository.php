@@ -52,7 +52,8 @@ class StockManagementRepository extends BaseRepository
             $sale = Sale::create($saleInputArray);
 
             // Update stock for each item sold
-            $this->updateStockForItems($input['items'], 'decrease');
+            // Pass sale details for history tracking
+            $this->updateStockForItems($input['items'], 'decrease', $sale->id, $input['warehouse_id']);
 
             DB::commit();
 
@@ -68,7 +69,11 @@ class StockManagementRepository extends BaseRepository
             DB::beginTransaction();
 
             // Assume input includes items to add stock for
-            $this->updateStockForItems($input['items'], 'increase');
+            // For general warehouse stock update (not attached to a specific sale/purchase entity yet in this context, or maybe it is?)
+            // If it's a generic update, we might not have a reference ID, or we can use null.
+            // But let's check what $input contains.
+            
+            $this->updateStockForItems($input['items'], 'increase', null, $input['warehouse_id'] ?? null); // Add warehouse_id if available in input
 
             // Trigger webhooks to update other marketplaces
             $this->triggerStockUpdateWebhooks($input['items']);
@@ -80,24 +85,69 @@ class StockManagementRepository extends BaseRepository
         }
     }
 
-    private function updateStockForItems(array $items, $operation)
+    private function updateStockForItems(array $items, $operation, $saleId = null, $warehouseId = null)
     {
+        /** @var \App\Services\StockService $stockService */
+        $stockService = app(\App\Services\StockService::class);
+
         foreach ($items as $item) {
             $product = Product::where('code', $item['code'])->first();
-            $stock = ManageStock::whereProductId($product->id)->first();
-
-            if (!$stock) {
-                throw new UnprocessableEntityHttpException('Product not found in stock.');
+            
+            // If warehouseId is not passed, try to find it from item or default? 
+            // The original code: $stock = ManageStock::whereProductId($product->id)->first();
+            // This implies it picked the FIRST stock record found, which is risky if multiple warehouses exist.
+            // But preserving original logic:
+            if ($warehouseId) {
+                $stock = ManageStock::whereProductId($product->id)->whereWarehouseId($warehouseId)->first();
+            } else {
+                $stock = ManageStock::whereProductId($product->id)->first();
             }
 
-            if ($operation === 'decrease') {
-                if ($stock->quantity >= $item['quantity']) {
-                    $stock->update(['quantity' => $stock->quantity - $item['quantity']]);
+            if (!$stock) {
+                // If it's an increase, maybe we should create it?
+                // Original code threw exception if not found.
+                if ($operation === 'increase') {
+                     // If we have warehouseId, we can create. If not, we can't reliably create.
+                     if ($warehouseId) {
+                         // StockService handles creation if needed? No, StockService updates.
+                         // Actually StockService::updateStock handles creation if qty > 0.
+                         // But we need warehouse_id.
+                     } else {
+                         throw new UnprocessableEntityHttpException('Product not found in stock and no warehouse specified.');
+                     }
                 } else {
+                    throw new UnprocessableEntityHttpException('Product not found in stock.');
+                }
+            }
+            
+            $targetWarehouseId = $warehouseId ?? ($stock ? $stock->warehouse_id : null);
+
+            if ($operation === 'decrease') {
+                // Check sufficiency
+                if ($stock && $stock->quantity < $item['quantity']) {
                     throw new UnprocessableEntityHttpException('Quantity must be less than available quantity.');
                 }
+                
+                $stockService->updateStock(
+                    $targetWarehouseId,
+                    $product->id,
+                    -1 * $item['quantity'],
+                    Sale::class, // Assuming mostly Sales here, but could be generic
+                    $saleId,
+                    'market_place_sale',
+                    'Marketplace Sale'
+                );
+                
             } elseif ($operation === 'increase') {
-                $stock->update(['quantity' => $stock->quantity + $item['quantity']]);
+                $stockService->updateStock(
+                    $targetWarehouseId,
+                    $product->id,
+                    $item['quantity'],
+                    null, // No specific reference type for generic update?
+                    null,
+                    'stock_management_increase',
+                    'Stock Management Increase'
+                );
             }
         }
     }

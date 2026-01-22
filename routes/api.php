@@ -380,6 +380,14 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('cleanup', [\App\Http\Controllers\API\JobStatusController::class, 'cleanup']);
     });
 
+    // Stock History
+    Route::get('stock-history', [\App\Http\Controllers\API\StockHistoryController::class, 'index']);
+
+    // Sales Item Report
+    Route::get('sales-item-report', [\App\Http\Controllers\API\SalesItemReportController::class, 'index']);
+    Route::get('sales-item-report-filters', [\App\Http\Controllers\API\SalesItemReportController::class, 'getFilters']);
+    Route::get('sales-item-report-export', [\App\Http\Controllers\API\SalesItemReportController::class, 'salesItemExport']);
+
 });
 
 Route::middleware('checkApiKey')->group(function (){

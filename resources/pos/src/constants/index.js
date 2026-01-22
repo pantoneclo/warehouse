@@ -111,7 +111,7 @@ export const apiBaseURL = {
     PACKAGES: "/packages",
     PRODUCT_ABSTRACTS: "/product_abstracts",
     VARIANTS: "/variants",
-    POSSIBLE_VARIANT_UPDATE:"settings/variant/update",
+    POSSIBLE_VARIANT_UPDATE: "settings/variant/update",
 
     INVENTORY: "/inventory",
     INVENTORY_INVOICE: "/inventory/invoice",
@@ -182,7 +182,7 @@ export const settingActionType = {
     FETCH_CACHE_CLEAR: 'FETCH_CACHE_CLEAR',
     FETCH_MAIL_SETTINGS: "FETCH_MAIL_SETTINGS",
     EDIT_MAIL_SETTINGS: "EDIT_MAIL_SETTINGS",
-    POSSIBLE_VARIANT_UPDATE:"POSSIBLE_VARIANT_UPDATE"
+    POSSIBLE_VARIANT_UPDATE: "POSSIBLE_VARIANT_UPDATE"
 };
 
 export const warehouseActionType = {
@@ -614,11 +614,11 @@ export const Permissions = {
     USER_CREATE: 'user.create',
     USER_VIEW: 'user.view',
 
-    SALE_CREATE:'sale.create',
+    SALE_CREATE: 'sale.create',
     SALE_EDIT: 'sale.edit',
     SALE_DELETE: 'sale.delete',
     SALE_VIEW: 'sale.view',
-    MANAGE_SALE_PAYMENT :'sale.payment.manage',
+    MANAGE_SALE_PAYMENT: 'sale.payment.manage',
 
     SALE_RETURN_EDIT: 'return.edit',
     SALE_RETURN_DELETE: 'return.delete',
@@ -847,13 +847,16 @@ export const statusOptions = [
 ];
 
 export const saleStatusOptions = [
-    { id: 2, name: 'status.filter.pending.label' },  //pending
     { id: 1, name: 'status.filter.received.label' }, //confirmed
+    { id: 2, name: 'status.filter.pending.label' },  //pending
     { id: 3, name: 'status.filter.ordered.label' },  //picked up
     { id: 4, name: 'status.filter.ontheway.label' }, //On The Way
     { id: 5, name: 'status.filter.delivered.label' },  //Delivered
     { id: 6, name: 'status.filter.cancelled.label' },  //Cancelled
+    { id: 7, name: 'status.filter.order_failed.label' }, //Failed Order
+    { id: 8, name: 'status.filter.returned.label' }, //Returned
 ];
+
 
 export const salePaymentStatusOptions = [
     { id: 1, name: 'payment-status.filter.paid.label' },
@@ -865,6 +868,7 @@ export const paymentStatusOptions = [
     { id: 1, name: 'payment-status.filter.paid.label' },
     { id: 2, name: 'payment-status.filter.unpaid.label' },
     { id: 3, name: 'payment-status.filter.partial.label' },
+    { id: 4, name: 'payment-status.filter.refund.label' },
 ];
 
 export const unitOptions = [
@@ -949,15 +953,15 @@ export const productAbstractAttributes = [
 
 export const shippingCompanyNames = [
     { id: 1, label: 'GLS' },
-    {id : 2, label: 'EXPEDICO' },
-    {id : 3, label: 'REDEX' },
-    {id : 4, label: 'PACTIC' },
-    {id : 5, label: 'PACKETA' },
-    {id : 6, label: 'PATHAO' },
-    {id : 7, label: 'FAN COURIER' },
-    {id : 8, label: 'FEDEX' },
-    {id : 9, label: 'OVERSEAS' },
-    {id : 10, label: 'WAREHOUSE' },
+    { id: 2, label: 'EXPEDICO' },
+    { id: 3, label: 'REDEX' },
+    { id: 4, label: 'PACTIC' },
+    { id: 5, label: 'PACKETA' },
+    { id: 6, label: 'PATHAO' },
+    { id: 7, label: 'FAN COURIER' },
+    { id: 8, label: 'FEDEX' },
+    { id: 9, label: 'OVERSEAS' },
+    { id: 10, label: 'WAREHOUSE' },
 ]
 
 export const getLabelById = (id) => {
@@ -1001,26 +1005,26 @@ export const currencySymbols = {
 };
 
 export const countryOptions = [
-    { id: 1, code:'BD', currency:"BDT", currencySymbol: currencySymbols.BDT, name: 'Bangladesh', vat:0 },
-    { id: 2, code:'SI', currency:"EUR", currencySymbol: currencySymbols.EUR, name: 'Slovenia', vat:22},
-    { id: 3, code:'IT', currency:"EUR", currencySymbol: currencySymbols.EUR, name: 'Italy', vat:22},
-    { id: 4, code:'SK', currency:"EUR", currencySymbol: currencySymbols.EUR, name: 'Slovakia', vat:20},
-    { id: 5, code:'PL', currency:"PLN", currencySymbol: currencySymbols.PLN, name: 'Poland', vat:23},
-    { id: 6, code:'GR', currency:"EUR", currencySymbol: currencySymbols.EUR, name: 'Greece', vat:24},
-    { id: 7, code:'RO', currency:"RON", currencySymbol: currencySymbols.RON, name: 'Romania', vat:19},
-    { id: 8, code:'LT', currency:"EUR", currencySymbol: currencySymbols.EUR, name: 'Lithuania', vat:21},
-    { id: 9, code:'BG', currency:"BGN", currencySymbol: currencySymbols.BGN, name: 'Bulgaria', vat:20},
-    { id: 10, code:'AT', currency:"EUR", currencySymbol: currencySymbols.EUR, name: 'Austria', vat:20},
-    { id: 11, code:'ES', currency:"EUR", currencySymbol: currencySymbols.EUR, name: 'Spain', vat:21},
-    { id: 12, code:'PT', currency:"EUR", currencySymbol: currencySymbols.EUR, name: 'Portugal', vat:23},
-    { id: 13, code:'DE', currency:"EUR", currencySymbol: currencySymbols.EUR, name: 'Germany', vat:19},
-    { id: 14, code:'HR', currency:"EUR", currencySymbol: currencySymbols.EUR, name: 'Croatia', vat:25},
-    { id: 15, code:'CZ', currency:"CZK", currencySymbol: currencySymbols.CZK, name: 'Czech Republic', vat:21},
-    { id: 16, code:'HU', currency:"HUF", currencySymbol: currencySymbols.HUF, name: 'Hungry', vat:27},
-    { id: 17, code:'EE', currency:"EUR", currencySymbol: currencySymbols.EUR, name: 'Estonia', vat:22},
-    { id: 18, code:'LV', currency:"EUR", currencySymbol: currencySymbols.EUR, name: 'Latvia', vat:21},
-    { id: 19, code:'IN', currency:"RUP", currencySymbol: currencySymbols.RUP, name: 'India', vat:0},
-    { id: 20, code:'BE', currency:"EUR", currencySymbol: currencySymbols.EUR, name: 'Belgium', vat:21},
+    { id: 1, code: 'BD', currency: "BDT", currencySymbol: currencySymbols.BDT, name: 'Bangladesh', vat: 0 },
+    { id: 2, code: 'SI', currency: "EUR", currencySymbol: currencySymbols.EUR, name: 'Slovenia', vat: 22 },
+    { id: 3, code: 'IT', currency: "EUR", currencySymbol: currencySymbols.EUR, name: 'Italy', vat: 22 },
+    { id: 4, code: 'SK', currency: "EUR", currencySymbol: currencySymbols.EUR, name: 'Slovakia', vat: 20 },
+    { id: 5, code: 'PL', currency: "PLN", currencySymbol: currencySymbols.PLN, name: 'Poland', vat: 23 },
+    { id: 6, code: 'GR', currency: "EUR", currencySymbol: currencySymbols.EUR, name: 'Greece', vat: 24 },
+    { id: 7, code: 'RO', currency: "RON", currencySymbol: currencySymbols.RON, name: 'Romania', vat: 19 },
+    { id: 8, code: 'LT', currency: "EUR", currencySymbol: currencySymbols.EUR, name: 'Lithuania', vat: 21 },
+    { id: 9, code: 'BG', currency: "BGN", currencySymbol: currencySymbols.BGN, name: 'Bulgaria', vat: 20 },
+    { id: 10, code: 'AT', currency: "EUR", currencySymbol: currencySymbols.EUR, name: 'Austria', vat: 20 },
+    { id: 11, code: 'ES', currency: "EUR", currencySymbol: currencySymbols.EUR, name: 'Spain', vat: 21 },
+    { id: 12, code: 'PT', currency: "EUR", currencySymbol: currencySymbols.EUR, name: 'Portugal', vat: 23 },
+    { id: 13, code: 'DE', currency: "EUR", currencySymbol: currencySymbols.EUR, name: 'Germany', vat: 19 },
+    { id: 14, code: 'HR', currency: "EUR", currencySymbol: currencySymbols.EUR, name: 'Croatia', vat: 25 },
+    { id: 15, code: 'CZ', currency: "CZK", currencySymbol: currencySymbols.CZK, name: 'Czech Republic', vat: 21 },
+    { id: 16, code: 'HU', currency: "HUF", currencySymbol: currencySymbols.HUF, name: 'Hungry', vat: 27 },
+    { id: 17, code: 'EE', currency: "EUR", currencySymbol: currencySymbols.EUR, name: 'Estonia', vat: 22 },
+    { id: 18, code: 'LV', currency: "EUR", currencySymbol: currencySymbols.EUR, name: 'Latvia', vat: 21 },
+    { id: 19, code: 'IN', currency: "RUP", currencySymbol: currencySymbols.RUP, name: 'India', vat: 0 },
+    { id: 20, code: 'BE', currency: "EUR", currencySymbol: currencySymbols.EUR, name: 'Belgium', vat: 21 },
     // Add more countries as needed
 ];
 

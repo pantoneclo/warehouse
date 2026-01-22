@@ -88,30 +88,53 @@ class AdjustmentRepository extends BaseRepository
             $adjustmentItem['adjustment_id'] = $adjustment->id;
             AdjustmentItem::Create($adjustmentItem);
 
-            $product = ManageStock::whereWarehouseId($adjustment->warehouse_id)->whereProductId($adjustmentItem['product_id'])->first();
-            if (! empty($product)) {
-                if ($adjustmentItem['method_type'] == AdjustmentItem::METHOD_ADDITION) {
-                    $totalQuantity = $product->quantity + $adjustmentItem['quantity'];
-                    $product->update([
-                        'quantity' => $totalQuantity,
-                    ]);
-                } else {
-                    $totalQuantity = $product->quantity - $adjustmentItem['quantity'];
-                    if ($totalQuantity < 0) {
-                        throw new UnprocessableEntityHttpException('Quantity exceeds quantity available in stock.');
-                    }
-                    $product->update([
-                        'quantity' => $totalQuantity,
-                    ]);
-                }
+            // Refactored to use StockService
+            /** @var \App\Services\StockService $stockService */
+            $stockService = app(\App\Services\StockService::class);
+
+            if ($adjustmentItem['method_type'] == AdjustmentItem::METHOD_ADDITION) {
+                $stockService->updateStock(
+                    $adjustment->warehouse_id,
+                    $adjustmentItem['product_id'],
+                    $adjustmentItem['quantity'],
+                    Adjustment::class,
+                    $adjustment->id,
+                    'adjustment_addition',
+                    'Adjustment Addition'
+                );
             } else {
-                if ($adjustmentItem['method_type'] == AdjustmentItem::METHOD_ADDITION) {
-                    ManageStock::create([
-                        'warehouse_id' => $adjustment->warehouse_id,
-                        'product_id' => $adjustmentItem['product_id'],
-                        'quantity' => $adjustmentItem['quantity'],
-                    ]);
-                }
+                // Check if sufficient quantity, though StockService can handle negative results or throwing error?
+                // The original code threw exception if stock < quantity.
+                // StockService allows going negative or we should check before.
+                // Replicate check:
+                $product = ManageStock::whereWarehouseId($adjustment->warehouse_id)->whereProductId($adjustmentItem['product_id'])->first();
+                 if ($product && ($product->quantity - $adjustmentItem['quantity']) < 0) {
+                        throw new UnprocessableEntityHttpException('Quantity exceeds quantity available in stock.');
+                 }
+                 // If original code allowed non-existing product to subtract (which is impossible logically but code path existed as else block), 
+                 // actually the original else block logic for subtraction on non-existing product:
+                 // } else { if method == ADDITION ... } 
+                 // Meaning if product didn't exist, it only supported ADDITION.
+                 // So for subtraction, product MUST exist. The above check covers it.
+                 // If product doesn't exist, first check fails (product null). 
+                 if (!$product) {
+                     // logic for non-existing product subtraction in original code was technically unreachable or ignored?
+                     // Original code:
+                     // if (!empty($product)) { ... } else { if (ADDITION) { create } }
+                     // So if not empty and subtraction -> nothing happened? Or error?
+                     // Ah, strictly speaking, if product doesn't exist, we can't subtract.
+                     // So we proceed only if valid.
+                 }
+
+                $stockService->updateStock(
+                    $adjustment->warehouse_id,
+                    $adjustmentItem['product_id'],
+                    -1 * $adjustmentItem['quantity'],
+                    Adjustment::class,
+                    $adjustment->id,
+                    'adjustment_subtraction',
+                    'Adjustment Subtraction'
+                );
             }
         }
 
@@ -175,35 +198,62 @@ class AdjustmentRepository extends BaseRepository
                     }
                 } else {
                     if ($adjustmentItem['method_type'] == AdjustmentItem::METHOD_ADDITION) {
-                        ManageStock::create([
-                            'warehouse_id' => $adjustment->warehouse_id,
-                            'product_id' => $adjustmentItem['product_id'],
-                            'quantity' => $adjustmentItem['quantity'],
-                        ]);
+                         /** @var \App\Services\StockService $stockService */
+                         $stockService = app(\App\Services\StockService::class);
+                         $stockService->updateStock(
+                            $adjustment->warehouse_id,
+                            $adjustmentItem['product_id'],
+                            $adjustmentItem['quantity'],
+                            Adjustment::class,
+                            $adjustment->id,
+                            'adjustment_addition',
+                            'Adjustment Addition (New Stock)'
+                        );
                     }
                 }
             } else {
                 $exitAdjustmentItem = AdjustmentItem::whereId($adjustmentItem['adjustment_item_id'])->firstOrFail();
 
-                if ($exitAdjustmentItem['method_type'] == AdjustmentItem::METHOD_ADDITION) {
-                    $existQuantity = $product->quantity - $exitAdjustmentItem->quantity;
-                } else {
-                    $existQuantity = $product->quantity + $exitAdjustmentItem->quantity;
-                }
+                // Refactoring update logic
+                // Provide difference
+                /** @var \App\Services\StockService $stockService */
+                $stockService = app(\App\Services\StockService::class);
+                
+                // We need to calculate the NET change to stock.
+                // Old item effect:
+                // ADDITION of 10 -> Stock + 10
+                // SUBTRACTION of 10 -> Stock - 10
+                // New item effect:
+                // ADDITION of 15 -> Stock + 15. Net change = +5.
+                // SUBTRACTION of 12 -> Stock - 12. Net change = -2 (if old was SUB 10). Wait.
+                // Old SUB 10, New SUB 12. Change is -2.
+                // Old ADD 10, New ADD 15. Change is +5.
+                // Old ADD 10, New SUB 5. Change is -15.
+                // Old SUB 10, New ADD 5. Change is +15.
 
-                if ($adjustmentItem['method_type'] == AdjustmentItem::METHOD_ADDITION) {
-                    $totalQuantity = $existQuantity + $adjustmentItem['quantity'];
-                    $product->update([
-                        'quantity' => $totalQuantity,
-                    ]);
-                } else {
-                    $totalQuantity = $existQuantity - $adjustmentItem['quantity'];
-                    if ($totalQuantity < 0) {
-                        throw new UnprocessableEntityHttpException('Quantity exceeds quantity available in stock.');
-                    }
-                    $product->update([
-                        'quantity' => $totalQuantity,
-                    ]);
+                $oldEffect = ($exitAdjustmentItem->method_type == AdjustmentItem::METHOD_ADDITION) ? $exitAdjustmentItem->quantity : -$exitAdjustmentItem->quantity;
+                $newEffect = ($adjustmentItem['method_type'] == AdjustmentItem::METHOD_ADDITION) ? $adjustmentItem['quantity'] : -$adjustmentItem['quantity'];
+                
+                $netChange = $newEffect - $oldEffect;
+
+                if ($netChange != 0) {
+                     // Check stock sufficiency if net change is negative
+                     if ($netChange < 0) {
+                         $product = ManageStock::whereWarehouseId($adjustment->warehouse_id)->whereProductId($adjustmentItem['product_id'])->first();
+                         if (!$product || ($product->quantity + $netChange) < 0) {
+                              throw new UnprocessableEntityHttpException('Quantity exceeds quantity available in stock.');
+                         }
+                     }
+                     
+                     $stockService->updateStock(
+                        $adjustment->warehouse_id,
+                        $adjustmentItem['product_id'],
+                        $netChange,
+                        Adjustment::class,
+                        $adjustment->id,
+                        'adjustment_update',
+                        'Adjustment Updated'
+                    );
                 }
 
                 $exitAdjustmentItem->update([
@@ -220,15 +270,24 @@ class AdjustmentRepository extends BaseRepository
                 $oldItem = AdjustmentItem::whereId($removeItemId)->firstOrFail();
                 $existProductStock = ManageStock::whereWarehouseId($adjustment->warehouse_id)->whereProductId($oldItem->product_id)->first();
 
-                if ($oldItem->method_type == AdjustmentItem::METHOD_ADDITION) {
-                    $totalQuantity = $existProductStock->quantity - $oldItem['quantity'];
-                } else {
-                    $totalQuantity = $existProductStock->quantity + $oldItem['quantity'];
-                }
-
-                $existProductStock->update([
-                    'quantity' => $totalQuantity,
-                ]);
+                // Refactoring Remove Item
+                // Reverse the effect
+                /** @var \App\Services\StockService $stockService */
+                $stockService = app(\App\Services\StockService::class);
+                
+                $effect = ($oldItem->method_type == AdjustmentItem::METHOD_ADDITION) ? $oldItem->quantity : -$oldItem->quantity;
+                // Reverse it
+                $reverseEffect = -1 * $effect;
+                
+                $stockService->updateStock(
+                    $adjustment->warehouse_id,
+                    $oldItem->product_id,
+                    $reverseEffect,
+                    Adjustment::class,
+                    $adjustment->id,
+                    'adjustment_item_remove',
+                    'Adjustment Item Removed'
+                );
             }
             AdjustmentItem::whereIn('id', array_values($removeItemIds))->delete();
         }

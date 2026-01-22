@@ -95,33 +95,11 @@ if (!function_exists('manageStock')) {
      */
     function manageStock($warehouseID, $productID, $qty = 0)
     {
-        $product = ManageStock::with('product')->whereWarehouseId($warehouseID)
-            ->whereProductId($productID)
-            ->first();
-
-
-        if ($product) {
-            $totalQuantity = $product->quantity + $qty;
-
-            if (($product->quantity + $qty) < 0) {
-                $totalQuantity = 0;
-            }
-            $product->update([
-                'quantity' => $totalQuantity,
-            ]);
-
-            StockHelper::manageStockForCodeAndWarehouse($product->product->code, $warehouseID);
-        } else {
-            if ($qty < 0) {
-                $qty = 0;
-            }
-
-            ManageStock::create([
-                'warehouse_id' => $warehouseID,
-                'product_id' => $productID,
-                'quantity' => $qty,
-            ]);
-        }
+        // Use the service to update stock
+        // Since we don't have context here, we pass nulls. 
+        // Ideally, we replace calls to this helper with direct service calls.
+        $stockService = app(\App\Services\StockService::class);
+        $stockService->updateStock($warehouseID, $productID, $qty, null, null, 'general_update', 'Updated via generic manageStock helper');
     }
 }
 

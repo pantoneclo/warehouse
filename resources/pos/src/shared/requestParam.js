@@ -1,8 +1,8 @@
-import {Filters} from '../constants';
+import { Filters } from '../constants';
 
 export default (filters = Filters.OBJ, admin, stockReport, isProductQuantity) => {
     let url = '?';
-    if (filters.order_By !== '') {
+    if (filters.order_By && filters.order_By !== '') {
         if (url !== '?') {
             url += '&'
         }
@@ -13,14 +13,14 @@ export default (filters = Filters.OBJ, admin, stockReport, isProductQuantity) =>
         }
     }
     if (filters.order_By === '') {
-        if(isProductQuantity){
+        if (isProductQuantity) {
         } else {
             if (url !== '?') {
                 url += '&'
             }
-                url = url + 'sort='  + '-' +  filters.created_at;
+            url = url + 'sort=' + '-' + filters.created_at;
         }
-        
+
     }
     if (filters.pageSize > 0) {
         if (url !== '?') {
@@ -34,13 +34,13 @@ export default (filters = Filters.OBJ, admin, stockReport, isProductQuantity) =>
         }
         url = url + 'page[number]=' + filters.page;
     }
-    if (filters.search !== '') {
+    if (filters.search && filters.search !== '') {
         if (url !== '?') {
             url += '&'
         }
         url += 'filter[search]=' + filters.search;
     }
-    if(stockReport) {
+    if (stockReport) {
         if (filters.search !== '') {
             if (url !== '?') {
                 url += '&'
@@ -56,13 +56,25 @@ export default (filters = Filters.OBJ, admin, stockReport, isProductQuantity) =>
         url = url + 'start_date=' + filters.start_date + '&end_date=' + filters.end_date;
     }
 
-    if (filters.status || filters.payment_status || filters.payment_type) {
+    if (filters.status && filters.status !== null) {
         if (url !== '?') {
             url += '&'
         }
-        url = url + 'status=' + filters.status + '&payment_status=' + filters.payment_status + '&payment_type=' + filters.payment_type;
+        url = url + 'status=' + filters.status;
     }
-    
+    if (filters.payment_status && filters.payment_status !== null) {
+        if (url !== '?') {
+            url += '&'
+        }
+        url = url + 'payment_status=' + filters.payment_status;
+    }
+    if (filters.payment_type && filters.payment_type !== null) {
+        if (url !== '?') {
+            url += '&'
+        }
+        url = url + 'payment_type=' + filters.payment_type;
+    }
+
     if (filters.product_unit) {
         if (url !== '?') {
             url += '&'
@@ -75,7 +87,7 @@ export default (filters = Filters.OBJ, admin, stockReport, isProductQuantity) =>
         }
         url = url + 'base_unit=' + filters.base_unit;
     }
-    if (filters.warehouse_id) {
+    if (filters.warehouse_id && filters.warehouse_id !== null) {
         if (url !== '?') {
             url += '&'
         }

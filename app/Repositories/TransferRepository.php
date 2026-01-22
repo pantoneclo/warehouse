@@ -104,9 +104,30 @@ class TransferRepository extends BaseRepository
                 if ($transferItem['quantity'] > $product->quantity) {
                     throw new UnprocessableEntityHttpException('Quantity should not be greater than available quantity.');
                 } else {
-                    manageStock($input['to_warehouse_id'], $transferItem['product_id'], $transferItem['quantity']);
-                    $exceptQuantity = $product->quantity - $transferItem['quantity'];
-                    $product->update(['quantity' => $exceptQuantity]);
+                    /** @var \App\Services\StockService $stockService */
+                    $stockService = app(\App\Services\StockService::class);
+                    
+                    // Add to destination
+                    $stockService->updateStock(
+                        $input['to_warehouse_id'],
+                        $transferItem['product_id'],
+                        $transferItem['quantity'],
+                        Transfer::class,
+                        $transfer->id,
+                        'transfer_in',
+                        'Transfer In'
+                    );
+
+                    // Subtract from source
+                    $stockService->updateStock(
+                        $input['from_warehouse_id'],
+                        $transferItem['product_id'],
+                        -1 * $transferItem['quantity'],
+                        Transfer::class,
+                        $transfer->id,
+                        'transfer_out',
+                        'Transfer Out'
+                    );
                 }
             } else {
                 throw new UnprocessableEntityHttpException('Product stock is not available in selected warehouse.');
@@ -228,10 +249,30 @@ class TransferRepository extends BaseRepository
                         if ($transferItem['quantity'] > $product->quantity) {
                             throw new UnprocessableEntityHttpException('Quantity should not be greater than available quantity.');
                         } else {
-                            manageStock($transfer->to_warehouse_id, $transferItem['product_id'],
-                                $transferItem['quantity']);
-                            $exceptQuantity = $product->quantity - $transferItem['quantity'];
-                            $product->update(['quantity' => $exceptQuantity]);
+                             /** @var \App\Services\StockService $stockService */
+                             $stockService = app(\App\Services\StockService::class);
+                             
+                             // Add to destination
+                             $stockService->updateStock(
+                                 $transfer->to_warehouse_id,
+                                 $transferItem['product_id'],
+                                 $transferItem['quantity'],
+                                 Transfer::class,
+                                 $transfer->id,
+                                 'transfer_in_update',
+                                 'Transfer In (Updated)'
+                             );
+
+                             // Subtract from source
+                             $stockService->updateStock(
+                                 $transfer->from_warehouse_id, 
+                                 $transferItem['product_id'],
+                                 -1 * $transferItem['quantity'],
+                                 Transfer::class,
+                                 $transfer->id,
+                                 'transfer_out_update',
+                                 'Transfer Out (Updated)'
+                             );
                         }
                     } else {
                         throw new UnprocessableEntityHttpException('Product stock is not available in selected warehouse.');
@@ -249,21 +290,34 @@ class TransferRepository extends BaseRepository
                 foreach ($removeItemIds as $removeItemId) {
                     $oldTransferItem = TransferItem::whereId($removeItemId)->first();
                     $oldTransfer = Transfer::whereId($oldTransferItem->transfer_id)->first();
-                    $fromManageStock = ManageStock::whereWarehouseId($oldTransfer->from_warehouse_id)->whereProductId($oldTransferItem->product_id)->first();
-                    $toManageStock = ManageStock::whereWarehouseId($oldTransfer->to_warehouse_id)->whereProductId($oldTransferItem->product_id)->first();
+                    /** @var \App\Services\StockService $stockService */
+                    $stockService = app(\App\Services\StockService::class);
+                    
+                    // Removing transfer item:
+                    // Source: Add back quantity (Reverse logic of creation)
+                    // Destination: Subtract quantity (Reverse logic of creation)
+                    
+                    // Destination Revert
+                    $stockService->updateStock(
+                        $oldTransfer->to_warehouse_id,
+                        $oldTransferItem->product_id,
+                        -1 * $oldTransferItem->quantity,
+                        Transfer::class,
+                        $oldTransfer->id,
+                        'transfer_in_remove',
+                        'Transfer In Removed'
+                    );
 
-                    $toquantity = 0;
-
-                    if ($toManageStock) {
-                        $toquantity = $toquantity - $oldTransferItem->quantity;
-                        manageStock($toManageStock->warehouse_id, $oldTransferItem->product_id, $toquantity);
-                    }
-
-                    $fromQuantity = 0;
-
-                    $fromQuantity = $fromQuantity + $oldTransferItem->quantity;
-
-                    manageStock($oldTransfer->from_warehouse_id, $oldTransferItem->product_id, $fromQuantity);
+                    // Source Revert
+                    $stockService->updateStock(
+                        $oldTransfer->from_warehouse_id,
+                        $oldTransferItem->product_id,
+                        $oldTransferItem->quantity,
+                        Transfer::class,
+                        $oldTransfer->id,
+                        'transfer_out_remove',
+                        'Transfer Out Removed'
+                    );
                 }
 
                 TransferItem::whereIn('id', array_values($removeItemIds))->delete();
@@ -307,32 +361,62 @@ class TransferRepository extends BaseRepository
                 $fromQuantity = $fromQuantity - $fromQuantityDiff;
             }
 
+            /** @var \App\Services\StockService $stockService */
+            $stockService = app(\App\Services\StockService::class);
+
             if ($fromQuantityDiff != 0) {
-                $product = ManageStock::whereWarehouseId($fromWarehouseId)->whereProductId($transferItem['product_id'])->first();
-
-                if ($product) {
-                    if (($fromQuantity + $product->quantity) < 0) {
-                        throw new UnprocessableEntityHttpException('Quantity should not be greater than available quantity.');
-                    } else {
-                        manageStock($fromWarehouseId, $item->product_id, $fromQuantity);
-                    }
-                } else {
-                    throw new UnprocessableEntityHttpException('Product stock is not available in selected warehouse.');
+                // If diff is positive, it means we consumed LESS from source?
+                // Logic above:
+                // if item->qty >= new->qty (Reduced transfer size):
+                // diff = old - new (positive)
+                // fromQty = fromQty + diff (Add back to source)
+                // else (Increased transfer size):
+                // diff = new - old (positive)
+                // fromQty = fromQty - diff (Subtract more from source)
+                
+                // My variable naming and logic in original code was accumulation in $fromQuantity variable but inconsistent.
+                // Let's rely on $fromQuantity calculated above.
+                // If $fromQuantity > 0, it means we are adding back to source.
+                // If $fromQuantity < 0, it means we are subtracting from source.
+                
+                // However, I need to check sufficiency if subtracting.
+                if ($fromQuantity < 0) {
+                     $product = ManageStock::whereWarehouseId($fromWarehouseId)->whereProductId($transferItem['product_id'])->first();
+                     if (!$product || ($product->quantity + $fromQuantity) < 0) { // $fromQuantity is neg
+                          throw new UnprocessableEntityHttpException('Quantity should not be greater than available quantity.');
+                     }
                 }
+                
+                $stockService->updateStock(
+                    $fromWarehouseId,
+                    $item->product_id,
+                    $fromQuantity, // calculated diff
+                    Transfer::class,
+                    $transfer->id,
+                    'transfer_out_update',
+                    'Transfer Out Updated'
+                );
             }
 
-            $toQuantity = 0;
-
-            if ($item->quantity >= $transferItem['quantity']) {
-                $toQuantityDiff = $item->quantity - $transferItem['quantity'];
-                $toQuantity = $toQuantity - $toQuantityDiff;
-            } else {
-                $toQuantityDiff = $transferItem['quantity'] - $item->quantity;
-                $toQuantity = $toQuantity + $toQuantityDiff;
-            }
-
+            // Target Warehouse Logic
+            // $toQuantity calculated above.
+            // if item->qty >= new->qty (Reduced transfer size):
+            // diff = old - new
+            // toQty = toQty - diff (Remove from target)
+            // else (Increased transfer size):
+            // diff = new - old
+            // toQty = toQty + diff (Add to target)
+            
             if ($toQuantityDiff != 0) {
-                manageStock($toWarehouseId, $item->product_id, $toQuantity);
+                 $stockService->updateStock(
+                    $toWarehouseId,
+                    $item->product_id,
+                    $toQuantity,
+                    Transfer::class,
+                    $transfer->id,
+                    'transfer_in_update',
+                    'Transfer In Updated'
+                );
             }
 
             unset($transferItem['transfer_item_id']);

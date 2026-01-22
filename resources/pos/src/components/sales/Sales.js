@@ -16,9 +16,12 @@ import CreatePaymentModal from "./CreatePaymentModal";
 import { fetchSalePayments } from "../../store/action/salePaymentAction";
 import { callSaleApi } from "../../store/action/saleApiAction";
 import TopProgressBar from "../../shared/components/loaders/TopProgressBar";
+import { fetchAllWarehouses } from '../../store/action/warehouseAction';
+import ReactSelect from '../../shared/select/reactSelect';
+import { Permissions, countryOptions, getCurrencySymbol, saleStatusOptions, paymentStatusOptions } from '../../constants';
+import { fetchCurrencies } from '../../store/action/currencyAction';
+import DateRangePicker from '../../shared/datepicker/DateRangePicker';
 import usePermission from '../../shared/utils/usePermission';
-import { Permissions, countryOptions, getCurrencySymbol } from '../../constants';
-import {fetchCurrencies} from '../../store/action/currencyAction';
 const Sales = (props) => {
     const {
         sales,
@@ -32,8 +35,16 @@ const Sales = (props) => {
         fetchCurrencies,
         frontSetting,
         isCallSaleApi,
-        allConfigData
+        allConfigData,
+        warehouses,
+        fetchAllWarehouses
     } = props;
+    const [warehouseValue, setWarehouseValue] = useState({ label: 'All', value: null });
+    const [statusValue, setStatusValue] = useState({ label: 'All Status', value: null });
+    const [paymentStatusValue, setPaymentStatusValue] = useState({ label: 'All', value: null });
+    const [countryValue, setCountryValue] = useState({ label: 'All Country', value: null });
+    const [selectDate, setSelectDate] = useState();
+    const [filterOptions, setFilterOptions] = useState({ statuses: [], countries: [], warehouses: [], paymentStatuses: [] });
     const [deleteModel, setDeleteModel] = useState(false);
     const [isShowPaymentModel, setIsShowPaymentModel] = useState(false);
     const [isCreatePaymentOpen, setIsCreatePaymentOpen] = useState(false);
@@ -44,12 +55,102 @@ const Sales = (props) => {
     useEffect(() => {
         fetchFrontSetting();
         fetchCurrencies();
+        fetchAllWarehouses();
+        // Initialize filters from constants
+        const statusData = saleStatusOptions.map(s => ({ label: getFormattedMessage(s.name), value: s.id }));
+        const countryData = countryOptions.map(c => ({ label: c.name, value: c.code }));
+        const paymentStatusData = paymentStatusOptions.filter(p => p.id !== 0).map(p => ({ label: getFormattedMessage(p.name), value: p.id }));
+
+        statusData.unshift({ label: 'All Status', value: null });
+        countryData.unshift({ label: 'All Country', value: null });
+        paymentStatusData.unshift({ label: 'All', value: null });
+
+        setFilterOptions(prev => ({ ...prev, statuses: statusData, countries: countryData, paymentStatuses: paymentStatusData }));
     }, []);
+
+    useEffect(() => {
+        if (warehouses && warehouses.length) {
+            const warehouseData = warehouses.map(w => ({
+                value: w.id,
+                label: w.attributes ? w.attributes.name : w.name
+            }));
+            warehouseData.unshift({ value: null, label: 'All' });
+            setFilterOptions(prev => ({ ...prev, warehouses: warehouseData }));
+        }
+    }, [warehouses]);
+
+    const onWarehouseChange = (obj) => {
+        setWarehouseValue(obj);
+        fetchSales({
+            warehouse_id: obj.value,
+            status: statusValue.value,
+            payment_status: paymentStatusValue.value,
+            country: countryValue.value,
+            start_date: selectDate ? selectDate.start_date : null,
+            end_date: selectDate ? selectDate.end_date : null
+        }, true);
+    };
+
+    const onStatusChange = (obj) => {
+        setStatusValue(obj);
+        fetchSales({
+            warehouse_id: warehouseValue.value,
+            status: obj.value,
+            payment_status: paymentStatusValue.value,
+            country: countryValue.value,
+            start_date: selectDate ? selectDate.start_date : null,
+            end_date: selectDate ? selectDate.end_date : null
+        }, true);
+    };
+
+    const onPaymentStatusChange = (obj) => {
+        setPaymentStatusValue(obj);
+        fetchSales({
+            warehouse_id: warehouseValue.value,
+            status: statusValue.value,
+            payment_status: obj.value,
+            country: countryValue.value,
+            start_date: selectDate ? selectDate.start_date : null,
+            end_date: selectDate ? selectDate.end_date : null
+        }, true);
+    };
+
+    const onCountryChange = (obj) => {
+        setCountryValue(obj);
+        fetchSales({
+            warehouse_id: warehouseValue.value,
+            status: statusValue.value,
+            payment_status: paymentStatusValue.value,
+            country: obj.value,
+            start_date: selectDate ? selectDate.start_date : null,
+            end_date: selectDate ? selectDate.end_date : null
+        }, true);
+    };
+
+    const onDateSelector = (date) => {
+        setSelectDate(date.params);
+        fetchSales({
+            warehouse_id: warehouseValue.value,
+            status: statusValue.value,
+            payment_status: paymentStatusValue.value,
+            country: countryValue.value,
+            start_date: date.params ? date.params.start_date : null,
+            end_date: date.params ? date.params.end_date : null
+        }, true);
+    };
 
     const currencySymbol = frontSetting && frontSetting.value && frontSetting.value.currency_symbol
 
     const onChange = (filter) => {
-        fetchSales(filter, true);
+        fetchSales({
+            ...filter,
+            warehouse_id: warehouseValue.value,
+            status: statusValue.value,
+            payment_status: paymentStatusValue.value,
+            country: countryValue.value,
+            start_date: selectDate ? selectDate.start_date : null,
+            end_date: selectDate ? selectDate.end_date : null
+        }, true);
     };
 
     //sale edit function
@@ -110,29 +211,29 @@ const Sales = (props) => {
         const currency = currencies.find(currency => currency.attributes.code === sale.attributes?.currency);
         const currencySymbolToUse = country?.currencySymbol || getCurrencySymbol(sale.attributes?.currency) || currency?.attributes?.symbol || '';
 
-        return{
-        date: getFormattedDate(sale.attributes.date, allConfigData && allConfigData),
-        // date_for_payment: sale.attributes.date,
-        time: moment(sale.attributes.created_at).format('LT'),
-        reference_code: sale.attributes.reference_code,
-        customer_name: sale.attributes.customer_name,
-        warehouse_name: sale.attributes.warehouse_name,
-        status: sale.attributes.status,
-        payment_status: sale.attributes.payment_status,
-        payment_type: sale.attributes.payment_type,
-        grand_total: sale.attributes.grand_total,
-        paid_amount: sale.attributes.paid_amount ? sale.attributes.paid_amount : 0.00.toFixed(2),
-        id: sale.id,
-        currency: currencySymbolToUse,
-        country:sale.attributes.country,
-        is_return: sale.attributes.is_return,
-        view_permission: view_permission,
-        edit_permission: edit_permission,
-        delete_permission: delete_permission,
-        create_sale_return_permission:create_sale_return_permission,
-        create_payment_permission:create_payment_permission,
-        order_no:sale.attributes.order_no,
-        market_place:sale.attributes.market_place,
+        return {
+            date: getFormattedDate(sale.attributes.date, allConfigData && allConfigData),
+            // date_for_payment: sale.attributes.date,
+            time: moment(sale.attributes.created_at).format('LT'),
+            reference_code: sale.attributes.reference_code,
+            customer_name: sale.attributes.customer_name,
+            warehouse_name: sale.attributes.warehouse_name,
+            status: sale.attributes.status,
+            payment_status: sale.attributes.payment_status,
+            payment_type: sale.attributes.payment_type,
+            grand_total: sale.attributes.grand_total,
+            paid_amount: sale.attributes.paid_amount ? sale.attributes.paid_amount : 0.00.toFixed(2),
+            id: sale.id,
+            currency: currencySymbolToUse,
+            country: sale.attributes.country,
+            is_return: sale.attributes.is_return,
+            view_permission: view_permission,
+            edit_permission: edit_permission,
+            delete_permission: delete_permission,
+            create_sale_return_permission: create_sale_return_permission,
+            create_payment_permission: create_payment_permission,
+            order_no: sale.attributes.order_no,
+            market_place: sale.attributes.market_place,
 
         }
     });
@@ -225,12 +326,12 @@ const Sales = (props) => {
                     <span className='badge bg-light-warning'>
                         {/*<span>{getFormattedMessage("payment-status.filter.unpaid.label")}</span>*/}
                         <span>{getFormattedMessage("payment-status.filter.partial.label")}</span>
-                    </span>||
+                    </span> ||
 
-                row.payment_status === 4 &&
-                <span className='badge bg-light-warning'>
+                    row.payment_status === 4 &&
+                    <span className='badge bg-light-warning'>
                         {/*<span>{getFormattedMessage("payment-status.filter.unpaid.label")}</span>*/}
-                    <span>{getFormattedMessage("payment-status.filter.refund.label")}</span>
+                        <span>{getFormattedMessage("payment-status.filter.refund.label")}</span>
                     </span>
                 )
             }
@@ -282,44 +383,44 @@ const Sales = (props) => {
                 if (row.is_return === 1) {
                     return (
                         <span className='badge bg-light-danger'>
-                          <span>{getFormattedMessage("status.filter.returned.label")}</span>
-                       </span>
+                            <span>{getFormattedMessage("status.filter.returned.label")}</span>
+                        </span>
                     );
                 }
 
                 return (
                     row.status === 2 &&
                     <span className='badge bg-primary'>
-                <span>{getFormattedMessage("status.filter.pending.label")}</span>
-            </span> ||
+                        <span>{getFormattedMessage("status.filter.pending.label")}</span>
+                    </span> ||
                     row.status === 1 &&
                     <span className='badge bg-light-primary'>
-                <span>{getFormattedMessage("status.filter.received.label")}</span>
-            </span> ||
+                        <span>{getFormattedMessage("status.filter.received.label")}</span>
+                    </span> ||
                     row.status === 3 &&
                     <span className='badge bg-light-warning'>
-                <span>{getFormattedMessage("status.filter.ordered.label")}</span>
-            </span> ||
+                        <span>{getFormattedMessage("status.filter.ordered.label")}</span>
+                    </span> ||
                     row.status === 4 &&
                     <span className='badge bg-light-info'>
-                <span>{getFormattedMessage("status.filter.ontheway.label")}</span>
-            </span> ||
+                        <span>{getFormattedMessage("status.filter.ontheway.label")}</span>
+                    </span> ||
                     row.status === 5 &&
                     <span className='badge bg-light-success'>
-                <span>{getFormattedMessage("status.filter.delivered.label")}</span>
-            </span> ||
+                        <span>{getFormattedMessage("status.filter.delivered.label")}</span>
+                    </span> ||
                     row.status === 6 &&
                     <span className='badge bg-light-danger'>
-                <span>{getFormattedMessage("status.filter.cancelled.label")}</span>
-            </span> ||
+                        <span>{getFormattedMessage("status.filter.cancelled.label")}</span>
+                    </span> ||
                     row.status === 7 &&
                     <span className='badge bg-light-danger'>
-                <span>{getFormattedMessage("status.filter.order_failed.label")}</span>
-            </span> ||
+                        <span>{getFormattedMessage("status.filter.order_failed.label")}</span>
+                    </span> ||
                     row.status === 8 &&
                     <span className='badge bg-light-warning'>
-                <span>{getFormattedMessage("status.filter.returned.label")}</span>
-            </span>
+                        <span>{getFormattedMessage("status.filter.returned.label")}</span>
+                    </span>
                 );
             }
         },
@@ -357,15 +458,15 @@ const Sales = (props) => {
                     row.payment_type === 4 &&
                     <span className='badge bg-light-primary'>
                         <span>{getFormattedMessage('payment-type.filter.other.label')}</span>
-                    </span>||
+                    </span> ||
                     row.payment_type === 5 &&
                     <span className='badge bg-light-primary'>
                         <span>{getFormattedMessage('payment-type.filter.cod.label')}</span>
-                    </span>||
+                    </span> ||
                     row.payment_type === 6 &&
                     <span className='badge bg-light-primary'>
                         <span>{getFormattedMessage('payment-type.filter.ssl.label')}</span>
-                    </span>||
+                    </span> ||
                     row.payment_type === 7 &&
                     <span className='badge bg-light-primary'>
                         <span>{getFormattedMessage('payment-type.filter.stripe.label')}</span>
@@ -398,25 +499,69 @@ const Sales = (props) => {
         <MasterLayout>
             <TopProgressBar />
             <TabTitle title={placeholderText('sales.title')} />
+            <div className='row mx-0 mb-md-5'>
+                <div className='col-12 col-md-3 mb-3'>
+                    <ReactSelect
+                        data={filterOptions.warehouses}
+                        onChange={onWarehouseChange}
+                        defaultValue={warehouseValue}
+                        title={getFormattedMessage('warehouse.title')}
+                        placeholder={placeholderText('purchase.select.warehouse.placeholder.label')}
+                    />
+                </div>
+                <div className='col-12 col-md-3 mb-3'>
+                    <ReactSelect
+                        data={filterOptions.statuses}
+                        onChange={onStatusChange}
+                        defaultValue={statusValue}
+                        title={getFormattedMessage('purchase.select.status.label')}
+                        placeholder={placeholderText('purchase.select.status.label')}
+                    />
+                </div>
+                <div className='col-12 col-md-3 mb-3'>
+                    <ReactSelect
+                        data={filterOptions.paymentStatuses}
+                        onChange={onPaymentStatusChange}
+                        defaultValue={paymentStatusValue}
+                        title={getFormattedMessage('dashboard.recentSales.paymentStatus.label')}
+                        placeholder={placeholderText('dashboard.recentSales.paymentStatus.label')}
+                    />
+                </div>
+                <div className='col-12 col-md-3 mb-3'>
+                    <ReactSelect
+                        data={filterOptions.countries}
+                        onChange={onCountryChange}
+                        defaultValue={countryValue}
+                        title={getFormattedMessage('globally.input.country.label')}
+                        placeholder={placeholderText('globally.input.country.label')}
+                    />
+                </div>
+                <div className='col-12 col-md-3 mb-3'>
+                    <div className="text-end mb-1">
+                        <label className="form-label d-block text-start">{getFormattedMessage('date-picker.filter.title')}</label>
+                        <DateRangePicker onDateSelector={onDateSelector} selectDate={selectDate} />
+                    </div>
+                </div>
+            </div>
             <div className='sale_table'>
                 <ReactDataTable
-                columns={columns}
-                items={tableArray}
-                buttonImport={false}
-                isExport={false}
-                to='#/app/sales/create'
-                ButtonValue={create_permission?getFormattedMessage('sale.create.title'):null}
-                isShowPaymentModel={isShowPaymentModel}
-                isCallSaleApi={isCallSaleApi}
-                isShowDateRangeField={false}
-                 onChange={onChange}
-                totalRows={totalRecord}
-                goToEdit={goToEdit}
-                isLoading={isLoading}
-                isShowFilterField={false}
-                isPaymentStatus={false}
-                isStatus={false}
-                isPaymentType={false} />
+                    columns={columns}
+                    items={tableArray}
+                    buttonImport={false}
+                    isExport={false}
+                    to='#/app/sales/create'
+                    ButtonValue={create_permission ? getFormattedMessage('sale.create.title') : null}
+                    isShowPaymentModel={isShowPaymentModel}
+                    isCallSaleApi={isCallSaleApi}
+                    isShowDateRangeField={false}
+                    onChange={onChange}
+                    totalRows={totalRecord}
+                    goToEdit={goToEdit}
+                    isLoading={isLoading}
+                    isShowFilterField={false}
+                    isPaymentStatus={false}
+                    isStatus={false}
+                    isPaymentType={false} />
             </div>
             <DeleteSale onClickDeleteModel={onClickDeleteModel} deleteModel={deleteModel} onDelete={isDelete} />
             <ShowPayment setIsShowPaymentModel={setIsShowPaymentModel} currencySymbol={currencySymbol}
@@ -429,8 +574,8 @@ const Sales = (props) => {
 };
 
 const mapStateToProps = (state) => {
-    const { sales,currencies, totalRecord, isLoading, frontSetting, isCallSaleApi, allConfigData } = state;
-    return { sales,currencies, totalRecord, isLoading, frontSetting, isCallSaleApi, allConfigData };
+    const { sales, currencies, totalRecord, isLoading, frontSetting, isCallSaleApi, allConfigData, warehouses } = state;
+    return { sales, currencies, totalRecord, isLoading, frontSetting, isCallSaleApi, allConfigData, warehouses };
 };
 
-export default connect(mapStateToProps, { fetchSales, salePdfAction,saleInvoiceAction, fetchCurrencies, fetchFrontSetting })(Sales);
+export default connect(mapStateToProps, { fetchSales, salePdfAction, saleInvoiceAction, fetchCurrencies, fetchFrontSetting, fetchAllWarehouses })(Sales);

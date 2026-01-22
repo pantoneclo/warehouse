@@ -267,13 +267,22 @@ class SaleRepository extends BaseRepository
             $sale['barcode_image_url'] = Storage::url('sales/barcode-' . $reference_code . '.png');
 
             foreach ($input['sale_items'] as $saleItem) {
+                // Refactored to use StockService
+                /** @var \App\Services\StockService $stockService */
+                $stockService = app(\App\Services\StockService::class);
+                
+                // Check availability first if needed, though StockService can handle or we can check here for better error message
                 $product = ManageStock::whereWarehouseId($input['warehouse_id'])->whereProductId($saleItem['product_id'])->first();
                 if ($product && $product->quantity >= $saleItem['quantity']) {
-                    $totalQuantity = $product->quantity - $saleItem['quantity'];
-                    $product->update([
-                        'quantity' => $totalQuantity,
-                    ]);
-                    StockHelper::manageStockForCodeAndWarehouse($saleItem['code'], $input['warehouse_id']);
+                     $stockService->updateStock(
+                        $input['warehouse_id'],
+                        $saleItem['product_id'],
+                        -1 * $saleItem['quantity'], // Decrease stock
+                        Sale::class,
+                        $sale->id,
+                        'sale',
+                        'Sale Created'
+                    );
                 } else {
                     throw new UnprocessableEntityHttpException('Quantity must be less than Available quantity.');
                 }
@@ -516,6 +525,7 @@ class SaleRepository extends BaseRepository
 
                 $this->updateItem($saleItemArray, $input['warehouse_id']);
                 //create new product items
+                //create new product items
                 if (is_null($saleItem['sale_item_id'])) {
                     $saleItem = $this->calculationSaleItems($saleItem);
                     $saleItemArray = Arr::only($saleItem, [
@@ -523,12 +533,22 @@ class SaleRepository extends BaseRepository
                         'discount_type', 'discount_value', 'discount_amount', 'sale_unit', 'quantity', 'sub_total',
                     ]);
                     $sale->saleItems()->create($saleItemArray);
+                    
+                    /** @var \App\Services\StockService $stockService */
+                    $stockService = app(\App\Services\StockService::class);
+                    
                     $product = ManageStock::whereWarehouseId($input['warehouse_id'])->whereProductId($saleItem['product_id'])->first();
                     if ($product) {
                         if ($product->quantity >= $saleItem['quantity']) {
-                            $product->update([
-                                'quantity' => $product->quantity - $saleItem['quantity'],
-                            ]);
+                             $stockService->updateStock(
+                                $input['warehouse_id'],
+                                $saleItem['product_id'],
+                                -1 * $saleItem['quantity'], // Decrease
+                                Sale::class,
+                                $sale->id,
+                                'sale_update_add',
+                                'Sale Item Added'
+                            );
                         } else {
                             throw new UnprocessableEntityHttpException('Quantity must be less than Available quantity.');
                         }
@@ -542,18 +562,37 @@ class SaleRepository extends BaseRepository
                     // remove quantity manage storage
                     $oldProduct = SaleItem::whereId($removeItemId)->first();
                     $productQuantity = ManageStock::whereWarehouseId($input['warehouse_id'])->whereProductId($oldProduct->product_id)->first();
+                    
                     if ($productQuantity) {
                         if ($oldProduct) {
-                            $productQuantity->update([
-                                'quantity' => $productQuantity->quantity + $oldProduct->quantity,
-                            ]);
+                             /** @var \App\Services\StockService $stockService */
+                             $stockService = app(\App\Services\StockService::class);
+                             
+                             // Add back the quantity
+                             $stockService->updateStock(
+                                $input['warehouse_id'],
+                                $oldProduct->product_id,
+                                $oldProduct->quantity, // Increase back
+                                Sale::class,
+                                $sale->id,
+                                'sale_update_remove',
+                                'Sale Item Removed'
+                            );
                         }
                     } else {
-                        ManageStock::create([
-                            'warehouse_id' => $input['warehouse_id'],
-                            'product_id' => $oldProduct->product_id,
-                            'quantity' => $oldProduct->quantity,
-                        ]);
+                        // If no stock record exists, we should create it or handled by StockService if we pass +qty? 
+                        // StockService creates if +qty.
+                         /** @var \App\Services\StockService $stockService */
+                         $stockService = app(\App\Services\StockService::class);
+                         $stockService->updateStock(
+                                $input['warehouse_id'],
+                                $oldProduct->product_id,
+                                $oldProduct->quantity,
+                                Sale::class,
+                                $sale->id,
+                                'sale_update_remove',
+                                'Sale Item Removed'
+                        );
                     }
                 }
                 SaleItem::whereIn('id', array_values($removeItemIds))->delete();
@@ -869,30 +908,33 @@ class SaleRepository extends BaseRepository
             $item = SaleItem::whereId($saleItem['sale_item_id']);
             $product = ManageStock::whereWarehouseId($warehouseId)->whereProductId($saleItem['product_id'])->first();
             $oldItem = SaleItem::whereId($saleItem['sale_item_id'])->first();
+
             if ($oldItem && $oldItem->quantity != $saleItem['quantity']) {
-                $totalQuantity = 0;
-                if ($oldItem->quantity > $saleItem['quantity']) {
-                    if ($product) {
-                        $totalQuantity = $product->quantity + ($oldItem->quantity - $saleItem['quantity']);
-                        $product->update([
-                            'quantity' => $totalQuantity,
-                        ]);
-                    } else {
-                        ManageStock::create([
-                            'warehouse_id' => $warehouseId,
-                            'product_id' => $saleItem['product_id'],
-                            'quantity' => $totalQuantity,
-                        ]);
-                    }
-                } elseif ($oldItem->quantity < $saleItem['quantity']) {
-                    $totalQuantity = $product->quantity - ($saleItem['quantity'] - $oldItem->quantity);
-                    if ($product->quantity < ($saleItem['quantity'] - $oldItem->quantity)) {
-                        throw new UnprocessableEntityHttpException('Quantity must be less than Available quantity.');
-                    }
-                    $product->update([
-                        'quantity' => $totalQuantity,
-                    ]);
-                }
+                $diff = $saleItem['quantity'] - $oldItem->quantity;
+                /** @var \App\Services\StockService $stockService */
+                $stockService = app(\App\Services\StockService::class);
+                
+                // If diff is positive (increased qty), we need to DECREASE stock.
+                // If diff is negative (decreased qty), we need to INCREASE stock.
+                // So change to stock = -1 * diff.
+                
+                $stockChange = -1 * $diff;
+                
+                 if ($stockChange < 0) { // We are decreasing stock
+                       if (($product->quantity + $stockChange) < 0) {
+                            throw new UnprocessableEntityHttpException('Quantity must be less than Available quantity.');
+                       }
+                 }
+                
+                $stockService->updateStock(
+                    $warehouseId,
+                    $saleItem['product_id'],
+                    $stockChange,
+                    Sale::class,
+                    $oldItem->sale_id,
+                    'sale_update_qty',
+                    'Sale Item Quantity Changed'
+                );
             }
             unset($saleItem['sale_item_id']);
             $item->update($saleItem);
