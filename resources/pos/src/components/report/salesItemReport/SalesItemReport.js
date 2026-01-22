@@ -149,6 +149,12 @@ const SalesItemReport = (props) => {
             sortField: 'reference_code'
         },
         {
+            name: 'PO',
+            selector: row => row.po_no,
+            sortable: false, // Sortable could be added if mapped in controller
+            sortField: 'po_no' // Need to map in controller if sortable
+        },
+        {
             name: 'SKU',
             selector: row => row.sku,
             sortable: true,
@@ -167,6 +173,20 @@ const SalesItemReport = (props) => {
                     </div>
                 </div>
             )
+        },
+        {
+            name: 'Country',
+            selector: row => row.country_code,
+            sortable: false,
+            cell: row => {
+                const country = countryOptions.find(c => c.code === row.country_code);
+                return <span>{country ? country.name : row.country_code}</span>
+            }
+        },
+        {
+            name: 'Market Place',
+            selector: row => row.market_place,
+            sortable: false,
         },
         {
             name: 'FOB (Cost)',

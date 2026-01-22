@@ -56,6 +56,10 @@ class SalesItemReportController extends AppBaseController
                 'products.name as product_name',
                 'products.product_cost as fob',
                 'products.product_price as product_price',
+                'products.product_price as product_price',
+                'product_abstracts.pan_style as po_no', // Added PO Number
+                'sales.country as country_code',         // Removed Join, selecting Raw Code
+                'sales.market_place as market_place',    // Added Market Place
                 // Explicitly show the rate used
                 DB::raw('COALESCE((SELECT conversion_rate FROM currency_histories WHERE currency_histories.currency_id = currencies.id AND currency_histories.date <= sales.date ORDER BY currency_histories.date DESC LIMIT 1), COALESCE(NULLIF(currencies.conversion_rate, 0), 1)) as effective_rate_used'),
                 // Calculations using the EXACT same logic
@@ -67,6 +71,8 @@ class SalesItemReportController extends AppBaseController
             )
             ->join('sales', 'sale_items.sale_id', '=', 'sales.id')
             ->join('products', 'sale_items.product_id', '=', 'products.id')
+            ->leftJoin('product_abstracts', 'products.product_abstract_id', '=', 'product_abstracts.id') // Join Abstract for PO
+            // ->leftJoin('countries', 'sales.country', '=', 'countries.id') // REMOVED Join
             // JOIN BY CODE AS REQUESTED
             ->leftJoin('currencies', 'sales.currency', '=', 'currencies.code')
             ->leftJoin('manage_stocks', function($join) {

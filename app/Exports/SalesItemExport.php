@@ -46,6 +46,9 @@ class SalesItemExport implements FromView
                 'products.name as product_name',
                 'products.product_cost as fob',
                 'products.product_price as product_price',
+                'product_abstracts.pan_style as po_no', // Added PO Number
+                'sales.country as country_code',         // Remapped to Raw Code
+                'sales.market_place as market_place',    // Added Market Place
                 DB::raw('COALESCE((SELECT conversion_rate FROM currency_histories WHERE currency_histories.currency_id = currencies.id AND currency_histories.date <= sales.date ORDER BY currency_histories.date DESC LIMIT 1), COALESCE(NULLIF(currencies.conversion_rate, 0), 1)) as effective_rate_used'),
                 DB::raw('sale_items.net_unit_price * COALESCE((SELECT conversion_rate FROM currency_histories WHERE currency_histories.currency_id = currencies.id AND currency_histories.date <= sales.date ORDER BY currency_histories.date DESC LIMIT 1), COALESCE(NULLIF(currencies.conversion_rate, 0), 1)) as selling_price'),
                 'sale_items.quantity as quantity',
@@ -55,6 +58,8 @@ class SalesItemExport implements FromView
             )
             ->join('sales', 'sale_items.sale_id', '=', 'sales.id')
             ->join('products', 'sale_items.product_id', '=', 'products.id')
+            ->leftJoin('product_abstracts', 'products.product_abstract_id', '=', 'product_abstracts.id') // Join Abstract for PO
+            // ->leftJoin('countries', 'sales.country', '=', 'countries.id') // Removed Join
             ->leftJoin('currencies', 'sales.currency', '=', 'currencies.code')
             ->leftJoin('manage_stocks', function($join) {
                 $join->on('sale_items.product_id', '=', 'manage_stocks.product_id')
@@ -113,6 +118,34 @@ class SalesItemExport implements FromView
         $query->orderBy($sortColumn, $order);
 
         $reports = $query->get();
+
+        // Map Country Codes to Names
+        $countryOptions = [
+            'BD' => 'Bangladesh',
+            'SI' => 'Slovenia',
+            'IT' => 'Italy',
+            'SK' => 'Slovakia',
+            'PL' => 'Poland',
+            'GR' => 'Greece',
+            'RO' => 'Romania',
+            'LT' => 'Lithuania',
+            'BG' => 'Bulgaria',
+            'AT' => 'Austria',
+            'ES' => 'Spain',
+            'PT' => 'Portugal',
+            'DE' => 'Germany',
+            'HR' => 'Croatia',
+            'CZ' => 'Czech Republic',
+            'HU' => 'Hungry',
+            'EE' => 'Estonia',
+            'LV' => 'Latvia',
+            'IN' => 'India',
+            'BE' => 'Belgium',
+        ];
+
+        foreach ($reports as $report) {
+            $report->country_name = $countryOptions[$report->country_code] ?? $report->country_code;
+        }
 
         return view('excel.sales-item-report-excel', ['reports' => $reports]);
     }

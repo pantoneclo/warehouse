@@ -11,8 +11,11 @@
     <tr style="background-color: dodgerblue;">
         <th>Date</th>
         <th>Order ID</th>
+        <th>PO Number</th>
         <th>SKU</th>
         <th>Product Name</th>
+        <th>Country</th>
+        <th>Market Place</th>
         <th>FOB (Cost)</th>
         <th>Product Price</th>
         <th>Selling Price (EUR)</th>
@@ -27,8 +30,11 @@
         <tr align="center">
             <td>{{ \Carbon\Carbon::parse($report->sale_date)->format('Y-m-d') }}</td>
             <td>{{ $report->reference_code }}</td>
+            <td>{{ $report->po_no }}</td>
             <td>{{ $report->sku }}</td>
             <td>{{ $report->product_name }}</td>
+            <td>{{ $report->country_name }}</td>
+            <td>{{ $report->market_place }}</td>
             <td>{{ number_format($report->fob, 2) }}</td>
             <td>{{ number_format($report->product_price, 2) }}</td>
             <td>{{ number_format($report->selling_price, 2) }}</td>
