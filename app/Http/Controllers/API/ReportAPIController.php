@@ -169,12 +169,27 @@ class ReportAPIController extends AppBaseController
         $endDate = $request->input('end_date');
         $status = $request->input('status');
 
-        if (Storage::exists('excel/total-sales-report-excel.xlsx')) {
-            Storage::delete('excel/total-sales-report-excel.xlsx');
-        }
-        Excel::store(new SaleReportExport($startDate, $endDate, $status), 'excel/total-sales-report-excel.xlsx');
+        // DEBUG: Log received dates — check storage/logs/laravel.log on live server
+        \Illuminate\Support\Facades\Log::info('getSalesReportExcel called', [
+            'start_date' => $startDate,
+            'end_date'   => $endDate,
+            'status'     => $status,
+        ]);
 
-        $data['total_sale_excel_url'] = Storage::url('excel/total-sales-report-excel.xlsx');
+        // Use a timestamped filename to prevent serving a cached/stale Excel file
+        $filename = 'excel/total-sales-report-' . time() . '.xlsx';
+
+        // Clean up old report files
+        $oldFiles = Storage::files('excel');
+        foreach ($oldFiles as $file) {
+            if (str_starts_with(basename($file), 'total-sales-report-')) {
+                Storage::delete($file);
+            }
+        }
+
+        Excel::store(new SaleReportExport($startDate, $endDate, $status), $filename);
+
+        $data['total_sale_excel_url'] = Storage::url($filename);
 
         return $this->sendResponse($data, 'Sale Report retrieved successfully');
     }
