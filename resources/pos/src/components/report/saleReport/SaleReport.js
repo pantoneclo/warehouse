@@ -1,18 +1,18 @@
-import React, {useEffect, useState} from 'react';
-import {connect} from 'react-redux';
+import React, { useEffect, useState } from 'react';
+import { connect } from 'react-redux';
 import moment from 'moment';
 import MasterLayout from '../../MasterLayout';
 import TabTitle from '../../../shared/tab-title/TabTitle';
 import {
     faEye, faFilePdf, faDollarSign, faTrash, faAngleDown, faCartShopping, faPenToSquare, faEllipsisVertical
 } from '@fortawesome/free-solid-svg-icons';
-import {FontAwesomeIcon} from '@fortawesome/react-fontawesome';
-import {currencySymbolHendling, getFormattedMessage, placeholderText} from '../../../shared/sharedMethod';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { currencySymbolHendling, getFormattedMessage, placeholderText } from '../../../shared/sharedMethod';
 import ReactDataTable from '../../../shared/table/ReactDataTable';
-import {fetchFrontSetting} from '../../../store/action/frontSettingAction';
-import {fetchSales} from '../../../store/action/salesAction';
-import {totalSaleReportExcel} from '../../../store/action/totalSaleReportExcel';
-import {fetchCurrencies} from '../../../store/action/currencyAction';
+import { fetchFrontSetting } from '../../../store/action/frontSettingAction';
+import { fetchSales } from '../../../store/action/salesAction';
+import { totalSaleReportExcel } from '../../../store/action/totalSaleReportExcel';
+import { fetchCurrencies } from '../../../store/action/currencyAction';
 import TopProgressBar from "../../../shared/components/loaders/TopProgressBar";
 import { Permissions } from '../../../constants';
 import EditSaleReportModal from './EditSaleReportModal';
@@ -33,6 +33,7 @@ const SaleReport = (props) => {
     const [isEditSaleReportOpen, setIsEditSaleReportOpen] = useState(false);
     const [selectedSaleReportItem, setSelectedSaleReportItem] = useState(null);
     const [isWarehouseValue, setIsWarehouseValue] = useState(false);
+    const [filterDates, setFilterDates] = useState({ start_date: null, end_date: null });
     const currencySymbol = frontSetting && frontSetting.value && frontSetting.value.currency_symbol
 
     useEffect(() => {
@@ -43,13 +44,13 @@ const SaleReport = (props) => {
         fetchSales();
     }, [fetchSales]);
 
-    useEffect(()=>{
+    useEffect(() => {
         fetchCurrencies();
     }, [fetchCurrencies])
 
     useEffect(() => {
         if (isWarehouseValue === true) {
-            totalSaleReportExcel(dates, setIsWarehouseValue);
+            totalSaleReportExcel(filterDates, setIsWarehouseValue);
         }
     }, [isWarehouseValue])
 
@@ -67,43 +68,43 @@ const SaleReport = (props) => {
 
     const itemsValue = currencySymbol && sales.length > 0 ? sales.map(sale => {
         const currency = currencies.find(currency => currency.attributes.code === sale.attributes?.currency);
-        return{
-        reference_code: sale.attributes?.reference_code,
-        customer_name: sale.attributes?.customer_name,
-        customer_id: sale.attributes?.customer_id,
-        warehouse_name: sale.attributes?.warehouse_name,
-        warehouse_id: sale.attributes?.warehouse_id,
-        status: sale.attributes?.status,
-        payment_status: sale.attributes?.payment_status,
-        tax_rate: sale.attributes?.tax_rate ? sale.attributes.tax_rate : parseFloat(0.00).toFixed(2) ,
-        tax_amount: sale.attributes?.tax_amount? sale.attributes.tax_amount : parseFloat(0.00).toFixed(2),
-        shipping: sale.attributes?.shipping,
-        discount: sale.attributes?.discount,
-        grand_total: sale.attributes?.grand_total,
-        payment_type: sale.attributes?.payment_type,
-        paid_amount: sale.attributes?.paid_amount ? sale.attributes.paid_amount : parseFloat(0.00).toFixed(2),
-        received_amount: sale.attributes?.received_amount ? sale.attributes.received_amount : parseFloat(0.00).toFixed(2),
-        marketplace_commission: sale.attributes?.marketplace_commission ? sale.attributes.marketplace_commission : parseFloat(0.00).toFixed(2),
-        order_process_fee: sale.attributes?.order_process_fee ? sale.attributes.order_process_fee : parseFloat(0.00).toFixed(2),
-        other_income: sale.attributes?.other_income ? sale.attributes.other_income : parseFloat(0.00).toFixed(2),
-        courier_fee: sale.attributes?.courier_fee ? sale.attributes.courier_fee : parseFloat(0.00).toFixed(2),
-        other_cost: sale.attributes?.other_cost ? sale.attributes.other_cost : parseFloat(0.00).toFixed(2),
-        selling_value_eur: sale.attributes?.selling_value_eur ? sale.attributes.selling_value_eur : parseFloat(0.00).toFixed(2),
+        return {
+            reference_code: sale.attributes?.reference_code,
+            customer_name: sale.attributes?.customer_name,
+            customer_id: sale.attributes?.customer_id,
+            warehouse_name: sale.attributes?.warehouse_name,
+            warehouse_id: sale.attributes?.warehouse_id,
+            status: sale.attributes?.status,
+            payment_status: sale.attributes?.payment_status,
+            tax_rate: sale.attributes?.tax_rate ? sale.attributes.tax_rate : parseFloat(0.00).toFixed(2),
+            tax_amount: sale.attributes?.tax_amount ? sale.attributes.tax_amount : parseFloat(0.00).toFixed(2),
+            shipping: sale.attributes?.shipping,
+            discount: sale.attributes?.discount,
+            grand_total: sale.attributes?.grand_total,
+            payment_type: sale.attributes?.payment_type,
+            paid_amount: sale.attributes?.paid_amount ? sale.attributes.paid_amount : parseFloat(0.00).toFixed(2),
+            received_amount: sale.attributes?.received_amount ? sale.attributes.received_amount : parseFloat(0.00).toFixed(2),
+            marketplace_commission: sale.attributes?.marketplace_commission ? sale.attributes.marketplace_commission : parseFloat(0.00).toFixed(2),
+            order_process_fee: sale.attributes?.order_process_fee ? sale.attributes.order_process_fee : parseFloat(0.00).toFixed(2),
+            other_income: sale.attributes?.other_income ? sale.attributes.other_income : parseFloat(0.00).toFixed(2),
+            courier_fee: sale.attributes?.courier_fee ? sale.attributes.courier_fee : parseFloat(0.00).toFixed(2),
+            other_cost: sale.attributes?.other_cost ? sale.attributes.other_cost : parseFloat(0.00).toFixed(2),
+            selling_value_eur: sale.attributes?.selling_value_eur ? sale.attributes.selling_value_eur : parseFloat(0.00).toFixed(2),
 
-        country: sale.attributes?.country,
-        note: sale.attributes?.note,
-        is_return: sale.attributes?.is_return,
-        barcode_symbol: sale.attributes?.barcode_symbol,
-        market_place: sale.attributes?.market_place,
-        order_no: sale.attributes?.order_no,
-        date: moment(sale.attributes.date).format('YYYY-MM-DD'),
-        time: moment(sale.attributes.created_at).format('LT'),
-        currency: currency?.attributes?.symbol || '',
-        sale_items:sale.attributes?.sale_items || '',
-        shipment:sale.attributes?.shipment,
-        id: sale.id
-     }
-    }): [];
+            country: sale.attributes?.country,
+            note: sale.attributes?.note,
+            is_return: sale.attributes?.is_return,
+            barcode_symbol: sale.attributes?.barcode_symbol,
+            market_place: sale.attributes?.market_place,
+            order_no: sale.attributes?.order_no,
+            date: moment(sale.attributes.date).format('YYYY-MM-DD'),
+            time: moment(sale.attributes.created_at).format('LT'),
+            currency: currency?.attributes?.symbol || '',
+            sale_items: sale.attributes?.sale_items || '',
+            shipment: sale.attributes?.shipment,
+            id: sale.id
+        }
+    }) : [];
 
     console.log("Currency", currencies);
     console.log("Sales Report", sales);
@@ -118,8 +119,8 @@ const SaleReport = (props) => {
             sortable: false,
             cell: row => {
                 return <span className='badge bg-light-danger'>
-                            <span>{row.reference_code}</span>
-                        </span>
+                    <span>{row.reference_code}</span>
+                </span>
             }
         },
         {
@@ -166,19 +167,19 @@ const SaleReport = (props) => {
                     row.status === 3 &&
                     <span className='badge bg-light-warning'>
                         <span>{getFormattedMessage("status.filter.ordered.label")}</span>
-                    </span>||
+                    </span> ||
                     row.status === 4 &&
                     <span className='badge bg-light-info'>
                         <span>{getFormattedMessage("status.filter.ontheway.label")}</span>
-                    </span>||
+                    </span> ||
                     row.status === 5 &&
                     <span className='badge bg-light-success'>
                         <span>{getFormattedMessage("status.filter.delivered.label")}</span>
-                    </span>||
+                    </span> ||
                     row.status === 6 &&
                     <span className='badge bg-light-danger'>
                         <span>{getFormattedMessage("status.filter.cancelled.label")}</span>
-                    </span>||
+                    </span> ||
 
                     row.status === 7 &&
                     <span className='badge bg-light-danger'>
@@ -329,13 +330,17 @@ const SaleReport = (props) => {
             button: true,
             cell: row => {
                 return (
-                    <FontAwesomeIcon icon={faPenToSquare} className="fs-1"  onClick={() => handleEditSaleReportClick(row)}/>
+                    <FontAwesomeIcon icon={faPenToSquare} className="fs-1" onClick={() => handleEditSaleReportClick(row)} />
                 )
             },
-          },
+        },
     ];
 
     const onChange = (filter) => {
+        setFilterDates({
+            start_date: filter.start_date || null,
+            end_date: filter.end_date || null,
+        });
         fetchSales(filter, true);
     };
 
@@ -346,32 +351,32 @@ const SaleReport = (props) => {
     return (
         <MasterLayout>
             <TopProgressBar />
-            <TabTitle title={placeholderText('sale.reports.title')}/>
+            <TabTitle title={placeholderText('sale.reports.title')} />
             <ReactDataTable columns={columns} items={itemsValue} onChange={onChange} isLoading={isLoading}
-                            totalRows={totalRecord} isShowDateRangeField isEXCEL isShowFilterField
-                            isStatus isPaymentStatus isCountry onExcelClick={onExcelClick}
-                            customStyles={{
-                                rows: {
-                                    style: (row) => row.isFooter ? { fontWeight: 'bold', backgroundColor: '#f8f8f8' } : {},
-                                },
-                            }}
+                totalRows={totalRecord} isShowDateRangeField isEXCEL isShowFilterField
+                isStatus isPaymentStatus isCountry onExcelClick={onExcelClick}
+                customStyles={{
+                    rows: {
+                        style: (row) => row.isFooter ? { fontWeight: 'bold', backgroundColor: '#f8f8f8' } : {},
+                    },
+                }}
 
 
-                            />
-                           {isEditSaleReportOpen && (
-                                <EditSaleReportModal
-                                    isEditSaleReportOpen={isEditSaleReportOpen}
-                                    setIsEditSaleReportOpen={handleCloseModal}
-                                    onEditSaleReportClick={handleCloseModal}
-                                    saleReportItem={selectedSaleReportItem}
-                                />
-                            )}
+            />
+            {isEditSaleReportOpen && (
+                <EditSaleReportModal
+                    isEditSaleReportOpen={isEditSaleReportOpen}
+                    setIsEditSaleReportOpen={handleCloseModal}
+                    onEditSaleReportClick={handleCloseModal}
+                    saleReportItem={selectedSaleReportItem}
+                />
+            )}
         </MasterLayout>
     )
 };
 const mapStateToProps = (state) => {
-    const {sales, currencies, frontSetting, isLoading, totalRecord, dates, allConfigData} = state;
-    return {sales, currencies, frontSetting, isLoading, totalRecord, dates, allConfigData}
+    const { sales, currencies, frontSetting, isLoading, totalRecord, dates, allConfigData } = state;
+    return { sales, currencies, frontSetting, isLoading, totalRecord, dates, allConfigData }
 };
 
-export default connect(mapStateToProps, {fetchFrontSetting, fetchSales, totalSaleReportExcel, fetchCurrencies})(SaleReport);
+export default connect(mapStateToProps, { fetchFrontSetting, fetchSales, totalSaleReportExcel, fetchCurrencies })(SaleReport);
