@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { connect } from 'react-redux';
 import moment from 'moment';
 import MasterLayout from '../../MasterLayout';
@@ -33,7 +33,7 @@ const SaleReport = (props) => {
     const [isEditSaleReportOpen, setIsEditSaleReportOpen] = useState(false);
     const [selectedSaleReportItem, setSelectedSaleReportItem] = useState(null);
     const [isWarehouseValue, setIsWarehouseValue] = useState(false);
-    const [filterDates, setFilterDates] = useState({ start_date: null, end_date: null });
+    const filterDatesRef = useRef({ start_date: null, end_date: null });
     const currencySymbol = frontSetting && frontSetting.value && frontSetting.value.currency_symbol
 
     useEffect(() => {
@@ -50,7 +50,7 @@ const SaleReport = (props) => {
 
     useEffect(() => {
         if (isWarehouseValue === true) {
-            totalSaleReportExcel(filterDates, setIsWarehouseValue);
+            totalSaleReportExcel(filterDatesRef.current, setIsWarehouseValue);
         }
     }, [isWarehouseValue])
 
@@ -337,10 +337,10 @@ const SaleReport = (props) => {
     ];
 
     const onChange = (filter) => {
-        setFilterDates({
+        filterDatesRef.current = {
             start_date: filter.start_date || null,
             end_date: filter.end_date || null,
-        });
+        };
         fetchSales(filter, true);
     };
 
