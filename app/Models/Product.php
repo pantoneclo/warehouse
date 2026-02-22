@@ -404,4 +404,20 @@ class Product extends BaseModel implements HasMedia, JsonResourceful
     {
         return $this->hasMany(ComboProduct::class);
     }
+
+    /**
+     * @return HasMany
+     */
+    public function countryPrices(): HasMany
+    {
+        return $this->hasMany(ProductCountryPrice::class, 'product_id', 'id');
+    }
+
+    /**
+     * @return HasMany
+     */
+    public function priceHistories(): HasMany
+    {
+        return $this->hasMany(ProductPriceHistory::class, 'product_id', 'id');
+    }
 }

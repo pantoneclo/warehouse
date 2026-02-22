@@ -17,52 +17,52 @@ const EditProductAbstract = (props) => {
     const { fetchProductAbstract, productAbstracts, fetchAllBaseUnits, base } = props;
     // console.log(productAbstracts, 'productAbstracts')
     const { id } = useParams();
-    const [itemsValue,setItemsValue] = useState([]);
+    const [itemsValue, setItemsValue] = useState([]);
 
 
-    const getSaleUnit = productAbstracts.length >= 1 && productAbstracts[0]?.attributes.sale_unit_name ? { label: productAbstracts[0]?.attributes.sale_unit_name.name, value: productAbstracts[0]?.attributes.sale_unit_name.id } : ''
-    const getPurchaseUnit = productAbstracts.length >= 1 && productAbstracts[0]?.attributes.sale_unit_name ? { label: productAbstracts[0]?.attributes.purchase_unit_name.name, value: productAbstracts[0]?.attributes.purchase_unit_name.id } : ''
+    const getSaleUnit = productAbstracts.length >= 1 && productAbstracts[0]?.attributes?.sale_unit_name ? { label: productAbstracts[0]?.attributes?.sale_unit_name?.name, value: productAbstracts[0]?.attributes?.sale_unit_name?.id } : ''
+    const getPurchaseUnit = productAbstracts.length >= 1 && productAbstracts[0]?.attributes?.sale_unit_name ? { label: productAbstracts[0]?.attributes?.purchase_unit_name?.name, value: productAbstracts[0]?.attributes?.purchase_unit_name?.id } : ''
 
     useEffect(() => {
 
         const itemsValue = productAbstracts?.length >= 1 && productAbstracts.map(product => ({
 
-            name: product?.attributes.name,
-            pan_style: product?.attributes.pan_style,
-            base_price: product?.attributes.base_price,
-            base_cost: product?.attributes.base_cost,
+            name: product?.attributes?.name,
+            pan_style: product?.attributes?.pan_style,
+            base_price: product?.attributes?.base_price,
+            base_cost: product?.attributes?.base_cost,
 
             category: {
-                value: product?.attributes.product_category_id,
-                label: product?.attributes.product_category_name
+                value: product?.attributes?.product_category_id,
+                label: product?.attributes?.product_category_name
             },
             brand: {
-                value: product?.attributes.brand_id,
-                label: product?.attributes.brand_name
+                value: product?.attributes?.brand_id,
+                label: product?.attributes?.brand_name
             },
-            attributes: Object.entries(product?.attributes.attributes).map(([key, value]) => ({ label: ucwords(key), value: key })),
+            attributes: product?.attributes?.attributes ? Object.entries(product.attributes.attributes).map(([key, value]) => ({ label: ucwords(key), value: key })) : [],
             //reduce attribute_list such we can directly use it
-            attribute_list: Object.entries(product?.attributes.attributes)
+            attribute_list: product?.attributes?.attributes ? Object.entries(product.attributes.attributes)
                 .reduce((result, [key, value]) => {
                     result[key] = value.map((item) => ({ label: item, value: item }));
                     return result;
-                }, {}),
-            product_unit: Number(product?.attributes.product_unit),
+                }, {}) : {},
+            product_unit: Number(product?.attributes?.product_unit),
             sale_unit: getSaleUnit,
             purchase_unit: getPurchaseUnit,
-            order_tax: product?.attributes.order_tax,
+            order_tax: product?.attributes?.order_tax,
             tax_type: taxMethodOptions
-                .filter(item => item.id.toString() === product?.attributes.tax_type)
+                .filter(item => item.id.toString() === product?.attributes?.tax_type)
                 .map(item => ({
                     value: item.id,
                     label: getFormattedMessage(item.name),
                 }))[0],
-            notes: product?.attributes.notes,
-            images: product?.attributes.images,
+            notes: product?.attributes?.notes,
+            images: product?.attributes?.images,
 
             is_Edit: true,
             id: product.id,
-            products: product?.attributes.products,
+            products: product?.attributes?.products,
         }));
 
         if (itemsValue.length == 1 && itemsValue[0].id == id) {
