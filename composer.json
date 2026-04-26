@@ -11,7 +11,7 @@
     "require": {
         "php": "^8.0",
         "ext-gd": "*",
-        "barryvdh/laravel-dompdf": "^1.0",
+        "barryvdh/laravel-dompdf": "^2.1.1",
         "brotzka/laravel-dotenv-editor": "^2.1",
         "doctrine/dbal": "^2.13",
         "guzzlehttp/guzzle": "^7.2",

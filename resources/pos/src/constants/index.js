@@ -979,6 +979,7 @@ export const eccomercePlatform = [
     { id: 7, name: 'eccomerce.label.7' },
     { id: 8, name: 'eccomerce.label.8' },
     { id: 9, name: 'eccomerce.label.9' },
+    { id: 10, name: 'eccomerce.label.10' },
 ];
 
 

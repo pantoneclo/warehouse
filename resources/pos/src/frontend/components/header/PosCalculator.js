@@ -1,29 +1,4 @@
 import React from 'react'
-import Calculator from "awesome-react-calculator";
-
-// const PosCalculator = () => {
-//     const handleInput = (input) => {
-//         console.log(`${input.expression} is shown in the calculator, User clicked the ${input.key}`)
-//       }
-//
-//     const onResultChange = (newResult) => {
-//         console.log(newResult)
-//         console.log(`${newResult.expression} is validated as ${newResult.result} `)
-//       }
-//
-//
-//   return (
-//      <div>
-//         <div className='calculator-demo pos-calculator-popup '>
-//       <Calculator
-//         onNewInput={handleInput}
-//         onResultChange={onResultChange}/>
-//     </div>
-//     </div>
-//   )
-// }
-//
-// export default PosCalculator
 
 
 
