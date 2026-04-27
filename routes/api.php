@@ -39,6 +39,7 @@ use App\Http\Controllers\MailTemplateAPIController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\API\AdvancedSearchAPIController;
 use App\Http\Controllers\API\InventoryAPIController;
+use App\Http\Controllers\API\MatrixLeadAPIController;
 
 //Daraz
 use App\Http\Controllers\API\DarazAPIController;
@@ -428,3 +429,5 @@ Route::get('/stock-managed-warehouse-combo', [StockManagementAPIController::clas
 
 Route::get('/connection-pantoneclo-database', [StockManagementAPIController::class, 'connectionPantonecloDatabase']);
 Route::get('/webhook-update-sell-status', [StockManagementAPIController::class, 'webHookUpdateSellStatus']);
+
+Route::post('/matrix-lead', [MatrixLeadAPIController::class, 'store']);

@@ -962,6 +962,8 @@ export const shippingCompanyNames = [
     { id: 8, label: 'FEDEX' },
     { id: 9, label: 'OVERSEAS' },
     { id: 10, label: 'WAREHOUSE' },
+    { id: 11, label: 'DHL' },
+
 ]
 
 export const getLabelById = (id) => {
