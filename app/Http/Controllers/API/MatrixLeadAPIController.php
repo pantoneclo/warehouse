@@ -50,7 +50,7 @@ class MatrixLeadAPIController extends AppBaseController
         $matrixLead = MatrixLead::create($input);
 
         // Send Email
-        Mail::to('shohel@matrixapparels.com')->send(new MatrixLeadMail($matrixLead));
+        // Mail::to('shohel@matrixapparels.com')->send(new MatrixLeadMail($matrixLead));
 
         return $this->sendResponse($matrixLead, 'Matrix Lead saved and email sent successfully.');
     }
