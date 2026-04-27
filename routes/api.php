@@ -431,3 +431,4 @@ Route::get('/connection-pantoneclo-database', [StockManagementAPIController::cla
 Route::get('/webhook-update-sell-status', [StockManagementAPIController::class, 'webHookUpdateSellStatus']);
 
 Route::post('/matrix-lead', [MatrixLeadAPIController::class, 'store']);
+Route::get('/matrix-leads', [MatrixLeadAPIController::class, 'index']);

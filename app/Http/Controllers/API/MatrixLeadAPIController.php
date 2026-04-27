@@ -12,6 +12,18 @@ use Illuminate\Support\Facades\Validator;
 class MatrixLeadAPIController extends AppBaseController
 {
     /**
+     * Display a listing of the leads.
+     *
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function index()
+    {
+        $leads = MatrixLead::orderBy('created_at', 'desc')->get();
+
+        return $this->sendResponse($leads, 'Leads retrieved successfully.');
+    }
+
+    /**
      * Store a newly created lead in storage.
      *
      * @param  Request  $request
