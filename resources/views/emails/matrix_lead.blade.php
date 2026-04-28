@@ -1,8 +1,10 @@
 <!DOCTYPE html>
 <html>
+
 <head>
     <title>New Matrix Lead</title>
 </head>
+
 <body>
     <h2>New Lead Information</h2>
     <p><strong>Name:</strong> {{ $lead->name }}</p>
@@ -13,4 +15,5 @@
     <p><strong>File Name:</strong> {{ $lead->file_name }}</p>
     <p><strong>Status:</strong> {{ $lead->status }}</p>
 </body>
+
 </html>
