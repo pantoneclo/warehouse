@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useState} from 'react';
 import {connect} from 'react-redux';
 import MasterLayout from '../MasterLayout';
 import ReactDataTable from '../../shared/table/ReactDataTable';
@@ -6,10 +6,20 @@ import {fetchMatrixLeads, updateMatrixLeadStatus} from '../../store/action/matri
 import TabTitle from '../../shared/tab-title/TabTitle';
 import {getFormattedMessage, placeholderText} from '../../shared/sharedMethod';
 import TopProgressBar from "../../shared/components/loaders/TopProgressBar";
-import {Dropdown} from 'react-bootstrap';
+import {Dropdown, Modal, Button} from 'react-bootstrap';
+import {FontAwesomeIcon} from '@fortawesome/react-fontawesome';
+import {faEye, faDownload} from '@fortawesome/free-solid-svg-icons';
 
 const MatrixLeads = (props) => {
     const {matrixLeads, fetchMatrixLeads, updateMatrixLeadStatus, totalRecord, isLoading} = props;
+    const [showModal, setShowModal] = useState(false);
+    const [selectedLead, setSelectedLead] = useState(null);
+
+    const handleClose = () => setShowModal(false);
+    const handleShow = (lead) => {
+        setSelectedLead(lead);
+        setShowModal(true);
+    };
 
     const onChange = (filter) => {
         fetchMatrixLeads(filter, true);
@@ -66,15 +76,33 @@ const MatrixLeads = (props) => {
             sortField: 'note',
             sortable: false,
             minWidth: '200px',
-            wrap: true
+            wrap: true,
+            cell: row => (
+                <div className="cursor-pointer" onClick={() => handleShow(row)}>
+                    {row.note.length > 50 ? row.note.substring(0, 50) + '...' : row.note}
+                    {row.note.length > 50 && <span className="text-primary ms-1">View</span>}
+                </div>
+            )
         },
         {
-            name: getFormattedMessage('matrix-leads.table.file.column.title'),
-            selector: row => row.file_name,
-            sortField: 'file_name',
-            sortable: false,
-            minWidth: '100px',
-            cell: row => row.file_name ? <a href={`/uploads/matrix_leads/${row.file_name}`} target="_blank" rel="noreferrer">{row.file_name}</a> : 'No File'
+            name: getFormattedMessage('react-data-table.action.column.label'),
+            right: true,
+            ignoreRowClick: true,
+            allowOverflow: true,
+            button: true,
+            minWidth: '120px',
+            cell: row => (
+                <div className="d-flex align-items-center">
+                    <Button variant="link" className="p-0 me-3" title="View Details" onClick={() => handleShow(row)}>
+                        <FontAwesomeIcon icon={faEye} className="text-primary fs-3" />
+                    </Button>
+                    {row.file_name && (
+                        <a href={`/uploads/matrix_leads/${row.file_name}`} target="_blank" rel="noreferrer" title="Download File">
+                            <FontAwesomeIcon icon={faDownload} className="text-success fs-3" />
+                        </a>
+                    )}
+                </div>
+            )
         },
         {
             name: getFormattedMessage('matrix-leads.table.status.column.title'),
@@ -111,6 +139,35 @@ const MatrixLeads = (props) => {
                                     totalRows={totalRecord} isLoading={isLoading}/>
                 </div>
             </div>
+
+            <Modal show={showModal} onHide={handleClose} size="lg">
+                <Modal.Header closeButton>
+                    <Modal.Title>Lead Details</Modal.Title>
+                </Modal.Header>
+                <Modal.Body>
+                    {selectedLead && (
+                        <div className="p-3">
+                            <p><strong>Name:</strong> {selectedLead.name}</p>
+                            <p><strong>Company:</strong> {selectedLead.company_name}</p>
+                            <p><strong>Email:</strong> {selectedLead.email}</p>
+                            <p><strong>Profile:</strong> {selectedLead.profile_name}</p>
+                            {selectedLead.file_name && (
+                                <p><strong>Attached File:</strong> <a href={`/uploads/matrix_leads/${selectedLead.file_name}`} target="_blank" rel="noreferrer" className="text-decoration-none">{selectedLead.file_name}</a></p>
+                            )}
+                            <hr />
+                            <p><strong>Note:</strong></p>
+                            <div className="bg-light p-3 rounded" style={{ whiteSpace: 'pre-wrap' }}>
+                                {selectedLead.note}
+                            </div>
+                        </div>
+                    )}
+                </Modal.Body>
+                <Modal.Footer>
+                    <Button variant="secondary" onClick={handleClose}>
+                        Close
+                    </Button>
+                </Modal.Footer>
+            </Modal>
         </MasterLayout>
     )
 };
