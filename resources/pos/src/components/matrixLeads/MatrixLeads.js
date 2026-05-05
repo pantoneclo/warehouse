@@ -36,36 +36,44 @@ const MatrixLeads = (props) => {
             selector: row => row.name,
             sortField: 'name',
             sortable: true,
+            minWidth: '120px'
         },
         {
             name: getFormattedMessage('matrix-leads.table.company.column.title'),
             selector: row => row.company_name,
             sortField: 'company_name',
             sortable: true,
+            minWidth: '130px'
         },
         {
             name: getFormattedMessage('matrix-leads.table.email.column.title'),
             selector: row => row.email,
             sortField: 'email',
             sortable: true,
+            minWidth: '180px'
         },
         {
             name: getFormattedMessage('matrix-leads.table.profile.column.title'),
             selector: row => row.profile_name,
             sortField: 'profile_name',
             sortable: true,
+            minWidth: '150px',
+            wrap: true
         },
         {
             name: getFormattedMessage('matrix-leads.table.note.column.title'),
             selector: row => row.note,
             sortField: 'note',
             sortable: false,
+            minWidth: '200px',
+            wrap: true
         },
         {
             name: getFormattedMessage('matrix-leads.table.file.column.title'),
             selector: row => row.file_name,
             sortField: 'file_name',
             sortable: false,
+            minWidth: '100px',
             cell: row => row.file_name ? <a href={`/uploads/matrix_leads/${row.file_name}`} target="_blank" rel="noreferrer">{row.file_name}</a> : 'No File'
         },
         {
@@ -73,6 +81,7 @@ const MatrixLeads = (props) => {
             selector: row => row.status,
             sortField: 'status',
             sortable: true,
+            minWidth: '120px',
             cell: row => {
                 const statusClass = row.status === 'approved' ? 'success' : (row.status === 'rejected' ? 'danger' : 'warning');
                 return (
@@ -96,8 +105,12 @@ const MatrixLeads = (props) => {
         <MasterLayout>
             <TopProgressBar />
             <TabTitle title={placeholderText('matrix-leads.title')}/>
-            <ReactDataTable columns={columns} items={itemsValue} onChange={onChange}
-                            totalRows={totalRecord} isLoading={isLoading}/>
+            <div className='card'>
+                <div className='card-body'>
+                    <ReactDataTable columns={columns} items={itemsValue} onChange={onChange}
+                                    totalRows={totalRecord} isLoading={isLoading}/>
+                </div>
+            </div>
         </MasterLayout>
     )
 };
