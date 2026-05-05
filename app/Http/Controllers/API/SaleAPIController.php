@@ -103,6 +103,10 @@ class SaleAPIController extends AppBaseController
             $sales->where('country', $request->get('country'));
         }
 
+        if ($request->get('market_place') && $request->get('market_place') != 'null') {
+            $sales->where('market_place', $request->get('market_place'));
+        }
+
         $sales = $sales->paginate($perPage);
 
         SaleResource::usingWithCollection();

@@ -972,16 +972,16 @@ export const getLabelById = (id) => {
 };
 
 export const eccomercePlatform = [
-    { id: 1, name: 'eccomerce.label.1' },
-    { id: 2, name: 'eccomerce.label.2' },
-    { id: 3, name: 'eccomerce.label.3' },
-    { id: 4, name: 'eccomerce.label.4' },
-    { id: 5, name: 'eccomerce.label.5' },
-    { id: 6, name: 'eccomerce.label.6' },
-    { id: 7, name: 'eccomerce.label.7' },
-    { id: 8, name: 'eccomerce.label.8' },
-    { id: 9, name: 'eccomerce.label.9' },
-    { id: 10, name: 'eccomerce.label.10' },
+    { id: 'AMAZON', name: 'eccomerce.label.1' },
+    { id: 'E-Bay', name: 'eccomerce.label.2' },
+    { id: 'DARAZ', name: 'eccomerce.label.3' },
+    { id: 'PANTONECLO', name: 'eccomerce.label.4' },
+    { id: 'PIGU', name: 'eccomerce.label.5' },
+    { id: 'MIMOVRSTE', name: 'eccomerce.label.6' },
+    { id: 'ALLEGRO', name: 'eccomerce.label.7' },
+    { id: 'PANTONECLO WHM', name: 'eccomerce.label.8' },
+    { id: 'TEMU', name: 'eccomerce.label.9' },
+    { id: 'ABOUT YOU', name: 'eccomerce.label.10' },
 ];
 
 

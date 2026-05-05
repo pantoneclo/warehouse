@@ -99,6 +99,18 @@ export default (filters = Filters.OBJ, admin, stockReport, isProductQuantity) =>
         }
         url = url + 'customer_id=' + filters.customer_id;
     }
+    if (filters.market_place && filters.market_place !== null) {
+        if (url !== '?') {
+            url += '&'
+        }
+        url = url + 'market_place=' + filters.market_place;
+    }
+    if (filters.country && filters.country !== null) {
+        if (url !== '?') {
+            url += '&'
+        }
+        url = url + 'country=' + filters.country;
+    }
     if (admin) {
         if (url !== '?') {
             url += '&'

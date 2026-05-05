@@ -15,7 +15,7 @@ export const fetchSales = (filter = {}, isLoading = true) => async (dispatch) =>
     }
     const admin = true;
     let url = apiBaseURL.SALES;
-    if (!_.isEmpty(filter) && (filter.page || filter.pageSize || filter.search || filter.order_By || filter.created_at || filter.customer_id || filter.country || filter.status || filter.warehouse_id || filter.start_date || filter.end_date || filter.payment_status || filter.payment_type)) {
+    if (!_.isEmpty(filter) && (filter.page || filter.pageSize || filter.search || filter.order_By || filter.created_at || filter.customer_id || filter.country || filter.status || filter.warehouse_id || filter.start_date || filter.end_date || filter.payment_status || filter.payment_type || filter.market_place)) {
         url += requestParam(filter, admin);
     }
     await apiConfig.get(url)

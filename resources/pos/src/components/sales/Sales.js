@@ -18,7 +18,7 @@ import { callSaleApi } from "../../store/action/saleApiAction";
 import TopProgressBar from "../../shared/components/loaders/TopProgressBar";
 import { fetchAllWarehouses } from '../../store/action/warehouseAction';
 import ReactSelect from '../../shared/select/reactSelect';
-import { Permissions, countryOptions, getCurrencySymbol, saleStatusOptions, paymentStatusOptions } from '../../constants';
+import { Permissions, countryOptions, getCurrencySymbol, saleStatusOptions, paymentStatusOptions, eccomercePlatform } from '../../constants';
 import { fetchCurrencies } from '../../store/action/currencyAction';
 import DateRangePicker from '../../shared/datepicker/DateRangePicker';
 import usePermission from '../../shared/utils/usePermission';
@@ -43,8 +43,9 @@ const Sales = (props) => {
     const [statusValue, setStatusValue] = useState({ label: 'All Status', value: null });
     const [paymentStatusValue, setPaymentStatusValue] = useState({ label: 'All', value: null });
     const [countryValue, setCountryValue] = useState({ label: 'All Country', value: null });
+    const [marketplaceValue, setMarketplaceValue] = useState({ label: 'All Marketplace', value: null });
     const [selectDate, setSelectDate] = useState();
-    const [filterOptions, setFilterOptions] = useState({ statuses: [], countries: [], warehouses: [], paymentStatuses: [] });
+    const [filterOptions, setFilterOptions] = useState({ statuses: [], countries: [], warehouses: [], paymentStatuses: [], marketplaces: [] });
     const [deleteModel, setDeleteModel] = useState(false);
     const [isShowPaymentModel, setIsShowPaymentModel] = useState(false);
     const [isCreatePaymentOpen, setIsCreatePaymentOpen] = useState(false);
@@ -60,12 +61,14 @@ const Sales = (props) => {
         const statusData = saleStatusOptions.map(s => ({ label: getFormattedMessage(s.name), value: s.id }));
         const countryData = countryOptions.map(c => ({ label: c.name, value: c.code }));
         const paymentStatusData = paymentStatusOptions.filter(p => p.id !== 0).map(p => ({ label: getFormattedMessage(p.name), value: p.id }));
+        const marketplaceData = eccomercePlatform.map(m => ({ label: getFormattedMessage(m.name), value: m.id }));
 
         statusData.unshift({ label: 'All Status', value: null });
         countryData.unshift({ label: 'All Country', value: null });
         paymentStatusData.unshift({ label: 'All', value: null });
+        marketplaceData.unshift({ label: 'All Marketplace', value: null });
 
-        setFilterOptions(prev => ({ ...prev, statuses: statusData, countries: countryData, paymentStatuses: paymentStatusData }));
+        setFilterOptions(prev => ({ ...prev, statuses: statusData, countries: countryData, paymentStatuses: paymentStatusData, marketplaces: marketplaceData }));
     }, []);
 
     useEffect(() => {
@@ -86,6 +89,7 @@ const Sales = (props) => {
             status: statusValue.value,
             payment_status: paymentStatusValue.value,
             country: countryValue.value,
+            market_place: marketplaceValue.value,
             start_date: selectDate ? selectDate.start_date : null,
             end_date: selectDate ? selectDate.end_date : null
         }, true);
@@ -98,6 +102,7 @@ const Sales = (props) => {
             status: obj.value,
             payment_status: paymentStatusValue.value,
             country: countryValue.value,
+            market_place: marketplaceValue.value,
             start_date: selectDate ? selectDate.start_date : null,
             end_date: selectDate ? selectDate.end_date : null
         }, true);
@@ -110,6 +115,7 @@ const Sales = (props) => {
             status: statusValue.value,
             payment_status: obj.value,
             country: countryValue.value,
+            market_place: marketplaceValue.value,
             start_date: selectDate ? selectDate.start_date : null,
             end_date: selectDate ? selectDate.end_date : null
         }, true);
@@ -122,6 +128,20 @@ const Sales = (props) => {
             status: statusValue.value,
             payment_status: paymentStatusValue.value,
             country: obj.value,
+            market_place: marketplaceValue.value,
+            start_date: selectDate ? selectDate.start_date : null,
+            end_date: selectDate ? selectDate.end_date : null
+        }, true);
+    };
+
+    const onMarketplaceChange = (obj) => {
+        setMarketplaceValue(obj);
+        fetchSales({
+            warehouse_id: warehouseValue.value,
+            status: statusValue.value,
+            payment_status: paymentStatusValue.value,
+            country: countryValue.value,
+            market_place: obj.value,
             start_date: selectDate ? selectDate.start_date : null,
             end_date: selectDate ? selectDate.end_date : null
         }, true);
@@ -134,6 +154,7 @@ const Sales = (props) => {
             status: statusValue.value,
             payment_status: paymentStatusValue.value,
             country: countryValue.value,
+            market_place: marketplaceValue.value,
             start_date: date.params ? date.params.start_date : null,
             end_date: date.params ? date.params.end_date : null
         }, true);
@@ -148,6 +169,7 @@ const Sales = (props) => {
             status: statusValue.value,
             payment_status: paymentStatusValue.value,
             country: countryValue.value,
+            market_place: marketplaceValue.value,
             start_date: selectDate ? selectDate.start_date : null,
             end_date: selectDate ? selectDate.end_date : null
         }, true);
@@ -534,6 +556,15 @@ const Sales = (props) => {
                         defaultValue={countryValue}
                         title={getFormattedMessage('globally.input.country.label')}
                         placeholder={placeholderText('globally.input.country.label')}
+                    />
+                </div>
+                <div className='col-12 col-md-3 mb-3'>
+                    <ReactSelect
+                        data={filterOptions.marketplaces}
+                        onChange={onMarketplaceChange}
+                        defaultValue={marketplaceValue}
+                        title={getFormattedMessage('marketplace.label')}
+                        placeholder={placeholderText('marketplace.label')}
                     />
                 </div>
                 <div className='col-12 col-md-3 mb-3'>
