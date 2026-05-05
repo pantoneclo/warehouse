@@ -105,6 +105,7 @@ import warehouseProductsSearchReducer from "./warehouseProductsSearchReducer";
 // Added By Atiqur Rahman
 import comboProductReducer from "./comboProductReducer";
 import inventoryReducer from "./inventoryReducer";
+import matrixLeadReducer from "./matrixLeadReducer";
 
 export default combineReducers({
     loginUser: loginReducers,
@@ -215,4 +216,5 @@ export default combineReducers({
     language: languageDataReducer,
     baseUnits: baseUnitsReducres,
     base: baseUnitReducer,
+    matrixLeads: matrixLeadReducer,
 });

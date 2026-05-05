@@ -96,8 +96,9 @@ export const apiBaseURL = {
     BEST_CUSTOMERS_REPORT_PDF: "best-customers-pdf-download",
     PROFIT_AND_LOSS_REPORT: "profit-loss-report",
     CUSTOMER_REPORT_WIDGET_DATA: "customer-info",
-    CUSTOMER_REPORT_PDF: "customer-pdf-download",
-    CUSTOMER_QUOTATIONS_REPORT_PDF: "customer-quotations-pdf-download",
+    CUSTOMER_REPORT_PDF: 'customer-pdf-download',
+    CUSTOMER_QUOTATIONS_REPORT_PDF: 'customer-quotations-pdf-download',
+    MATRIX_LEADS: '/matrix-leads',
     CUSTOMER_SALES_REPORT_PDF: "customer-sales-pdf-download",
     CUSTOMER_SALES_RETURNS_REPORT_PDF: "customer-returns-pdf-download",
     CUSTOMER_PAYMENT_REPORT: "customer-payments-report",
@@ -794,6 +795,11 @@ export const variantActionType = {
     EDIT_VARIANT: 'EDIT_VARIANT',
     DELETE_VARIANT: 'DELETE_VARIANT',
     FETCH_ALL_VARIANTS: 'FETCH_ALL_VARIANTS'
+}
+
+export const matrixLeadActionType = {
+    FETCH_MATRIX_LEADS: 'FETCH_MATRIX_LEADS',
+    UPDATE_MATRIX_LEAD_STATUS: 'UPDATE_MATRIX_LEAD_STATUS',
 }
 
 

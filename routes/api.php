@@ -389,6 +389,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('sales-item-report-filters', [\App\Http\Controllers\API\SalesItemReportController::class, 'getFilters']);
     Route::get('sales-item-report-export', [\App\Http\Controllers\API\SalesItemReportController::class, 'salesItemExport']);
 
+    // Matrix Leads
+    Route::get('/matrix-leads', [MatrixLeadAPIController::class, 'index']);
+    Route::post('/matrix-leads/{id}/status', [MatrixLeadAPIController::class, 'updateStatus']);
 });
 
 Route::middleware('checkApiKey')->group(function (){
@@ -431,4 +434,3 @@ Route::get('/connection-pantoneclo-database', [StockManagementAPIController::cla
 Route::get('/webhook-update-sell-status', [StockManagementAPIController::class, 'webHookUpdateSellStatus']);
 
 Route::post('/matrix-lead', [MatrixLeadAPIController::class, 'store']);
-Route::get('/matrix-leads', [MatrixLeadAPIController::class, 'index']);

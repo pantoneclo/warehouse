@@ -114,6 +114,7 @@ import ComboCreate from "./components/comboProduct/ComboCreate";
 import ComboProductDetail from "./components/comboProduct/ComboProductDetail";
 import StockHistory from "./components/report/stockHistory/StockHistory";
 import SalesItemReport from "./components/report/salesItemReport/SalesItemReport";
+import MatrixLeads from "./components/matrixLeads/MatrixLeads";
 
 export const route = [
     // {
@@ -681,6 +682,11 @@ export const route = [
     {
         path: "combo-products/details/:id",
         ele: <ComboProductDetail />,
+        permission: "",
+    },
+    {
+        path: "matrix-leads",
+        ele: <MatrixLeads />,
         permission: "",
     },
 ];

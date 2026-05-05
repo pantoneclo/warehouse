@@ -561,6 +561,20 @@ export default [
     },
 
     {
+        title: 'matrix-leads.title',
+        name: "matrix-leads",
+        fontIcon: <FontAwesomeIcon icon={faUserGroup} />,
+        to: '/app/matrix-leads',
+        class: 'd-flex',
+        permission: '',
+        items: [
+            {
+                title: getFormattedMessage('matrix-leads.title'),
+                to: '/app/matrix-leads'
+            }
+        ],
+    },
+    {
         title: 'settings.title',
         name: "settings",
         fontIcon: <FontAwesomeIcon icon={faGear} />,
