@@ -1034,6 +1034,11 @@ export const countryOptions = [
     { id: 18, code: 'LV', currency: "EUR", currencySymbol: currencySymbols.EUR, name: 'Latvia', vat: 21 },
     { id: 19, code: 'IN', currency: "RUP", currencySymbol: currencySymbols.RUP, name: 'India', vat: 0 },
     { id: 20, code: 'BE', currency: "EUR", currencySymbol: currencySymbols.EUR, name: 'Belgium', vat: 21 },
+    { id: 21, code: 'NL', currency: "EUR", currencySymbol: currencySymbols.EUR, name: 'Netherland', vat: 21 },
+    { id: 22, code: 'DK', currency: "EUR", currencySymbol: currencySymbols.EUR, name: 'Denmark', vat: 25 },
+    { id: 23, code: 'SE', currency: "EUR", currencySymbol: currencySymbols.EUR, name: 'Sweden', vat: 25 },
+    
+
     // Add more countries as needed
 ];
 
