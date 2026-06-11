@@ -34,7 +34,7 @@ const EditSale = (props) => {
     const paymentMethodOption = getFormattedOptions(paymentMethodOptions);
     const selectedPaymentType = sales.attributes && sales.attributes.payment_type && paymentMethodOption.filter((item) => item.id === sales.attributes.payment_type)
     const parcelCompanyId = sales.attributes?.shipment?.parcel_company_id;
-    const selectedParcelCompany = shippingCompanyNames.find(c => c.id === parcelCompanyId);
+    const selectedParcelCompany = shippingCompanyNames.find(c => Number(c.id) === Number(parcelCompanyId));
     const test =sales.attributes?.market_place;
     console.log(test, 'Market Place Value')
 
