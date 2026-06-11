@@ -347,6 +347,9 @@ class SaleRepository extends BaseRepository
                 ]);
             }
             $sale = $this->storeSaleItems($sale, $input);
+            if (isset($input['parcel_number']) && !empty($input['parcel_number'])) {
+                $this->ParcelStatusCreate($input, $sale);
+            }
             $reference_code = getSettingValue('sale_code') . '_111' . $sale->id;
             $this->generateBarcode($reference_code);
             $sale['barcode_image_url'] = Storage::url('sales/barcode-' . $reference_code . '.png');
@@ -762,14 +765,10 @@ class SaleRepository extends BaseRepository
             $sale['barcode_image_url'] = Storage::url('sales/barcode-' . $sale->reference_code . '.png');
             $sale = $this->updateSaleCalculation($input, $id);
 
-            if (isset($input['parcel_number'])) {
-
-                $parcel = Shipment::find($input['shipment_id']);
-
+            if (isset($input['parcel_number']) && !empty($input['parcel_number'])) {
+                $parcel = Shipment::where('sale_id', $sale->id)->first();
 
                 if ($parcel != null) {
-
-
                     $parcel->update([
                         'parcel_company_id' => $input['parcel_company_id'],
                         'parcel_number' => $input['parcel_number']]);
@@ -960,9 +959,19 @@ class SaleRepository extends BaseRepository
     public function updateParcelStatus($input)
     {
 
-        if (isset($input['parcel_number'])) {
+        if (isset($input['parcel_number']) && !empty($input['parcel_number'])) {
+            $parcel = null;
+            if (isset($input['shipment_id']) && !empty($input['shipment_id'])) {
+                $parcel = Shipment::find($input['shipment_id']);
+            }
+            if ($parcel == null && isset($input['sale_id']) && !empty($input['sale_id'])) {
+                $parcel = Shipment::where('sale_id', $input['sale_id'])->first();
+            }
 
-            $parcel = Shipment::find($input['shipment_id']);
+            if ($parcel == null) {
+                return null;
+            }
+
             if ($input['status'] == 2 && $parcel->parcel_company_id == 1) {
 
                 $credential = ['gls_username', 'gls_password'];

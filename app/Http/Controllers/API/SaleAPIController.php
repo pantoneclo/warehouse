@@ -368,11 +368,25 @@ class SaleAPIController extends AppBaseController
 
             return $this->sendResponse($data, 'pdf retrieved Successfully');
             
-        } else{
-
+        } else {
             $fileName = $sale->file;
-            $fileUrl = url('uploads/sales/invoices/' . $fileName);
-            $data['sale_invoice_url'] = Storage::url('sales/invoices/' . $fileName);
+            if (empty($fileName)) {
+                $sale = $sale->load('customer', 'saleItems.product', 'payments');
+                $disk = Storage::disk(config('app.media_disc'));
+                $path = 'pdf/Sale-'.$sale->country.'-'.$sale->order_no.'.pdf';
+                if ($disk->exists($path)) {
+                    $disk->delete($path);
+                }
+                $companyLogo = getLogoUrl();
+                $pdf = PDF::loadView('pdf.sale-pdf', compact('sale', 'companyLogo'))->setOptions([
+                    'tempDir' => public_path(),
+                    'chroot'  => public_path(),
+                ]);
+                $disk->put($path, $pdf->output(), 'public');
+                $data['sale_invoice_url'] = $disk->url($path);
+            } else {
+                $data['sale_invoice_url'] = url('uploads/sales/invoices/' . $fileName);
+            }
             $data['country'] = $sale->country;
             $data['invoice_no'] = $sale->order_no;
 

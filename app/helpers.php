@@ -150,7 +150,27 @@ if (!function_exists('getLogo')) {
         /** @var Setting $setting */
         $logoImage = Setting::where('key', '=', 'logo')->first()->value;
 
-        $logo = base64_encode(file_get_contents(asset($logoImage)));
+        // Try local file resolution first
+        $parsedUrl = parse_url($logoImage);
+        $localPath = isset($parsedUrl['path']) ? public_path(ltrim($parsedUrl['path'], '/')) : '';
+
+        // If URL has double slashes like //uploads, make sure ltrim cleans it properly
+        if (str_starts_with($localPath, public_path('/'))) {
+            $localPath = public_path(ltrim(str_replace(public_path(), '', $localPath), '/'));
+        }
+
+        if (!empty($localPath) && file_exists($localPath)) {
+            $logo = base64_encode(file_get_contents($localPath));
+        } else {
+            // Fallback to fetching with SSL verification disabled
+            $arrContextOptions = [
+                "ssl" => [
+                    "verify_peer" => false,
+                    "verify_peer_name" => false,
+                ],
+            ];
+            $logo = base64_encode(file_get_contents($logoImage, false, stream_context_create($arrContextOptions)));
+        }
 
         return 'data:image/png;base64,' . $logo;
     }

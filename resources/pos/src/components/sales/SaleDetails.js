@@ -14,9 +14,11 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faEnvelope, faLocationDot, faMobileAlt, faUser } from "@fortawesome/free-solid-svg-icons";
 import TopProgressBar from "../../shared/components/loaders/TopProgressBar";
 import { use } from 'echarts';
+import { getLabelById } from '../../constants';
+import { saleInvoiceAction } from '../../store/action/salePdfAction';
 
 const SaleDetails = (props) => {
-    const { saleDetailsAction, saleDetails,parcelStatusUpdateAction, fetchFrontSetting, frontSetting, allConfigData } = props;
+    const { saleDetailsAction, saleDetails,parcelStatusUpdateAction, fetchFrontSetting, frontSetting, allConfigData, saleInvoiceAction } = props;
     const { id } = useParams();
 
     const [parcelStatusUpdate, setParcelStatusUpdate] = useState(
@@ -53,7 +55,12 @@ const SaleDetails = (props) => {
     return (
         <MasterLayout>
             <TopProgressBar />
-            <HeaderTitle title={getFormattedMessage('sale.details.title')} to='/app/sales' />
+            <HeaderTitle
+                title={getFormattedMessage('sale.details.title')}
+                to='/app/sales'
+                onClickPdf={() => saleInvoiceAction(id)}
+                pdfBtnLabel={getFormattedMessage('globally.pdf.download.label')}
+            />
             <TabTitle title={placeholderText('sale.details.title')} />
             <div className='card'>
                 <div className='card-body'>
@@ -126,28 +133,18 @@ const SaleDetails = (props) => {
 
                                 <div className='p-4'>
                                     <div className='pb-1'>
-                                        <span
-                                            className='me-2'>{getFormattedMessage('globally.parcel.parcel.number.label')} :</span>
+                                        <span className='me-2'>{getFormattedMessage('pacel.company.label.name')} :</span>
+                                        <span>{saleDetails && saleDetails?.shipment?.parcel_company_id ? getLabelById(Number(saleDetails?.shipment?.parcel_company_id)) : ''}</span>
+                                    </div>
+
+                                    <div className='pb-1'>
+                                        <span className='me-2'>{getFormattedMessage('parcel.number.label')} :</span>
                                         <span>{saleDetails && saleDetails?.shipment?.parcel_number}</span>
                                     </div>
 
                                     <div className='pb-1'>
-                                        <span className='me-2'>Parcel Status :</span>
-
-                                        <span className='badge bg-light-success'>
-                                            <span>   {saleDetails && saleDetails?.shipment?.status_description}</span>
-                                        </span>
-
-                                    </div>
-                                    <div className='pb-1'>
-                                        <span
-                                            className='me-2'>Depot City :</span>
-                                        <span>{saleDetails.shipment && saleDetails?.shipment?.depot_city}</span>
-                                    </div>
-                                    <div className='pb-1'>
-                                        <span
-                                            className='me-2'>Weight :</span>
-                                        <span>{saleDetails.shipment && saleDetails?.shipment?.weight}</span>
+                                        <span className='me-2'>{getFormattedMessage('marketplace.label')} :</span>
+                                        <span>{saleDetails && saleDetails?.market_place}</span>
                                     </div>
 
                                     <div className='pb-1'>
@@ -168,11 +165,6 @@ const SaleDetails = (props) => {
                                                 <span>Ordered</span>
                                             </span>
                                         }
-                                    </div>
-                                    <div className='pb-1'>
-                                        <span
-                                            className='me-2'>Sale Reference :</span>
-                                        <span>{saleDetails && saleDetails.reference_code}</span>
                                     </div>
                                     <div>
                                         <span
@@ -273,4 +265,4 @@ const mapStateToProps = (state) => {
     return { saleDetails, frontSetting, allConfigData }
 };
 
-export default connect(mapStateToProps, { saleDetailsAction,parcelStatusUpdateAction, fetchFrontSetting })(SaleDetails);
+export default connect(mapStateToProps, { saleDetailsAction,parcelStatusUpdateAction, fetchFrontSetting, saleInvoiceAction })(SaleDetails);
