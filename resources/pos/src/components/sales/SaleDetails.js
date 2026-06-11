@@ -14,7 +14,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faEnvelope, faLocationDot, faMobileAlt, faUser } from "@fortawesome/free-solid-svg-icons";
 import TopProgressBar from "../../shared/components/loaders/TopProgressBar";
 import { use } from 'echarts';
-import { getLabelById } from '../../constants';
+import { getLabelById, countryOptions, getCurrencySymbol } from '../../constants';
 import { saleInvoiceAction } from '../../store/action/salePdfAction';
 
 const SaleDetails = (props) => {
@@ -50,7 +50,8 @@ const SaleDetails = (props) => {
         parcelStatusUpdateAction(parcelStatusUpdate)
     }
 
-
+    const country = saleDetails?.country ? countryOptions.find(c => c.code === saleDetails.country) : null;
+    const currencySymbolToUse = country?.currencySymbol || getCurrencySymbol(saleDetails?.currency) || (frontSetting.value && frontSetting.value.currency_symbol) || '';
 
     return (
         <MasterLayout>
@@ -206,12 +207,12 @@ const SaleDetails = (props) => {
                                                         details.product && details.product.variant.name})
                                                 </td>
                                                 <td className='ps-3'>{details.product && details.product.product_abstract.pan_style}</td>
-                                                <td>{currencySymbolHendling(allConfigData, frontSetting.value && frontSetting.value.currency_symbol, details.net_unit_price)}</td>
+                                                <td>{currencySymbolHendling(allConfigData, currencySymbolToUse, details.net_unit_price)}</td>
                                                 <td>{details.quantity}</td>
-                                                <td>{currencySymbolHendling(allConfigData, frontSetting.value && frontSetting.value.currency_symbol, details.product_price)}</td>
-                                                <td>{currencySymbolHendling(allConfigData, frontSetting.value && frontSetting.value.currency_symbol, details.discount_amount)}</td>
-                                                <td>{currencySymbolHendling(allConfigData, frontSetting.value && frontSetting.value.currency_symbol, details.tax_amount)}</td>
-                                                <td>{currencySymbolHendling(allConfigData, frontSetting.value && frontSetting.value.currency_symbol, details.sub_total)}</td>
+                                                <td>{currencySymbolHendling(allConfigData, currencySymbolToUse, details.product_price)}</td>
+                                                <td>{currencySymbolHendling(allConfigData, currencySymbolToUse, details.discount_amount)}</td>
+                                                <td>{currencySymbolHendling(allConfigData, currencySymbolToUse, details.tax_amount)}</td>
+                                                <td>{currencySymbolHendling(allConfigData, currencySymbolToUse, details.sub_total)}</td>
                                             </tr>)
                                     })}
                                 </tbody>
@@ -226,25 +227,25 @@ const SaleDetails = (props) => {
                                             <tr>
                                                 <td className='py-3'>{getFormattedMessage('globally.detail.order.tax')}</td>
                                                 <td className='py-3'>
-                                                    {currencySymbolHendling(allConfigData, frontSetting.value && frontSetting.value.currency_symbol, saleDetails && saleDetails.tax_amount > 0 ? saleDetails.tax_amount : '0.00')} ({saleDetails && parseFloat(saleDetails.tax_rate).toFixed(2)}%)
+                                                    {currencySymbolHendling(allConfigData, currencySymbolToUse, saleDetails && saleDetails.tax_amount > 0 ? saleDetails.tax_amount : '0.00')} ({saleDetails && parseFloat(saleDetails.tax_rate).toFixed(2)}%)
                                                 </td>
                                             </tr>
                                             <tr>
                                                 <td className='py-3'>{getFormattedMessage('globally.detail.discount')}</td>
-                                                <td className='py-3'>{currencySymbolHendling(allConfigData, frontSetting.value && frontSetting.value.currency_symbol, saleDetails && saleDetails.discount)}</td>
+                                                <td className='py-3'>{currencySymbolHendling(allConfigData, currencySymbolToUse, saleDetails && saleDetails.discount)}</td>
                                             </tr>
                                             <tr>
                                                 <td className='py-3'>{getFormattedMessage('purchase.input.cod.label')}</td>
-                                                <td className='py-3'>{currencySymbolHendling(allConfigData, frontSetting.value && frontSetting.value.currency_symbol, saleDetails && saleDetails.cod)}</td>
+                                                <td className='py-3'>{currencySymbolHendling(allConfigData, currencySymbolToUse, saleDetails && saleDetails.cod)}</td>
                                             </tr>
                                             <tr>
                                                 <td className='py-3'>{getFormattedMessage('globally.detail.shipping')}</td>
-                                                <td className='py-3'>{currencySymbolHendling(allConfigData, frontSetting.value && frontSetting.value.currency_symbol, saleDetails && saleDetails.shipping)}</td>
+                                                <td className='py-3'>{currencySymbolHendling(allConfigData, currencySymbolToUse, saleDetails && saleDetails.shipping)}</td>
                                             </tr>
                                             <tr>
                                                 <td className='py-3 text-primary'>{getFormattedMessage('globally.detail.grand.total')}</td>
                                                 <td className='py-3 text-primary'>
-                                                    {currencySymbolHendling(allConfigData, frontSetting.value && frontSetting.value.currency_symbol, saleDetails && saleDetails.grand_total)}
+                                                    {currencySymbolHendling(allConfigData, currencySymbolToUse, saleDetails && saleDetails.grand_total)}
                                                 </td>
                                             </tr>
                                             </tbody>
