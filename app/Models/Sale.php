@@ -123,6 +123,8 @@ class Sale extends BaseModel implements HasMedia, JsonResourceful
         'cod',
         'order_process_fee',
         'file',
+        'courier_document',
+        'courier_document_name',
         'conversion_rate',
         'selling_value_eur',
     ];
@@ -264,6 +266,11 @@ class Sale extends BaseModel implements HasMedia, JsonResourceful
             'other_income'=>$this->other_income,
             'selling_value_eur'=>$this->selling_value_eur,
             'cod'=>$this->cod,
+            'file' => $this->file,
+            'fileName' => $this->file,
+            'courier_document' => $this->courier_document,
+            'courier_document_name' => $this->courier_document_name,
+            'courier_document_url' => $this->courier_document ? url('uploads/sales/couriers/' . $this->courier_document) : null,
         ];
 
         return $fields;

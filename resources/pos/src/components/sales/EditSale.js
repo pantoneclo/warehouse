@@ -13,7 +13,7 @@ import paymentStatus from '../../shared/option-lists/paymentStatus.json';
 import paymentType from '../../shared/option-lists/paymentType.json';
 import Spinner from "../../shared/components/loaders/Spinner";
 import TopProgressBar from "../../shared/components/loaders/TopProgressBar";
-import { saleStatusOptions ,eccomercePlatform, countryOptions, getCurrencySymbol } from '../../constants';
+import { saleStatusOptions ,eccomercePlatform, countryOptions, getCurrencySymbol, paymentMethodOptions, shippingCompanyNames } from '../../constants';
 import { useIntl } from 'react-intl';
 const EditSale = (props) => {
     const {fetchSale, sales, customers, fetchAllCustomer, warehouses, fetchAllWarehouses, isLoading} = props;
@@ -31,7 +31,10 @@ const EditSale = (props) => {
     console.log(marketplaceFilterOptions, "Edit Marketplace Options")
     const statusDefaultValue =  sales.attributes && sales.attributes.status && statusFilterOptions.filter((option) => option.id === sales.attributes.status)
     const selectedPayment = sales.attributes && sales.attributes.payment_status && paymentStatus.filter((item) => item.value === sales.attributes.payment_status)
-    const selectedPaymentType = sales.attributes && sales.attributes.payment_type && paymentType.filter((item) => item.value === sales.attributes.payment_type)
+    const paymentMethodOption = getFormattedOptions(paymentMethodOptions);
+    const selectedPaymentType = sales.attributes && sales.attributes.payment_type && paymentMethodOption.filter((item) => item.id === sales.attributes.payment_type)
+    const parcelCompanyId = sales.attributes?.shipment?.parcel_company_id;
+    const selectedParcelCompany = shippingCompanyNames.find(c => c.id === parcelCompanyId);
     const test =sales.attributes?.market_place;
     console.log(test, 'Market Place Value')
 
@@ -102,7 +105,10 @@ console.log(sales.attributes , 'this is from sales attributes')
         notes: sales.attributes.note,
         is_Partial : sales.attributes.payment_status,
         parcel_number: sales.attributes?.shipment?.parcel_number? sales.attributes?.shipment?.parcel_number : '',
-        parcel_company_id: sales.attributes?.shipment?.parcel_company_id ? sales.attributes?.shipment?.parcel_company_id : '',
+        parcel_company_id: selectedParcelCompany ? {
+            label: selectedParcelCompany.label,
+            value: selectedParcelCompany.id
+        } : '',
         country: selectedCountryFromOptions ? {
             value: selectedCountryFromOptions.code,
             label: selectedCountryFromOptions.name,
@@ -126,8 +132,8 @@ console.log(sales.attributes , 'this is from sales attributes')
             value: selectedPayment && selectedPayment[0] && selectedPayment[0].value
         },
         payment_type: {
-            label: selectedPaymentType && selectedPaymentType[0] && selectedPaymentType[0].label,
-            value: selectedPaymentType && selectedPaymentType[0] && selectedPaymentType[0].value
+            label: selectedPaymentType && selectedPaymentType[0] && selectedPaymentType[0].name,
+            value: selectedPaymentType && selectedPaymentType[0] && selectedPaymentType[0].id
         },
         status_id: {
             label: statusDefaultValue && statusDefaultValue[0] && statusDefaultValue[0].name,
@@ -136,7 +142,9 @@ console.log(sales.attributes , 'this is from sales attributes')
         currency: selectedCountryFromOptions ? selectedCountryFromOptions.currency : sales.attributes?.currency,
         currencySymbol: selectedCountryFromOptions ? selectedCountryFromOptions.currencySymbol : getCurrencySymbol(sales.attributes?.currency),
         file: sales.attributes?.file || null,
-        fileName: sales.attributes?.fileName || ''
+        fileName: sales.attributes?.fileName || '',
+        courier_document: sales.attributes?.courier_document || null,
+        courier_document_name: sales.attributes?.courier_document_name || ''
     };
 console.log(itemsValue,'itemsValue')
 console.log("Final Currency Set:", selectedCountryFromOptions ? selectedCountryFromOptions.currency : sales.attributes?.currency);

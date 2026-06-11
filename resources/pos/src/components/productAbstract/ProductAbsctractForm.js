@@ -744,7 +744,7 @@ const ProductAbsctractForm = (props) => {
                 "product.input.purchase-unit.validate.label"
             );
         } else if (productAbstract["order_tax"] > 100) {
-            console.log("this is from order tax");
+            console.log("this is from Order Vat");
             errorss["order_tax"] = getFormattedMessage(
                 "product.input.order-tax.valid.validate.label"
             );

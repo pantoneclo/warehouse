@@ -69,6 +69,10 @@ const SalesForm = (props) => {
     const [currentFileName, setCurrentFileName] = useState('');
     const [originalFileName, setOriginalFileName] = useState('');
 
+    const [uploadedCourierFile, setUploadedCourierFile] = useState(null);
+    const [currentCourierFileName, setCurrentCourierFileName] = useState('');
+    const [originalCourierFileName, setOriginalCourierFileName] = useState('');
+
     const handleFileChange = (e) => {
         const file = e.target.files[0];
         if (file) {
@@ -81,6 +85,23 @@ const SalesForm = (props) => {
                 }));
                 setUploadedFile(file);
                 setCurrentFileName(file.name);
+            };
+            reader.readAsDataURL(file);
+        }
+    };
+
+    const handleCourierFileChange = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                setSaleValue(prev => ({
+                    ...prev,
+                    courier_document: reader.result,
+                    courier_document_name: file.name // Store the courier document name
+                }));
+                setUploadedCourierFile(file);
+                setCurrentCourierFileName(file.name);
             };
             reader.readAsDataURL(file);
         }
@@ -116,6 +137,8 @@ const SalesForm = (props) => {
         city: '',
         file: null,
         fileName: '',
+        courier_document: null,
+        courier_document_name: '',
         order_tax_type: '1' // Default Exclusive
     });
     const [errors, setErrors] = useState({
@@ -123,7 +146,13 @@ const SalesForm = (props) => {
         warehouse_id: '',
         status_id: '',
         payment_status: '',
-        payment_type: ''
+        payment_type: '',
+        country: '',
+        name: '',
+        email: '',
+        phone: '',
+        city: '',
+        address: ''
     });
 
     useEffect(() => {
@@ -169,6 +198,8 @@ const SalesForm = (props) => {
                 city: singleSale ? singleSale.city : '',
                 file: singleSale ? singleSale.file : '',
                 fileName: singleSale ? singleSale.fileName : '',
+                courier_document: singleSale ? singleSale.courier_document : '',
+                courier_document_name: singleSale ? singleSale.courier_document_name : '',
             })
 
             // Set payment type visibility based on payment status
@@ -180,6 +211,12 @@ const SalesForm = (props) => {
             if (singleSale.file) {
                 setCurrentFileName('');  // Reset to show "Existing file"
                 setOriginalFileName(singleSale.fileName || 'Existing file'); // Store original file name
+            }
+
+            // Set original courier file name if courier document exists
+            if (singleSale.courier_document) {
+                setCurrentCourierFileName('');
+                setOriginalCourierFileName(singleSale.courier_document_name || 'Existing courier file');
             }
         }
         if (singleSale && isQuotation) {
@@ -263,98 +300,149 @@ const SalesForm = (props) => {
 
     const handleValidation = () => {
         let error = {};
-        let isValid = false;
+        let isValid = true;
         const qtyCart = updateProducts.filter((a) => a.quantity === 0);
+
         if (!saleValue.date) {
             error['date'] = getFormattedMessage('globally.date.validate.label');
-        } else if (!saleValue.warehouse_id) {
-            error['warehouse_id'] = getFormattedMessage('product.input.warehouse.validate.label');
-        } else if (qtyCart.length > 0) {
-            dispatch(addToast({ text: getFormattedMessage('globally.product-quantity.validate.message'), type: toastType.ERROR }))
-        } else if (updateProducts.length < 1) {
-            dispatch(addToast({ text: getFormattedMessage('purchase.product-list.validate.message'), type: toastType.ERROR }))
-        } else if (!saleValue.status_id) {
-            error['status_id'] = getFormattedMessage("globally.status.validate.label")
-        } else if (!saleValue.payment_status) {
-            error['payment_status'] = getFormattedMessage("globally.payment.status.validate.label")
-        } else if (!saleValue.payment_type) {
-            error['payment_type'] = getFormattedMessage("globally.payment.type.validate.label")
-        } else {
-            isValid = true;
+            isValid = false;
         }
+        if (!saleValue.warehouse_id) {
+            error['warehouse_id'] = getFormattedMessage('product.input.warehouse.validate.label');
+            isValid = false;
+        }
+        if (!saleValue.status_id) {
+            error['status_id'] = getFormattedMessage("globally.status.validate.label");
+            isValid = false;
+        }
+        if (!saleValue.payment_status) {
+            error['payment_status'] = getFormattedMessage("globally.payment.status.validate.label");
+            isValid = false;
+        }
+        if (!saleValue.payment_type) {
+            error['payment_type'] = getFormattedMessage("globally.payment.type.validate.label");
+            isValid = false;
+        }
+        if (!saleValue.country || (typeof saleValue.country === 'object' && !saleValue.country.value)) {
+            error['country'] = getFormattedMessage('globally.input.country.validate.label');
+            isValid = false;
+        }
+
+        // Validate customer fields that are marked as required in UI
+        if (!saleValue.name || !saleValue.name.trim()) {
+            error['name'] = getFormattedMessage('globally.input.name.validate.label');
+            isValid = false;
+        }
+
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!saleValue.email || !saleValue.email.trim()) {
+            error['email'] = getFormattedMessage('globally.input.email.validate.label');
+            isValid = false;
+        } else if (!emailRegex.test(saleValue.email.trim())) {
+            error['email'] = getFormattedMessage('globally.input.email.valid.validate.label');
+            isValid = false;
+        }
+
+        if (!saleValue.phone || !saleValue.phone.trim()) {
+            error['phone'] = getFormattedMessage('globally.input.phone-number.validate.label');
+            isValid = false;
+        }
+
+        if (!saleValue.city || !saleValue.city.trim()) {
+            error['city'] = getFormattedMessage('globally.input.city.validate.label');
+            isValid = false;
+        }
+
+        if (!saleValue.address || !saleValue.address.trim()) {
+            error['address'] = getFormattedMessage('globally.input.address.validate.label');
+            isValid = false;
+        }
+
+        // Cart items validation
+        if (updateProducts.length < 1) {
+            dispatch(addToast({ text: getFormattedMessage('purchase.product-list.validate.message'), type: toastType.ERROR }));
+            isValid = false;
+        } else if (qtyCart.length > 0) {
+            dispatch(addToast({ text: getFormattedMessage('globally.product-quantity.validate.message'), type: toastType.ERROR }));
+            isValid = false;
+        }
+
         setErrors(error);
         return isValid;
     };
 
     const onWarehouseChange = (obj) => {
-        setSaleValue(inputs => ({ ...inputs, warehouse_id: obj }));
-        setErrors('');
-        dispatch(setWarehouseId(obj.value));
-    };
+            setSaleValue(inputs => ({ ...inputs, warehouse_id: obj }));
+            setErrors(prev => ({ ...prev, warehouse_id: '' }));
+            dispatch(setWarehouseId(obj.value));
+        };
 
 
-    const onParcelCompanyChange = (obj) => {
-        setSaleValue(inputs => ({ ...inputs, parcel_company_id: obj }));
-        setErrors('');
+        const onParcelCompanyChange = (obj) => {
+            setSaleValue(inputs => ({ ...inputs, parcel_company_id: obj }));
+        };
 
-    };
+        const onCurrencyChange = (obj) => {
 
-    const onCurrencyChange = (obj) => {
-
-        if (singleSale) {
-            singleSale.currency = obj.value
-        }
-
-        setSaleValue(inputs => ({ ...inputs, currency: obj }));
-        setErrors('');
-    };
-
-
-    const onChangeInput = (e) => {
-        e.preventDefault();
-        const { value } = e.target;
-        // check if value includes a decimal point
-        if (value.match(/\./g)) {
-            const [, decimal] = value.split('.');
-            // restrict value to only 2 decimal places
-            if (decimal?.length > 2) {
-                // do nothing
-                return;
+            if (singleSale) {
+                singleSale.currency = obj.value
             }
-        }
-        setSaleValue(inputs => ({ ...inputs, [e.target.name]: value && value }));
-    };
+
+            setSaleValue(inputs => ({ ...inputs, currency: obj }));
+        };
 
 
-    const onChangeText = (e) => {
-        e.preventDefault();
-        setSaleValue(inputs => ({ ...inputs, [e.target.name]: e.target.value }));
-    };
+        const onChangeInput = (e) => {
+            e.preventDefault();
+            const { value } = e.target;
+            // check if value includes a decimal point
+            if (value.match(/\./g)) {
+                const [, decimal] = value.split('.');
+                // restrict value to only 2 decimal places
+                if (decimal?.length > 2) {
+                    // do nothing
+                    return;
+                }
+            }
+            setSaleValue(inputs => ({ ...inputs, [e.target.name]: value && value }));
+            setErrors(prev => ({ ...prev, [e.target.name]: '' }));
+        };
 
-    const onChangeEmail = (e) => {
-        e.preventDefault();
-        const { value } = e.target;
-        setSaleValue(inputs => ({ ...inputs, [e.target.name]: value && value }))
-    };
 
-    const onNotesChangeInput = (e) => {
-        e.preventDefault();
-        setSaleValue(inputs => ({ ...inputs, notes: e.target.value }));
-    };
+        const onChangeText = (e) => {
+            e.preventDefault();
+            setSaleValue(inputs => ({ ...inputs, [e.target.name]: e.target.value }));
+            setErrors(prev => ({ ...prev, [e.target.name]: '' }));
+        };
 
-    const onStatusChange = (obj) => {
-        setSaleValue(inputs => ({ ...inputs, status_id: obj }));
-    };
+        const onChangeEmail = (e) => {
+            e.preventDefault();
+            const { value } = e.target;
+            setSaleValue(inputs => ({ ...inputs, [e.target.name]: value && value }));
+            setErrors(prev => ({ ...prev, [e.target.name]: '' }));
+        };
 
-    const onPaymentStatusChange = (obj) => {
-        setSaleValue(inputs => ({ ...inputs, payment_status: obj }));
-        obj.value !== 2 ? setIsPaymentType(true) : setIsPaymentType(false)
-        setSaleValue(input => ({ ...input, payment_type: { label: getFormattedMessage("payment-type.filter.cash.label"), value: 1 } }))
-    };
+        const onNotesChangeInput = (e) => {
+            e.preventDefault();
+            setSaleValue(inputs => ({ ...inputs, notes: e.target.value }));
+        };
 
-    const onPaymentTypeChange = (obj) => {
-        setSaleValue(inputs => ({ ...inputs, payment_type: obj }));
-    };
+        const onStatusChange = (obj) => {
+            setSaleValue(inputs => ({ ...inputs, status_id: obj }));
+            setErrors(prev => ({ ...prev, status_id: '' }));
+        };
+
+        const onPaymentStatusChange = (obj) => {
+            setSaleValue(inputs => ({ ...inputs, payment_status: obj }));
+            obj.value !== 2 ? setIsPaymentType(true) : setIsPaymentType(false);
+            setSaleValue(input => ({ ...input, payment_type: { label: getFormattedMessage("payment-type.filter.cash.label"), value: 1 } }));
+            setErrors(prev => ({ ...prev, payment_status: '', payment_type: '' }));
+        };
+
+        const onPaymentTypeChange = (obj) => {
+            setSaleValue(inputs => ({ ...inputs, payment_type: obj }));
+            setErrors(prev => ({ ...prev, payment_type: '' }));
+        };
 
     const updatedQty = (qty) => {
         setQuantity(qty);
@@ -409,6 +497,7 @@ const SalesForm = (props) => {
                 currency: fullCountry.currency,
                 currencySymbol: fullCountry.currencySymbol
             }));
+            setErrors(prev => ({ ...prev, country: '' }));
 
             onCurrencyChange(fullCountry.currency);
         } else {
@@ -509,6 +598,8 @@ const SalesForm = (props) => {
             address: prepareData.address,
             city: prepareData.city,
             file: prepareData.file,
+            courier_document: prepareData.courier_document,
+            courier_document_name: prepareData.courier_document_name,
         }
         return formValue
     };
@@ -633,6 +724,7 @@ const SalesForm = (props) => {
                             isCurrencyDisable={false}
                             value={filtredCurrency}
                             name='currency'
+                            required={false}
                         />
                     </div>
 
@@ -643,7 +735,7 @@ const SalesForm = (props) => {
                             name='country'
                             title={getFormattedMessage('globally.input.country.label')}
                             value={selectedCountry}
-                            // errors={errors['payment_status']}
+                            errors={errors['country']}
                             placeholder={placeholderText('globally.input.country.placeholder.label')} />
                     </div>
 
@@ -841,6 +933,7 @@ const SalesForm = (props) => {
                             placeholder={placeholderText('pacel.company.select.label')}
                             value={saleValue.parcel_company_id}
                             name='parcel_company_id'
+                            required={false}
                         />
                     </div>
 
@@ -859,6 +952,43 @@ const SalesForm = (props) => {
                             />
 
                         </InputGroup>
+                    </div>
+
+                    <div className='col-md-4 mb-3'>
+                        <label htmlFor="uploadCourierFile" className='form-label'>
+                            {getFormattedMessage('globally.input.courier-document.label')}:
+                        </label>
+                        <input
+                            type="file"
+                            id="uploadCourierFile"
+                            name="uploadCourierFile"
+                            className="form-control"
+                            accept=".pdf,.doc,.docx,image/*"
+                            onChange={handleCourierFileChange}
+                        />
+                        {saleValue.courier_document && (
+                            <div className="mt-2">
+                                <small className="text-muted">
+                                    <strong>File: </strong>
+                                    {currentCourierFileName ? (
+                                        <>
+                                            {currentCourierFileName}
+                                            <span className="text-success"> (New file selected - will replace existing)</span>
+                                        </>
+                                    ) : (
+                                        <>
+                                            {originalCourierFileName || saleValue.courier_document_name || 'Existing courier file'}
+                                            {typeof saleValue.courier_document === 'string' && !saleValue.courier_document.startsWith('data:') && (
+                                                <a href={`/uploads/sales/couriers/${saleValue.courier_document}`} target="_blank" rel="noreferrer" className="ms-2 badge bg-primary text-decoration-none">
+                                                    View / Download
+                                                </a>
+                                            )}
+                                            <span className="text-info ms-2"> (Current file)</span>
+                                        </>
+                                    )}
+                                </small>
+                            </div>
+                        )}
                     </div>
 
 
@@ -886,9 +1016,10 @@ const SalesForm = (props) => {
                             name='market_place'
                             title={getFormattedMessage('marketplace.label')}
                             value={saleValue.market_place}
-                            // errors={errors['payment_status']}
                             defaultValue={marketplaceNamesDefault[0]}
-                            placeholder={placeholderText('globally.input.marketplace.label')} />
+                            placeholder={placeholderText('globally.input.marketplace.label')}
+                            required={false}
+                        />
                     </div>
 
 
@@ -915,7 +1046,7 @@ const SalesForm = (props) => {
                     </div>
                     <div className='col-md-4'>
                         <label htmlFor="uploadFile" className='form-label'>
-                            {getFormattedMessage('globally.input.upload.file.label')}
+                            {getFormattedMessage('order.input.upload.file.label')}
                         </label>
                         <input
                             type="file"
@@ -937,7 +1068,12 @@ const SalesForm = (props) => {
                                     ) : (
                                         <>
                                             {originalFileName || saleValue.fileName || 'Existing file'}
-                                            <span className="text-info"> (Current file)</span>
+                                            {typeof saleValue.file === 'string' && !saleValue.file.startsWith('data:') && (
+                                                <a href={`/uploads/sales/invoices/${saleValue.file}`} target="_blank" rel="noreferrer" className="ms-2 badge bg-primary text-decoration-none">
+                                                    View / Download
+                                                </a>
+                                            )}
+                                            <span className="text-info ms-2"> (Current file)</span>
                                         </>
                                     )}
                                 </small>

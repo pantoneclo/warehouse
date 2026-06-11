@@ -146,6 +146,7 @@ class SaleAPIController extends AppBaseController
             return $this->sendError('Permission Denied');
         }
         $sale = $this->saleRepository->find($id);
+        $sale->load('shipment');
 
         return new SaleResource($sale);
     }
@@ -159,7 +160,7 @@ class SaleAPIController extends AppBaseController
         if (!Auth::user()->can('sale.edit')) {
             return $this->sendError('Permission Denied');
         }
-        $sale = $sale->load(['saleItems.product.stocks', 'warehouse',
+        $sale = $sale->load(['saleItems.product.stocks', 'warehouse', 'shipment',
 
             'saleItems.product' => function ($query) {
 
@@ -280,6 +281,12 @@ class SaleAPIController extends AppBaseController
 
             if (File::exists(Storage::path('sales/invoices/' . $sale->file))) {
                 File::delete(Storage::path('sales/invoices/' . $sale->file));
+            }
+            if (!empty($sale->file) && File::exists(public_path('uploads/sales/invoices/' . $sale->file))) {
+                File::delete(public_path('uploads/sales/invoices/' . $sale->file));
+            }
+            if (!empty($sale->courier_document) && File::exists(public_path('uploads/sales/couriers/' . $sale->courier_document))) {
+                File::delete(public_path('uploads/sales/couriers/' . $sale->courier_document));
             }
             $this->saleRepository->delete($id);
             DB::commit();

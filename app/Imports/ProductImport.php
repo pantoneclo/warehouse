@@ -35,25 +35,25 @@ class ProductImport implements ToCollection, WithChunkReading, WithStartRow, Wit
 
                 $productName = Product::whereName($row[0])->exists();
                 if ($productName) {
-                    throw new UnprocessableEntityHttpException('Product Name '.$row[0].' is already exist.');
+                    throw new UnprocessableEntityHttpException('Product Name ' . $row[0] . ' is already exist.');
                 }
                 $productCode = Product::Where('code', $row[1])->exists();
                 if ($productCode) {
-                    throw new UnprocessableEntityHttpException('Product Code '.$row[1].' is already exist.');
+                    throw new UnprocessableEntityHttpException('Product Code ' . $row[1] . ' is already exist.');
                 }
 
                 $productCategory = ProductCategory::whereName($row[2])->first();
                 $brand = Brand::whereName($row[3])->first();
-                
+
                 $baseUnit = BaseUnit::whereName(strtolower($row[7]))->first();
-                
-                if ($baseUnit){
+
+                if ($baseUnit) {
                     $productUnitId = $baseUnit->id;
-                }else {
-                    throw new UnprocessableEntityHttpException('Product unit '.$row[7].' is not found.');
+                } else {
+                    throw new UnprocessableEntityHttpException('Product unit ' . $row[7] . ' is not found.');
                 }
 
-//                if (strtolower($row[7]) == 'piece') {
+                //                if (strtolower($row[7]) == 'piece') {
 //                    $productUnitId = 1;
 //                } elseif (strtolower($row[7]) == 'meter') {
 //                    $productUnitId = 2;
@@ -62,14 +62,14 @@ class ProductImport implements ToCollection, WithChunkReading, WithStartRow, Wit
 //                } else {
 //                    throw new UnprocessableEntityHttpException('Product unit '.$row[7].' is not found.');
 //                }
-                
+
                 $saleUnit = Unit::whereName(strtolower($row[8]))->whereBaseUnit($productUnitId)->first();
                 $purchaseUnit = Unit::whereName(strtolower($row[9]))->whereBaseUnit($productUnitId)->first();
-                if (! $saleUnit) {
-                    throw new UnprocessableEntityHttpException('Sale unit '.$row[8].' is not found.');
+                if (!$saleUnit) {
+                    throw new UnprocessableEntityHttpException('Sale unit ' . $row[8] . ' is not found.');
                 }
-                if (! $purchaseUnit) {
-                    throw new UnprocessableEntityHttpException('Purchase unit '.$row[9].' is not found.');
+                if (!$purchaseUnit) {
+                    throw new UnprocessableEntityHttpException('Purchase unit ' . $row[9] . ' is not found.');
                 }
 
                 if ($productCategory) {
@@ -91,7 +91,7 @@ class ProductImport implements ToCollection, WithChunkReading, WithStartRow, Wit
                 } elseif ($row[4] == 'CODE39') {
                     $barcodeSymbol = 2;
                 } else {
-                    throw new UnprocessableEntityHttpException('Product barcode symbol '.$row[4].' is not found.');
+                    throw new UnprocessableEntityHttpException('Product barcode symbol ' . $row[4] . ' is not found.');
                 }
 
                 if (strtolower($row[12]) == 'exclusive') {
@@ -99,7 +99,7 @@ class ProductImport implements ToCollection, WithChunkReading, WithStartRow, Wit
                 } elseif (strtolower($row[12]) == 'inclusive') {
                     $taxType = 2;
                 } else {
-                    throw new UnprocessableEntityHttpException('Tax type '.$row[12].' is not found.');
+                    throw new UnprocessableEntityHttpException('Tax type ' . $row[12] . ' is not found.');
                 }
 
                 $productData = [
@@ -111,8 +111,8 @@ class ProductImport implements ToCollection, WithChunkReading, WithStartRow, Wit
                     'product_cost' => $row[5],
                     'product_price' => $row[6],
                     'product_unit' => $productUnitId,
-                    'sale_unit' => ! empty($saleUnit) ? $saleUnit->id : null,
-                    'purchase_unit' => ! empty($purchaseUnit) ? $purchaseUnit->id : null,
+                    'sale_unit' => !empty($saleUnit) ? $saleUnit->id : null,
+                    'purchase_unit' => !empty($purchaseUnit) ? $purchaseUnit->id : null,
                     'stock_alert' => isset($row[10]) ? $row[10] : null,
                     'order_tax' => isset($row[11]) ? $row[11] : null,
                     'tax_type' => $taxType,
@@ -121,7 +121,7 @@ class ProductImport implements ToCollection, WithChunkReading, WithStartRow, Wit
 
                 $product = Product::create($productData);
 
-                $reference_code = 'PR_'.$product->id;
+                $reference_code = 'PR_' . $product->id;
 
                 $barcodeType = null;
                 $generator = new BarcodeGeneratorPNG();
@@ -143,8 +143,10 @@ class ProductImport implements ToCollection, WithChunkReading, WithStartRow, Wit
                         break;
                 }
 
-                Storage::disk(config('app.media_disc'))->put('product_barcode/barcode-'.$reference_code.'.png',
-                    $generator->getBarcode($row[1], $barcodeType, 4, 70));
+                Storage::disk(config('app.media_disc'))->put(
+                    'product_barcode/barcode-' . $reference_code . '.png',
+                    $generator->getBarcode($row[1], $barcodeType, 4, 70)
+                );
 
                 DB::commit();
             } catch (Exception $e) {
@@ -207,7 +209,7 @@ class ProductImport implements ToCollection, WithChunkReading, WithStartRow, Wit
             '8.required' => 'Sale unit field is required',
             '9.required' => 'Purchase unit field is required',
             '10.numeric' => 'Stock alert field must be a number',
-            '11.numeric' => 'Order tax percentage must be a number',
+            '11.numeric' => 'Order Vat percentage must be a number',
             '12.required' => 'Tax type field is required',
         ];
     }

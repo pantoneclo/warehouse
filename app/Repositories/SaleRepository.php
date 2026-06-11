@@ -253,6 +253,91 @@ class SaleRepository extends BaseRepository
                 }
             }
          // invoice upload End
+ 
+            // courier document upload
+            if (!empty($input['courier_document'])) {
+                try {
+                    $base64_str = $input['courier_document'];
+
+                    // Validate base64 string format
+                    if (!preg_match("/^data:(.*?);base64,/", $base64_str, $matches)) {
+                        throw new \Exception('Invalid base64 file format');
+                    }
+
+                    $mimeType = $matches[1];
+                    $extension = $this->mimeToExtension($mimeType);
+
+                    // Validate allowed file types
+                    $allowedTypes = [
+                        'pdf' => 'application/pdf',
+                        'doc' => 'application/msword',
+                        'docx' => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+                        'jpg' => 'image/jpeg',
+                        'jpeg' => 'image/jpeg',
+                        'png' => 'image/png',
+                        'gif' => 'image/gif',
+                        'webp' => 'image/webp'
+                    ];
+
+                    if (!in_array($mimeType, $allowedTypes)) {
+                        throw new \Exception('Unsupported file type for courier document. Only documents and images are allowed.');
+                    }
+
+                    // Extract the base64 data
+                    $base64_data = substr($base64_str, strpos($base64_str, ',') + 1);
+                    $file_data = base64_decode($base64_data);
+
+                    if ($file_data === false) {
+                        throw new \Exception('Base64 decoding failed');
+                    }
+
+                    // Check file size (max 5MB)
+                    $fileSize = strlen($file_data);
+                    $maxSize = 5 * 1024 * 1024; // 5MB
+                    if ($fileSize > $maxSize) {
+                        throw new \Exception('Courier document size exceeds maximum limit of 5MB');
+                    }
+
+                    // Additional validation for images
+                    if (strpos($mimeType, 'image/') === 0) {
+                        if (!@getimagesizefromstring($file_data)) {
+                            throw new \Exception('Invalid image data');
+                        }
+                    }
+
+                    // Create sales/couriers directory structure if it doesn't exist
+                    $uploadPath = public_path('uploads/sales/couriers');
+                    if (!file_exists($uploadPath)) {
+                        mkdir($uploadPath, 0755, true);
+                    }
+
+                    // Generate unique filename with correct extension
+                    $fileName = 'courier_'.$input['country'].'_'.$input['order_no'].'_' . time() . '_' . Str::random(8) . '.' . $extension;
+                    $filePath = $uploadPath . '/' . $fileName;
+
+                    // Save the file with error handling
+                    if (file_put_contents($filePath, $file_data) === false) {
+                        throw new \Exception('Failed to save courier document');
+                    }
+
+                    chmod($filePath, 0644);
+
+                    // Save to database
+                    $sale->courier_document = $fileName;
+                    if (!empty($input['courier_document_name'])) {
+                        $sale->courier_document_name = $input['courier_document_name'];
+                    }
+                    $sale->save();
+
+                } catch (\Exception $e) {
+                    if (isset($filePath) && file_exists($filePath)) {
+                        unlink($filePath);
+                    }
+                    \Log::error('Courier document upload error: ' . $e->getMessage());
+                    throw new \Exception('Courier document upload failed: ' . $e->getMessage());
+                }
+            }
+            // courier document upload End
 
 
             if ($input['is_sale_created'] && $QuotationId) {
@@ -505,6 +590,82 @@ class SaleRepository extends BaseRepository
         try {
             DB::beginTransaction();
             $sale = Sale::findOrFail($id);
+
+            // Update invoice file if a new one is uploaded
+            if (!empty($input['file']) && str_starts_with($input['file'], 'data:')) {
+                try {
+                    $base64_str = $input['file'];
+                    if (preg_match("/^data:(.*?);base64,/", $base64_str, $matches)) {
+                        $mimeType = $matches[1];
+                        $extension = $this->mimeToExtension($mimeType);
+                        
+                        $base64_data = substr($base64_str, strpos($base64_str, ',') + 1);
+                        $file_data = base64_decode($base64_data);
+                        
+                        if ($file_data !== false) {
+                            $uploadPath = public_path('uploads/sales/invoices');
+                            if (!file_exists($uploadPath)) {
+                                mkdir($uploadPath, 0755, true);
+                            }
+                            
+                            // Delete old file if exists
+                            if (!empty($sale->file) && file_exists($uploadPath . '/' . $sale->file)) {
+                                @unlink($uploadPath . '/' . $sale->file);
+                            }
+                            
+                            $fileName = 'invoice_'.$input['country'].'_'.$input['order_no'].'_' . time() . '_' . Str::random(8) . '.' . $extension;
+                            $filePath = $uploadPath . '/' . $fileName;
+                            if (file_put_contents($filePath, $file_data) !== false) {
+                                chmod($filePath, 0644);
+                                $sale->file = $fileName;
+                                $sale->save();
+                            }
+                        }
+                    }
+                } catch (\Exception $e) {
+                    \Log::error('Invoice update upload error: ' . $e->getMessage());
+                }
+            }
+
+            // Update courier document if a new one is uploaded
+            if (!empty($input['courier_document']) && str_starts_with($input['courier_document'], 'data:')) {
+                try {
+                    $base64_str = $input['courier_document'];
+                    if (preg_match("/^data:(.*?);base64,/", $base64_str, $matches)) {
+                        $mimeType = $matches[1];
+                        $extension = $this->mimeToExtension($mimeType);
+                        
+                        $base64_data = substr($base64_str, strpos($base64_str, ',') + 1);
+                        $file_data = base64_decode($base64_data);
+                        
+                        if ($file_data !== false) {
+                            $uploadPath = public_path('uploads/sales/couriers');
+                            if (!file_exists($uploadPath)) {
+                                mkdir($uploadPath, 0755, true);
+                            }
+                            
+                            // Delete old file if exists
+                            if (!empty($sale->courier_document) && file_exists($uploadPath . '/' . $sale->courier_document)) {
+                                @unlink($uploadPath . '/' . $sale->courier_document);
+                            }
+                            
+                            $fileName = 'courier_'.$input['country'].'_'.$input['order_no'].'_' . time() . '_' . Str::random(8) . '.' . $extension;
+                            $filePath = $uploadPath . '/' . $fileName;
+                            if (file_put_contents($filePath, $file_data) !== false) {
+                                chmod($filePath, 0644);
+                                $sale->courier_document = $fileName;
+                                if (!empty($input['courier_document_name'])) {
+                                    $sale->courier_document_name = $input['courier_document_name'];
+                                }
+                                $sale->save();
+                            }
+                        }
+                    }
+                } catch (\Exception $e) {
+                    \Log::error('Courier document update upload error: ' . $e->getMessage());
+                }
+            }
+
             $saleItemIds = SaleItem::whereSaleId($id)->pluck('id')->toArray();
             $saleItmOldIds = [];
             foreach ($input['sale_items'] as $key => $saleItem) {

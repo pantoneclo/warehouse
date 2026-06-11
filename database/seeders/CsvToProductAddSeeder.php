@@ -45,7 +45,7 @@ class CsvToProductAddSeeder extends Seeder
             $currentPurchase = $this->purchase();
 
             $variant = [];
-            $variant['size'] = ['S', 'M', 'L', 'XL', 'XXL', '3XL', '6', '8', '10', '12', '14', '16', '18', '19', '20', '21', '22', '23', '24', '48', '50', '52', '54' , '56', '58', '62', '68', '74', '80', '86', '92'];
+            $variant['size'] = ['S', 'M', 'L', 'XL', 'XXL', '3XL', '6', '8', '10', '12', '14', '16', '18', '19', '20', '21', '22', '23', '24', '48', '50', '52', '54', '56', '58', '62', '68', '74', '80', '86', '92'];
 
             $isNewProduct = false;
             $currentProduct = null;
@@ -65,7 +65,7 @@ class CsvToProductAddSeeder extends Seeder
 
                 //get brand name
                 if ($isNewProduct) {
-                    $brandName = isset($record['Brand']) && !empty($record['Brand']) ? $record['Brand'] : 'True Classic';
+                    $brandName = isset($record['Brand']) && !empty($record['Brand']) ? $record['Brand'] : 'WHM-Matrix Platform';
                     $currentBrand = Brand::where('name', $brandName)->get()->first();
                     if ($currentBrand === null) {
                         $currentBrand = Brand::create([
@@ -210,7 +210,15 @@ class CsvToProductAddSeeder extends Seeder
         $purchaseStock['payment_type'] = 0;
 
         $purchaseInputArray = Arr::only($purchaseStock, [
-            'supplier_id', 'warehouse_id', 'date', 'status', 'discount', 'tax_rate', 'tax_amount', 'shipping', 'payment_type',
+            'supplier_id',
+            'warehouse_id',
+            'date',
+            'status',
+            'discount',
+            'tax_rate',
+            'tax_amount',
+            'shipping',
+            'payment_type',
         ]);
 
         /** @var Purchase $purchase */
@@ -227,7 +235,7 @@ class CsvToProductAddSeeder extends Seeder
         $curPrdItem = PurchaseItem::where([
             ['purchase_id', $purchase->id],
             ['product_id', $product->id],
-            ['quantity',$quantity],
+            ['quantity', $quantity],
         ])->first();
 
         if ($curPrdItem == null) {

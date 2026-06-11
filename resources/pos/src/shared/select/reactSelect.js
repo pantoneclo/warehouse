@@ -6,7 +6,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { getFormattedMessage } from '../sharedMethod';
 
 const ReactSelect = (props) => {
-    const { title, placeholder, data, defaultValue, onChange, errors, value, isRequired, multiLanguageOption, isWarehouseDisable, addSearchItems, isCurrencyDisable } = props;
+    const { title, placeholder, data, defaultValue, onChange, errors, value, isRequired, required, multiLanguageOption, isWarehouseDisable, addSearchItems, isCurrencyDisable } = props;
     const dispatch = useDispatch();
     const isOptionDisabled = useSelector((state) => state.isOptionDisabled);
 
@@ -30,7 +30,7 @@ const ReactSelect = (props) => {
     return (
         <Form.Group className='form-group w-100' controlId='formBasic'>
             {title ? <Form.Label>{title} :</Form.Label> : ''}
-            {isRequired ? '' : <span className='required' />}
+            {isRequired ? '' : (required === false ? '' : <span className='required' />)}
             <Select
                 placeholder={placeholder}
                 value={value}

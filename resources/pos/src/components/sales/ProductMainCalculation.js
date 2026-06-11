@@ -51,22 +51,28 @@ const ProductMainCalculation = (props) => {
                         <table className='table border'>
                             <tbody>
                                 <tr>
+                                    <td className='py-3'>{getFormattedMessage('pos-total.title')}</td>
+                                    <td className='py-3'>
+                                        {currencySymbolHendling(allConfigData, currencySymbolToUse, subtotal)}
+                                    </td>
+                                </tr>
+                                <tr>
                                     <td className='py-3'>{getFormattedMessage('purchase.input.order-tax.label')}</td>
                                     <td className='py-3'>
-                                        {currencySymbolHendling(allConfigData, frontSetting?.value?.currency_symbol, taxCal)}
-                                        {inputValues.order_tax_type === '2' ? "(Inc)" : "(Exc)"}
+                                        {currencySymbolHendling(allConfigData, currencySymbolToUse, taxCal)}
+                                        {inputValues.order_tax_type == 2 || inputValues.order_tax_type === '2' ? "(Inc)" : "(Exc)"}
                                     </td>
                                 </tr>
                                 <tr>
                                     <td className='py-3'>{getFormattedMessage('purchase.order-item.table.tax.column.label')}</td>
                                     <td className='py-3'>
-                                        {currencySymbolHendling(allConfigData, frontSetting?.value?.currency_symbol, allItemsTax)}
+                                        {currencySymbolHendling(allConfigData, currencySymbolToUse, allItemsTax)}
                                     </td>
                                 </tr>
                                 <tr>
                                     <td className='py-3'>{getFormattedMessage('purchase.order-item.table.discount.column.label')}</td>
                                     <td className='py-3'>
-                                        {currencySymbolHendling(allConfigData, frontSetting?.value?.currency_symbol, discount)}
+                                        {currencySymbolHendling(allConfigData, currencySymbolToUse, discount)}
                                     </td>
                                 </tr>
                                 <tr>
