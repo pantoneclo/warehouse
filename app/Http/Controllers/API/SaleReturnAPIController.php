@@ -16,6 +16,7 @@ use App\Models\User;
 use App\Models\Warehouse;
 use App\Repositories\SaleReturnRepository;
 use App\Helpers\StockHelper;
+use App\Jobs\SyncPostgresStock;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Exception;
 use Illuminate\Database\Eloquent\Builder;
@@ -307,6 +308,7 @@ class SaleReturnAPIController extends AppBaseController
             // Approve the return
             $saleReturn->approve(Auth::id());
 
+            $skus = [];
             // Update stock for each return item
             foreach ($saleReturn->saleReturnItems as $returnItem) {
                 $product = $returnItem->product;
@@ -328,14 +330,17 @@ class SaleReturnAPIController extends AppBaseController
                     ]);
                 }
 
-                // Update stock in PostgreSQL using StockHelper
-                StockHelper::manageStockForCodeAndWarehouse($product->code, $saleReturn->warehouse_id);
+                $skus[] = $product->code;
             }
 
             // Mark stock as updated
             $saleReturn->markStockUpdated();
 
             DB::commit();
+
+            if (!empty($skus)) {
+                SyncPostgresStock::dispatch($saleReturn->warehouse_id, $skus);
+            }
 
             return $this->sendResponse(
                 new SaleReturnResource($saleReturn),
@@ -384,6 +389,7 @@ class SaleReturnAPIController extends AppBaseController
                 return $this->sendError('No valid items found to approve', 400);
             }
 
+            $skus = [];
             // Update stock for each approved item
             foreach ($itemsToApprove as $returnItem) {
                 $product = $returnItem->product;
@@ -405,8 +411,7 @@ class SaleReturnAPIController extends AppBaseController
                     ]);
                 }
 
-                // Update stock in PostgreSQL using StockHelper
-                StockHelper::manageStockForCodeAndWarehouse($product->code, $saleReturn->warehouse_id);
+                $skus[] = $product->code;
 
                 // Mark this specific item as approved
                 $returnItem->update([
@@ -435,6 +440,10 @@ class SaleReturnAPIController extends AppBaseController
             }
 
             DB::commit();
+
+            if (!empty($skus)) {
+                SyncPostgresStock::dispatch($saleReturn->warehouse_id, $skus);
+            }
 
             return $this->sendResponse(
                 new SaleReturnResource($saleReturn),

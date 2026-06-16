@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use App\Helpers\StockHelper;
 use Exception;
+use App\Jobs\SyncPostgresStock;
 
 class StockService
 {
@@ -27,7 +28,7 @@ class StockService
      * @param string|null $note
      * @return ManageStock
      */
-    public function updateStock($warehouseId, $productId, $quantity, $referenceType = null, $referenceId = null, $action = null, $note = null)
+    public function updateStock($warehouseId, $productId, $quantity, $referenceType = null, $referenceId = null, $action = null, $note = null, $syncPostgres = true)
     {
         // Prevent updates with 0 quantity if desired, but sometimes 0 change might be relevant?
         // Usually 0 change means nothing to do.
@@ -75,15 +76,14 @@ class StockService
             'note' => $note,
         ]);
 
-        // Helper trigger to update product meta or other checks
-        // The original helper calls StockHelper::manageStockForCodeAndWarehouse
-        // We must ensure product is loaded to get code
-        if (!$manageStock->relationLoaded('product')) {
-            $manageStock->load('product');
-        }
-        
-        if ($manageStock->product) {
-             StockHelper::manageStockForCodeAndWarehouse($manageStock->product->code, $warehouseId);
+        if ($syncPostgres) {
+            if (!$manageStock->relationLoaded('product')) {
+                $manageStock->load('product');
+            }
+            
+            if ($manageStock->product) {
+                 SyncPostgresStock::dispatch($warehouseId, [$manageStock->product->code]);
+            }
         }
 
         return $manageStock;

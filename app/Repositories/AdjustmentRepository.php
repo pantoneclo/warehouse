@@ -100,7 +100,8 @@ class AdjustmentRepository extends BaseRepository
                     Adjustment::class,
                     $adjustment->id,
                     'adjustment_addition',
-                    'Adjustment Addition'
+                    'Adjustment Addition',
+                    false
                 );
             } else {
                 // Check if sufficient quantity, though StockService can handle negative results or throwing error?
@@ -133,7 +134,8 @@ class AdjustmentRepository extends BaseRepository
                     Adjustment::class,
                     $adjustment->id,
                     'adjustment_subtraction',
-                    'Adjustment Subtraction'
+                    'Adjustment Subtraction',
+                    false
                 );
             }
         }
@@ -207,7 +209,8 @@ class AdjustmentRepository extends BaseRepository
                             Adjustment::class,
                             $adjustment->id,
                             'adjustment_addition',
-                            'Adjustment Addition (New Stock)'
+                            'Adjustment Addition (New Stock)',
+                            false
                         );
                     }
                 }
@@ -252,7 +255,8 @@ class AdjustmentRepository extends BaseRepository
                         Adjustment::class,
                         $adjustment->id,
                         'adjustment_update',
-                        'Adjustment Updated'
+                        'Adjustment Updated',
+                        false
                     );
                 }
 
@@ -286,7 +290,8 @@ class AdjustmentRepository extends BaseRepository
                     Adjustment::class,
                     $adjustment->id,
                     'adjustment_item_remove',
-                    'Adjustment Item Removed'
+                    'Adjustment Item Removed',
+                    false
                 );
             }
             AdjustmentItem::whereIn('id', array_values($removeItemIds))->delete();

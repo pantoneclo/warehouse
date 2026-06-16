@@ -19,6 +19,7 @@ use App\Models\Product;
 
 use App\Http\Controllers\API\StockManagementAPIController;
 use App\Jobs\ProcessAdjustmentItems;
+use App\Jobs\SyncPostgresStock;
 class AdjustmentAPIController extends AppBaseController
 {
     /** @var AdjustmentRepository */
@@ -146,6 +147,22 @@ class AdjustmentAPIController extends AppBaseController
         $input = $request->all();
         $adjustment = $this->adjustmentRepository->updateAdjustment($input, $id);
 
+        try {
+            if (isset($input['adjustment_items']) && is_array($input['adjustment_items'])) {
+                ProcessAdjustmentItems::dispatch($input['adjustment_items'], $adjustment->warehouse_id);
+
+                // Trigger background queue worker
+                $command = 'php ' . base_path('artisan') . ' app:run-queue-worker > /dev/null 2>&1 &';
+                if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
+                    pclose(popen('start /B php ' . base_path('artisan') . ' app:run-queue-worker', "r"));
+                } else {
+                    exec($command);
+                }
+            }
+        } catch (\Exception $e) {
+            \Log::error('Failed to trigger adjustment background sync on update: ' . $e->getMessage());
+        }
+
         return new AdjustmentResource($adjustment);
     }
 
@@ -165,6 +182,9 @@ class AdjustmentAPIController extends AppBaseController
 
             $adjustment = $this->adjustmentRepository->with('adjustmentItems')->where('id', $id)->firstOrFail();
 
+            $productIds = $adjustment->adjustmentItems->pluck('product_id')->toArray();
+            $skus = Product::whereIn('id', $productIds)->pluck('code')->unique()->toArray();
+
             foreach ($adjustment->adjustmentItems as $adjustmentItem) {
                 $oldItem = AdjustmentItem::whereId($adjustmentItem->id)->firstOrFail();
                 $existProductStock = ManageStock::whereWarehouseId($adjustment->warehouse_id)->whereProductId($oldItem->product_id)->first();
@@ -183,6 +203,18 @@ class AdjustmentAPIController extends AppBaseController
             $this->adjustmentRepository->delete($id);
 
             DB::commit();
+
+            if (!empty($skus)) {
+                SyncPostgresStock::dispatch($adjustment->warehouse_id, $skus);
+
+                // Trigger background queue worker
+                $command = 'php ' . base_path('artisan') . ' app:run-queue-worker > /dev/null 2>&1 &';
+                if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
+                    pclose(popen('start /B php ' . base_path('artisan') . ' app:run-queue-worker', "r"));
+                } else {
+                    exec($command);
+                }
+            }
 
             return $this->sendSuccess('Adjustment delete successfully');
         } catch (Exception $e) {

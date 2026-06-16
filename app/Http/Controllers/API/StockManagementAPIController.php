@@ -32,6 +32,8 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Artisan;
 use Exception;
 use Symfony\Component\HttpKernel\Exception\UnprocessableEntityHttpException;
+use App\Helpers\StockHelper;
+use App\Jobs\SyncWebhookOrderStocks;
 
 
 class StockManagementAPIController extends AppBaseController
@@ -87,11 +89,8 @@ class StockManagementAPIController extends AppBaseController
 
     public function webHookOrder(Request $request)
     {
-//        dd($request->all());
-
         DB::beginTransaction();
         try {
-
             // Define validation rules
             $rules = [
                 'warehouse' => 'required|string',
@@ -129,11 +128,10 @@ class StockManagementAPIController extends AppBaseController
                 ], 422);
             }
 
-            // Create the customer
-            // Check if the customer already exists by email
-            $existCustomer = Customer::where('email', $request->input('customer.email'))->first();
+            // Create or reuse the customer
+            $customer = Customer::where('email', $request->input('customer.email'))->first();
 
-                // Create a new customer
+            if (!$customer) {
                 $customer = Customer::create([
                     'name' => $request->input('customer.name'),
                     'email' => $request->input('customer.email'),
@@ -143,7 +141,7 @@ class StockManagementAPIController extends AppBaseController
                     'address' => $request->input('customer.address'),
                     'dob' => $request->input('customer.dob'),
                 ]);
-
+            }
 
             $warehouse_id = $request->warehouse == "BD" ? "BD" : "SI";
 
@@ -157,20 +155,17 @@ class StockManagementAPIController extends AppBaseController
                 ], 404);
             }
 
-
-            $conversion_rate = Currency::where('code', $request->currency)->value('conversion_rate')??1;
-
-            //conversion_rate
-
-            $selling_value_eur =$request->grand_total *  $conversion_rate;
+            $conversion_rate = Currency::where('code', $request->currency)->value('conversion_rate') ?? 1;
+            $selling_value_eur = $request->grand_total * $conversion_rate;
 
             // Additional fields not directly available in the request
             $additionalFields = [
                 'customer_id' => $customer->id,
                 'warehouse_id' => $warehouse->id,
                 'selling_value_eur' => $selling_value_eur,
-                'conversion_rate' => $conversion_rate??1,
+                'conversion_rate' => $conversion_rate ?? 1,
             ];
+            
             // Extract sale input data and merge additional fields
             $saleInputArray = array_merge(
                 Arr::only($request->all(), [
@@ -179,13 +174,13 @@ class StockManagementAPIController extends AppBaseController
                     'market_place', 'order_no', 'country', 'currency'
                 ]),
                 [
-                    'cod' => $request->input('cod', 0) // If currency exists, store it; otherwise, null
+                    'cod' => $request->input('cod', 0)
                 ],
                 [
-                    'order_type' => $request->input('order_type', 1) // If order_type exists, store it; otherwise, null
+                    'order_type' => $request->input('order_type', 1)
                 ],
                 [
-                    'order_process_fee' => 0.85 //order_process_fee
+                    'order_process_fee' => 0.85
                 ],
                 $additionalFields
             );
@@ -200,175 +195,227 @@ class StockManagementAPIController extends AppBaseController
                     'code' => 500
                 ], 500);
             }
+            
             // Check if the sale was created successfully
             if (!$sale || !$sale->id) {
                 throw new UnprocessableEntityHttpException('Sale record could not be created.');
             }
 
-            // Array to store sale items data
+            // Extract all item codes
+            $itemCodes = [];
+            foreach ($request->items as $item) {
+                $itemCodes[] = $item['code'];
+            }
+            $itemCodes = array_unique($itemCodes);
+
+            $comboCodes = [];
+            $regularCodes = [];
+            foreach ($itemCodes as $code) {
+                if (strpos($code, 'COMBO') === 0) {
+                    $comboCodes[] = $code;
+                } else {
+                    $regularCodes[] = $code;
+                }
+            }
+
+            // 1. Direct Combo products relations
+            $directComboProducts = ComboProduct::whereIn('code', $comboCodes)
+                ->where('warehouse_id', $warehouse->id)
+                ->get();
+
+            // 2. Direct Regular products
+            $directRegularProducts = Product::whereIn('code', $regularCodes)->get();
+
+            // 3. Combos containing direct regular products
+            $combosContainingProducts = ComboProduct::whereIn('product_id', $directRegularProducts->pluck('id'))
+                ->where('warehouse_id', $warehouse->id)
+                ->get();
+
+            $relatedComboIds = $combosContainingProducts->pluck('combo_id')->unique()->toArray();
+
+            // 4. All constituent products of related combos
+            $allComboConstituents = collect();
+            if (!empty($relatedComboIds)) {
+                $allComboConstituents = ComboProduct::whereIn('combo_id', $relatedComboIds)
+                    ->where('warehouse_id', $warehouse->id)
+                    ->get();
+            }
+
+            // Accumulate all product IDs needed for preloading
+            $allProductIds = collect()
+                ->merge($directComboProducts->pluck('product_id'))
+                ->merge($directRegularProducts->pluck('id'))
+                ->merge($allComboConstituents->pluck('product_id'))
+                ->unique()
+                ->toArray();
+
+            // 5. Fetch all products in bulk (building ID and Code lookup maps)
+            $preloadedProducts = Product::whereIn('id', $allProductIds)->get();
+            $productsById = $preloadedProducts->keyBy('id');
+            $productsByCode = $preloadedProducts->keyBy('code');
+
+            // 6. Fetch all stock records in bulk
+            $preloadedStocks = ManageStock::where('warehouse_id', $warehouse->id)
+                ->whereIn('product_id', $allProductIds)
+                ->get();
+            $stocksByProductId = $preloadedStocks->keyBy('product_id');
+
+            // Pre-group collections for O(1) matching in the loop
+            $directComboProductsGrouped = $directComboProducts->groupBy('code');
+            $combosContainingProductGrouped = $combosContainingProducts->groupBy('product_id');
+            $allComboConstituentsGrouped = $allComboConstituents->groupBy('combo_id');
+
+            // Arrays to store prepared sale items and queue items
             $saleItemsData = [];
             $processedProductIds = [];
             $preparedItems = [];
             $comboRelatedItems = [];
+            $skusToSync = [];
             $operation = 'inventory';
-            // Process each item
+            $now = Carbon::now();
+
+            // Process each item using O(1) in-memory lookups
             foreach ($request->items as $item) {
-                // Extract the first 5 characters from the code
-                $firstFiveChars = substr($item['code'], 0, 5);
-
-                if ($firstFiveChars === 'COMBO') {
+                if (strpos($item['code'], 'COMBO') === 0) {
                     // Handle combo products
-                    $comboProductIds = ComboProduct::where('code', $item['code'])
-                        ->where('warehouse_id', $warehouse->id)
-                        ->pluck('product_id');
+                    $comboRelations = $directComboProductsGrouped->get($item['code']) ?? collect();
+                    $smallestQuantity = [];
 
-                    $relatedProductData = [];
-                    $smallestQuantity = []; // To store the smallest quantity from related products
+                    foreach ($comboRelations as $relation) {
+                        $productId = $relation->product_id;
+                        $product = $productsById->get($productId);
 
-                    foreach ($comboProductIds as $productId) {
-                        $product = Product::find($productId);
+                        if ($product) {
+                            // Perform stock management locally for each related product
+                            $this->managedStockPreloaded($product, $item['quantity'], $warehouse, $stocksByProductId);
 
-                        // Perform stock management locally for each related product
-                            $this->managedStock($product, $item, $sale, $warehouse, $saleItemsData, $managedType = null);
-
-                            // Prepare and save sale item
-                            $saleItem = $this->prepareAndSaveSaleItem($product, $item, $sale);
+                            // Collect sale item data for bulk insert
+                            $saleItemsData[] = [
+                                'product_id' => $product->id,
+                                'sale_id' => $sale->id,
+                                'product_price' => $item['price'],
+                                'net_unit_price' => $item['price'],
+                                'tax_type' => $item['tax_type'] ?? 0,
+                                'tax_value' => $item['tax_value'] ?? 0,
+                                'tax_amount' => $item['tax_amount'] ?? 0,
+                                'discount_type' => $item['discount_type'] ?? 2,
+                                'discount_value' => $item['discount_value'] ?? 0,
+                                'discount_amount' => $item['discount_amount'] ?? 0,
+                                'sale_unit' => $item['sale_unit'] ?? 1,
+                                'quantity' => $item['quantity'],
+                                'sub_total' => $item['quantity'] * $item['price'],
+                                'created_at' => $now,
+                                'updated_at' => $now,
+                            ];
                             $processedProductIds[] = $product->id;
 
-
-                        // Get the stock quantity for this product in the warehouse
-                        $manageStockProduct = ManageStock::where('warehouse_id', $warehouse->id)
-                            ->where('product_id', $productId)
-                            ->first();
-
-                        if ($manageStockProduct) {
-                            // Calculate the smaller quantity between requested and available
-                            $smallestQuantity[] = $manageStockProduct->quantity;
-
-                            // Store each related product SKU and its own quantity for the second operation
-                            $comboRelatedItems[] = [
-                                'sku' => $product->code,
-                                'quantity' => $manageStockProduct->quantity, // Use stock quantity here for each related product
-                            ];
-
-                            // Determine the smallest quantity for the combo as a whole
-
-
+                            // Get stock quantity for this product in the warehouse
+                            $manageStockProduct = $stocksByProductId->get($productId);
+                            if ($manageStockProduct) {
+                                $smallestQuantity[] = $manageStockProduct->quantity;
+                                $comboRelatedItems[] = [
+                                    'sku' => $product->code,
+                                    'quantity' => $manageStockProduct->quantity,
+                                ];
+                            }
                         }
                     }
 
                     // First Operation: Add the combo SKU with the smallest quantity
-                    if ($smallestQuantity !== null) {
+                    if (!empty($smallestQuantity)) {
                         $preparedItems[] = [
                             'sku' => $item['code'], // Combo SKU
                             'quantity' => min($smallestQuantity), // Smallest quantity among the related products
                         ];
                     }
-                    $this->manageStockForCodeAndWarehouse($item['code'],$warehouse->id);
+                    $skusToSync[] = $item['code'];
                 } else {
-
                     // Handle regular products
-                    $product = Product::where('code', $item['code'])->first();
-                     // Perform stock management locally
-                        $this->managedStock($product, $item, $sale, $warehouse, $saleItemsData, $managedType = null);
+                    $product = $productsByCode->get($item['code']);
+                    if (!$product) {
+                        throw new UnprocessableEntityHttpException('Product not found for code: ' . $item['code']);
+                    }
 
-                        // Prepare and save sale item
-                        $saleItem = $this->prepareAndSaveSaleItem($product, $item, $sale);
-                        $processedProductIds[] = $product->id;
+                    // Perform stock management locally
+                    $this->managedStockPreloaded($product, $item['quantity'], $warehouse, $stocksByProductId);
 
-                    $manageStockProduct = ManageStock::where('warehouse_id', $warehouse->id)
-                        ->where('product_id', $product->id)
-                        ->first();
+                    // Collect sale item data for bulk insert
+                    $saleItemsData[] = [
+                        'product_id' => $product->id,
+                        'sale_id' => $sale->id,
+                        'product_price' => $item['price'],
+                        'net_unit_price' => $item['price'],
+                        'tax_type' => $item['tax_type'] ?? 0,
+                        'tax_value' => $item['tax_value'] ?? 0,
+                        'tax_amount' => $item['tax_amount'] ?? 0,
+                        'discount_type' => $item['discount_type'] ?? 2,
+                        'discount_value' => $item['discount_value'] ?? 0,
+                        'discount_amount' => $item['discount_amount'] ?? 0,
+                        'sale_unit' => $item['sale_unit'] ?? 1,
+                        'quantity' => $item['quantity'],
+                        'sub_total' => $item['quantity'] * $item['price'],
+                        'created_at' => $now,
+                        'updated_at' => $now,
+                    ];
+                    $processedProductIds[] = $product->id;
 
-                    if ($product && $manageStockProduct) {
+                    $manageStockProduct = $stocksByProductId->get($product->id);
+
+                    if ($manageStockProduct) {
                         // Add the regular product to the preparedItems array
                         $preparedItems[] = [
-                            'sku' => $product->code, // Product SKU
-                            'quantity' => $manageStockProduct->quantity, // Stock quantity
+                            'sku' => $product->code,
+                            'quantity' => $manageStockProduct->quantity,
                         ];
 
                         // Check if the regular product is part of any combo
-                        $comboProductIds = ComboProduct::where('product_id', $product->id)
-                            ->where('warehouse_id', $warehouse->id)
-                            ->pluck('combo_id'); // Retrieve all combo IDs where this product is included
+                        $combos = $combosContainingProductGrouped->get($product->id) ?? collect();
+                        if ($combos->isNotEmpty()) {
+                            foreach ($combos as $comboInstance) {
+                                $comboId = $comboInstance->combo_id;
+                                $comboRelatedProductIds = $allComboConstituentsGrouped->get($comboId) ?? collect();
 
-                        if ($comboProductIds->isNotEmpty()) {
-                            foreach ($comboProductIds as $comboId) {
-                                // Get all products in this combo
-                                $comboRelatedProductIds = ComboProduct::where('combo_id', $comboId)
-                                    ->where('warehouse_id', $warehouse->id)
-                                    ->pluck('product_id');
+                                $smallestQuantity = null;
 
-                                $smallestQuantity = null; // To store the smallest quantity of combo-related products
-
-                                foreach ($comboRelatedProductIds as $comboProductId) {
-                                    $comboProduct = Product::find($comboProductId);
-                                    $comboStockProduct = ManageStock::where('warehouse_id', $warehouse->id)
-                                        ->where('product_id', $comboProductId)
-                                        ->first();
+                                foreach ($comboRelatedProductIds as $comboProductRelation) {
+                                    $comboProductId = $comboProductRelation->product_id;
+                                    $comboProduct = $productsById->get($comboProductId);
+                                    $comboStockProduct = $stocksByProductId->get($comboProductId);
 
                                     if ($comboProduct && $comboStockProduct) {
-                                        // Get the smaller quantity between requested and available
                                         $currentComboProductQuantity = min($item['quantity'], $comboStockProduct->quantity);
 
-                                        // Determine the smallest quantity for the combo-related products
                                         if ($smallestQuantity === null || $currentComboProductQuantity < $smallestQuantity) {
                                             $smallestQuantity = $currentComboProductQuantity;
                                         }
 
-                                        // Add each combo-related product's SKU and its own quantity
                                         $comboRelatedItems[] = [
                                             'sku' => $comboProduct->code,
-                                            'quantity' => $comboStockProduct->quantity, // Use the stock quantity of the combo-related product
+                                            'quantity' => $comboStockProduct->quantity,
                                         ];
                                     }
                                 }
 
-                                // After checking all related products, store the combo's smallest quantity if applicable
                                 if ($smallestQuantity !== null) {
                                     $preparedItems[] = [
-                                        'sku' => 'COMBO: ' . $comboId, // Combo SKU (you can use a relevant naming convention)
-                                        'quantity' => $smallestQuantity, // Smallest quantity among related products
+                                        'sku' => 'COMBO: ' . $comboId,
+                                        'quantity' => $smallestQuantity,
                                     ];
                                 }
                             }
                         }
-
-
                     }
 
-                    $this->manageStockForCodeAndWarehouse($item['code'],$warehouse->id);
+                    $skusToSync[] = $item['code'];
                 }
             }
 
-            // First call: Combo products (first operation) and regular products
-            if (!empty($preparedItems)) {
-//                return response()->json([
-//                    'warehouse' => $warehouse->country_code,
-//                    'operation' => $operation,
-//                    'items' => $preparedItems,
-//                ]);
-                $this-> manageStock(
-                    $warehouse->country_code,
-                    $operation,
-                    $preparedItems
-                );
+            // Bulk insert all sale items
+            if (!empty($saleItemsData)) {
+                SaleItem::insert($saleItemsData);
             }
 
-// Second call: Combo-related products (second operation)
-            if (!empty($comboRelatedItems)) {
-//                return response()->json([
-//                    'warehouse' => $warehouse->country_code,
-//                    'operation' => $operation,
-//                    'items' => $comboRelatedItems,
-//                ]);
-                $this->manageStock(
-                    $warehouse->country_code,
-                    $operation,
-                    $comboRelatedItems
-                );
-            }
-            //Payment
+            // Payment
             if ($sale->payment_status == Sale::PAID) {
                 $sale->paid_amount = $sale->grand_total;
                 SalesPayment::create([
@@ -384,15 +431,25 @@ class StockManagementAPIController extends AppBaseController
 
             // Generate reference code
             $sale->reference_code = getSettingValue('sale_code') . '_111' . $sale->id;
-            $sale->save();  // Update the sale record
+            $sale->save();
 
             // Fetch updated stock information
             $stocks = ManageStock::where('warehouse_id', $warehouse->id)
                 ->whereIn('product_id', $processedProductIds)
                 ->get();
 
-
             DB::commit();
+
+            // Dispatch background queue job for external API and PostgreSQL stock updates
+            SyncWebhookOrderStocks::dispatch(
+                $warehouse->id,
+                $warehouse->country_code,
+                $operation,
+                $preparedItems,
+                $comboRelatedItems,
+                $skusToSync
+            );
+
             // Final response
             return response()->json([
                 'status' => 'success',
@@ -417,13 +474,33 @@ class StockManagementAPIController extends AppBaseController
             $errorResponse = [
                 'error' => true,
                 'message' => $e->getMessage(),
-                'code' => 422, // or any other relevant HTTP status code
+                'code' => 422,
             ];
 
             return response()->json($errorResponse, 422);
         }
-
     }
+
+    private function managedStockPreloaded($product, $quantity, $warehouse, $stocksByProductId)
+    {
+        if (!$product) {
+            throw new UnprocessableEntityHttpException('Product not found.');
+        }
+
+        if (isset($product->quantity_limit) && $quantity > $product->quantity_limit) {
+            throw new UnprocessableEntityHttpException('Please enter less than ' . $product->quantity_limit . ' quantity of ' . $product->name . ' product.');
+        }
+
+        $manageStockProduct = $stocksByProductId->get($product->id);
+        if ($manageStockProduct && $manageStockProduct->quantity >= $quantity) {
+            $totalQuantity = $manageStockProduct->quantity - $quantity;
+            $manageStockProduct->quantity = $totalQuantity;
+            $manageStockProduct->save();
+        } else {
+            throw new UnprocessableEntityHttpException('Quantity must be less than available quantity.');
+        }
+    }
+
 
     /**
      * Process each product and manage stock

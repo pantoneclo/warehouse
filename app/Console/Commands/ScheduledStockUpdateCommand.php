@@ -145,11 +145,11 @@ class ScheduledStockUpdateCommand extends Command
         $progressBar = $this->output->createProgressBar($totalItems);
         $progressBar->start();
 
+        $visitedProductCodes = [];
+        $visitedComboCodes = [];
+
         // Process all products
         foreach ($productCodes as $productCode) {
-            $visitedProductCodes = [];
-            $visitedComboCodes = [];
-            
             StockHelper::manageStockForCodeAndWarehouse(
                 $productCode, 
                 $warehouseId, 
@@ -162,9 +162,6 @@ class ScheduledStockUpdateCommand extends Command
 
         // Process all combos
         foreach ($comboCodes as $comboCode) {
-            $visitedProductCodes = [];
-            $visitedComboCodes = [];
-            
             StockHelper::manageStockForCodeAndWarehouse(
                 $comboCode, 
                 $warehouseId, 

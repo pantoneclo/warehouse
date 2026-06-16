@@ -3,23 +3,26 @@
 namespace App\Jobs;
 
 use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldBeUnique;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use App\Models\Product;
-use App\Http\Controllers\API\StockManagementAPIController;
+use App\Helpers\StockHelper;
+use Illuminate\Support\Facades\Log;
 
 class ProcessAdjustmentItems implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+
     protected $adjustmentItems;
     protected $warehouseId;
+
     /**
      * Create a new job instance.
      *
-     * @return void
+     * @param array $adjustmentItems
+     * @param int $warehouseId
      */
     public function __construct($adjustmentItems, $warehouseId)
     {
@@ -29,33 +32,45 @@ class ProcessAdjustmentItems implements ShouldQueue
 
     /**
      * Execute the job.
-     *
-     * @return void
      */
-    public function handle(StockManagementAPIController $stockManagement)
+    public function handle()
     {
         try {
+            Log::info("Starting ProcessAdjustmentItems job", [
+                'warehouse_id' => $this->warehouseId,
+                'items_count' => count($this->adjustmentItems)
+            ]);
+
+            // Bulk load product codes to avoid N+1 queries
+            $productIds = array_column($this->adjustmentItems, 'product_id');
+            $products = Product::whereIn('id', $productIds)->select('id', 'code')->get()->keyBy('id');
+
+            $visitedProductCodes = [];
+            $visitedComboCodes = [];
+
             // Process each adjustment item
             foreach ($this->adjustmentItems as $item) {
                 $productId = $item['product_id'];
-                $quantity = $item['quantity'];
-                $methodType = $item['method_type']; // 1 for increase, 0 for decrease
+                $product = $products->get($productId);
 
-                // Fetch the product code using the product_id
-                $productCode = Product::where('id', $productId)->value('code');
-                if (!$productCode) {
-                    // Handle product not found case
+                if (!$product || !$product->code) {
                     continue; // Skip to the next item
                 }
 
                 // Adjust stock using the code and warehouse_id
-                $stockManagement->manageStockForCodeAndWarehouse($productCode, $this->warehouseId);
-
-                // Optional: Log the adjustment or perform other operations here
+                StockHelper::manageStockForCodeAndWarehouse(
+                    $product->code,
+                    $this->warehouseId,
+                    $visitedProductCodes,
+                    $visitedComboCodes
+                );
             }
+
+            Log::info("ProcessAdjustmentItems job completed successfully");
         } catch (\Exception $e) {
-            // Handle any exceptions that occur during the background processing
-            \Log::error('Error processing adjustment items: ' . $e->getMessage());
+            Log::error('Error processing adjustment items: ' . $e->getMessage(), [
+                'trace' => $e->getTraceAsString()
+            ]);
         }
     }
 }
