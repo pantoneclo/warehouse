@@ -6,7 +6,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { getFormattedMessage } from '../sharedMethod';
 
 const ReactSelect = (props) => {
-    const { title, placeholder, data, defaultValue, onChange, errors, value, isRequired, required, multiLanguageOption, isWarehouseDisable, addSearchItems, isCurrencyDisable } = props;
+    const { title, placeholder, data, defaultValue, onChange, errors, value, isRequired, required, multiLanguageOption, isWarehouseDisable, addSearchItems, isCurrencyDisable, isDisabled } = props;
     const dispatch = useDispatch();
     const isOptionDisabled = useSelector((state) => state.isOptionDisabled);
 
@@ -38,7 +38,7 @@ const ReactSelect = (props) => {
                 onChange={onChange}
                 options={option}
                 noOptionsMessage={() => getFormattedMessage('no-option.label')}
-                isDisabled={isWarehouseDisable ? isOptionDisabled : (isCurrencyDisable ? isCurrencyDisable : false)}
+                isDisabled={isDisabled !== undefined ? isDisabled : (isWarehouseDisable ? isOptionDisabled : (isCurrencyDisable ? isCurrencyDisable : false))}
             />
             {errors ? <span className='text-danger d-block fw-400 fs-small mt-2'>{errors ? errors : null}</span> : null}
         </Form.Group>

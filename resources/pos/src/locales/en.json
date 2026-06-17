@@ -974,5 +974,7 @@
   "sale.report.edit.enter.courier": "Please Enter Courier Fee",
   "sale.report.edit.enter.other.income": "Please Enter Other Income",
   "sale.report.edit.enter.other.cost": "Please Enter Other Cost",
-  "sale.report.success.edit.message": "Sale Report updated successfully"
+  "sale.report.success.edit.message": "Sale Report updated successfully",
+  "sale.status.confirm-cancelled.message": "Are you sure you want to change the status to Cancelled? Once saved, you will not be able to change it again.",
+  "sale.status.confirm-failed.message": "Are you sure you want to change the status to Failed Order? Once saved, you will not be able to change it again."
 }

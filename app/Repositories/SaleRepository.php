@@ -97,7 +97,7 @@ class SaleRepository extends BaseRepository
      */
     public function storeSale($input): Sale
     {
-    
+
         try {
             DB::beginTransaction();
 
@@ -115,10 +115,10 @@ class SaleRepository extends BaseRepository
                 'city' => $input['city'],
                 'country' => $input['country'],
             ];
-           
+
             $customer = Customer::create($customerData);
             $customerId = $customer->id;
-          
+
 
             // Generate order_no if not provided
             if (empty($input['order_no'])) {
@@ -132,30 +132,45 @@ class SaleRepository extends BaseRepository
 
             // Step 2: Prepare sale input array
             $saleInputArray = Arr::only($input, [
-                'warehouse_id', 'tax_rate', 'tax_amount', 'discount', 'shipping', 'grand_total',
-                'received_amount', 'paid_amount', 'payment_type', 'note', 'date', 'status',
-                'payment_status', 'market_place', 'order_no', 'country', 'currency','cod'
+                'warehouse_id',
+                'tax_rate',
+                'tax_amount',
+                'discount',
+                'shipping',
+                'grand_total',
+                'received_amount',
+                'paid_amount',
+                'payment_type',
+                'note',
+                'date',
+                'status',
+                'payment_status',
+                'market_place',
+                'order_no',
+                'country',
+                'currency',
+                'cod'
             ]);
 
             // Step 3: Add customer_id to the sale input array
             $saleInputArray['customer_id'] = $customerId; // Use the customer_id
             $saleInputArray['order_process_fee'] = 0.85; //order_process_fee
-            $saleInputArray['conversion_rate'] = Currency::where('code', $input['currency'])->value('conversion_rate')??1;
-            
+            $saleInputArray['conversion_rate'] = Currency::where('code', $input['currency'])->value('conversion_rate') ?? 1;
+
             //conversion_rate
-            $saleInputArray['selling_value_eur'] =$input['grand_total'] * $saleInputArray['conversion_rate'];
+            $saleInputArray['selling_value_eur'] = $input['grand_total'] * $saleInputArray['conversion_rate'];
             // Step 4: Create the sale
             /** @var Sale $sale */
 
             $sale = Sale::create($saleInputArray);
 
-            if($input['market_place'] == "MIMOVRSTE" && $input['payment_type'] == "5"){
-                $sale->marketplace_commission = ($sale->grand_total - 5)* 0.18;
+            if ($input['market_place'] == "MIMOVRSTE" && $input['payment_type'] == "5") {
+                $sale->marketplace_commission = ($sale->grand_total - 5) * 0.18;
                 $sale->save();
-            }elseif($input['market_place'] == "MIMOVRSTE" && $input['payment_type'] != "5"){
+            } elseif ($input['market_place'] == "MIMOVRSTE" && $input['payment_type'] != "5") {
                 $sale->marketplace_commission = ($sale->grand_total - 3) * 0.18;
                 $sale->save();
-            }elseif ($input['market_place'] == "PIGU"){
+            } elseif ($input['market_place'] == "PIGU") {
                 $sale->marketplace_commission = ($sale->grand_total - $sale->shipping) * 0.1;
                 $sale->save();
             }
@@ -222,7 +237,7 @@ class SaleRepository extends BaseRepository
                     }
 
                     // Generate unique filename with correct extension
-                    $fileName = 'invoice_'.$input['country'].'_'.$input['order_no'].'_' . time() . '_' . Str::random(8) . '.' . $extension;
+                    $fileName = 'invoice_' . $input['country'] . '_' . $input['order_no'] . '_' . time() . '_' . Str::random(8) . '.' . $extension;
                     $filePath = $uploadPath . '/' . $fileName;
 
                     // Save the file with error handling
@@ -252,8 +267,8 @@ class SaleRepository extends BaseRepository
                     throw new \Exception('Invoice upload failed: ' . $e->getMessage());
                 }
             }
-         // invoice upload End
- 
+            // invoice upload End
+
             // courier document upload
             if (!empty($input['courier_document'])) {
                 try {
@@ -312,7 +327,7 @@ class SaleRepository extends BaseRepository
                     }
 
                     // Generate unique filename with correct extension
-                    $fileName = 'courier_'.$input['country'].'_'.$input['order_no'].'_' . time() . '_' . Str::random(8) . '.' . $extension;
+                    $fileName = 'courier_' . $input['country'] . '_' . $input['order_no'] . '_' . time() . '_' . Str::random(8) . '.' . $extension;
                     $filePath = $uploadPath . '/' . $fileName;
 
                     // Save the file with error handling
@@ -358,11 +373,11 @@ class SaleRepository extends BaseRepository
                 // Refactored to use StockService
                 /** @var \App\Services\StockService $stockService */
                 $stockService = app(\App\Services\StockService::class);
-                
+
                 // Check availability first if needed, though StockService can handle or we can check here for better error message
                 $product = ManageStock::whereWarehouseId($input['warehouse_id'])->whereProductId($saleItem['product_id'])->first();
                 if ($product && $product->quantity >= $saleItem['quantity']) {
-                     $stockService->updateStock(
+                    $stockService->updateStock(
                         $input['warehouse_id'],
                         $saleItem['product_id'],
                         -1 * $saleItem['quantity'], // Decrease stock
@@ -384,7 +399,12 @@ class SaleRepository extends BaseRepository
             $customer = Customer::whereId($sale->customer_id)->first();
 
             $search = [
-                '{customer_name}', '{sales_id}', '{sales_date}', '{sales_amount}', '{paid_amount}', '{due_amount}',
+                '{customer_name}',
+                '{sales_id}',
+                '{sales_date}',
+                '{sales_amount}',
+                '{paid_amount}',
+                '{due_amount}',
                 '{app_name}',
             ];
 
@@ -403,7 +423,12 @@ class SaleRepository extends BaseRepository
             $dueAmount = number_format($dueAmount, 2);
 
             $replace = [
-                $customer->name, $sale->reference_code, $sale->date, number_format($sale->grand_total, 2), $payAmount, $dueAmount,
+                $customer->name,
+                $sale->reference_code,
+                $sale->date,
+                number_format($sale->grand_total, 2),
+                $payAmount,
+                $dueAmount,
                 getSettingValue('company_name'),
             ];
 
@@ -445,7 +470,7 @@ class SaleRepository extends BaseRepository
                     'form_params' => [$data],
                 ]);
             }
-           
+
 
             DB::commit();
 
@@ -532,36 +557,36 @@ class SaleRepository extends BaseRepository
      */
     public function storeSaleItems($sale, $input)
     {
-            foreach ($input['sale_items'] as $saleItem) {
-                $product = Product::whereId($saleItem['product_id'])->first();
+        foreach ($input['sale_items'] as $saleItem) {
+            $product = Product::whereId($saleItem['product_id'])->first();
 
-                if (!empty($product) && isset($product->quantity_limit) && $saleItem['quantity'] > $product->quantity_limit) {
-                    throw new UnprocessableEntityHttpException('Please enter less than ' . $product->quantity_limit . ' quantity of ' . $product->name . ' product.');
-                }
-                $item = $this->calculationSaleItems($saleItem);
-
-                $saleItem = new SaleItem($item);
-                $sale->saleItems()->save($saleItem);
+            if (!empty($product) && isset($product->quantity_limit) && $saleItem['quantity'] > $product->quantity_limit) {
+                throw new UnprocessableEntityHttpException('Please enter less than ' . $product->quantity_limit . ' quantity of ' . $product->name . ' product.');
             }
+            $item = $this->calculationSaleItems($saleItem);
 
-             $subTotalAmount = $sale->saleItems()->sum('sub_total');
+            $saleItem = new SaleItem($item);
+            $sale->saleItems()->save($saleItem);
+        }
 
-            //        if ($input['discount'] <= $subTotalAmount) {
-            //            $input['grand_total'] = $subTotalAmount - $input['discount'];
-            //        } else {
-            //            throw new UnprocessableEntityHttpException('Discount amount should not be greater than total.');
-            //        }
-            //        if ($input['tax_rate'] <= 100 && $input['tax_rate'] >= 0) {
-            //            $input['tax_amount'] = $input['grand_total'] * $input['tax_rate'] / 100;
-            //        } else {
-            //            throw new UnprocessableEntityHttpException('Please enter tax value between 0 to 100.');
-            //        }
-            //        $input['grand_total'] += $input['tax_amount'];
-            //        if ($input['shipping'] <= $input['grand_total'] && $input['shipping'] >= 0) {
-            //            $input['grand_total'] += $input['shipping'];
-            //        } else {
-            //            throw new UnprocessableEntityHttpException('Shipping amount should not be greater than total.');
-            //        }
+        $subTotalAmount = $sale->saleItems()->sum('sub_total');
+
+        //        if ($input['discount'] <= $subTotalAmount) {
+        //            $input['grand_total'] = $subTotalAmount - $input['discount'];
+        //        } else {
+        //            throw new UnprocessableEntityHttpException('Discount amount should not be greater than total.');
+        //        }
+        //        if ($input['tax_rate'] <= 100 && $input['tax_rate'] >= 0) {
+        //            $input['tax_amount'] = $input['grand_total'] * $input['tax_rate'] / 100;
+        //        } else {
+        //            throw new UnprocessableEntityHttpException('Please enter tax value between 0 to 100.');
+        //        }
+        //        $input['grand_total'] += $input['tax_amount'];
+        //        if ($input['shipping'] <= $input['grand_total'] && $input['shipping'] >= 0) {
+        //            $input['grand_total'] += $input['shipping'];
+        //        } else {
+        //            throw new UnprocessableEntityHttpException('Shipping amount should not be greater than total.');
+        //        }
 
         if ($input['payment_status'] == Sale::PAID) {
             $input['paid_amount'] = $input['grand_total'];
@@ -594,6 +619,15 @@ class SaleRepository extends BaseRepository
             DB::beginTransaction();
             $sale = Sale::findOrFail($id);
 
+            $oldStatus = $sale->status;
+            $newStatus = isset($input['status']) ? (int) $input['status'] : $oldStatus;
+
+            if (in_array($oldStatus, [Sale::CANCLED, Sale::FAILED_ORDER]) && $newStatus !== $oldStatus) {
+                throw new UnprocessableEntityHttpException("Cannot change status because the sale is already Cancelled or Failed Order.");
+            }
+
+            $isTransitioningToCancel = !in_array($oldStatus, [Sale::CANCLED, Sale::FAILED_ORDER]) && in_array($newStatus, [Sale::CANCLED, Sale::FAILED_ORDER]);
+
             // Update invoice file if a new one is uploaded
             if (!empty($input['file']) && str_starts_with($input['file'], 'data:')) {
                 try {
@@ -601,22 +635,22 @@ class SaleRepository extends BaseRepository
                     if (preg_match("/^data:(.*?);base64,/", $base64_str, $matches)) {
                         $mimeType = $matches[1];
                         $extension = $this->mimeToExtension($mimeType);
-                        
+
                         $base64_data = substr($base64_str, strpos($base64_str, ',') + 1);
                         $file_data = base64_decode($base64_data);
-                        
+
                         if ($file_data !== false) {
                             $uploadPath = public_path('uploads/sales/invoices');
                             if (!file_exists($uploadPath)) {
                                 mkdir($uploadPath, 0755, true);
                             }
-                            
+
                             // Delete old file if exists
                             if (!empty($sale->file) && file_exists($uploadPath . '/' . $sale->file)) {
                                 @unlink($uploadPath . '/' . $sale->file);
                             }
-                            
-                            $fileName = 'invoice_'.$input['country'].'_'.$input['order_no'].'_' . time() . '_' . Str::random(8) . '.' . $extension;
+
+                            $fileName = 'invoice_' . $input['country'] . '_' . $input['order_no'] . '_' . time() . '_' . Str::random(8) . '.' . $extension;
                             $filePath = $uploadPath . '/' . $fileName;
                             if (file_put_contents($filePath, $file_data) !== false) {
                                 chmod($filePath, 0644);
@@ -637,22 +671,22 @@ class SaleRepository extends BaseRepository
                     if (preg_match("/^data:(.*?);base64,/", $base64_str, $matches)) {
                         $mimeType = $matches[1];
                         $extension = $this->mimeToExtension($mimeType);
-                        
+
                         $base64_data = substr($base64_str, strpos($base64_str, ',') + 1);
                         $file_data = base64_decode($base64_data);
-                        
+
                         if ($file_data !== false) {
                             $uploadPath = public_path('uploads/sales/couriers');
                             if (!file_exists($uploadPath)) {
                                 mkdir($uploadPath, 0755, true);
                             }
-                            
+
                             // Delete old file if exists
                             if (!empty($sale->courier_document) && file_exists($uploadPath . '/' . $sale->courier_document)) {
                                 @unlink($uploadPath . '/' . $sale->courier_document);
                             }
-                            
-                            $fileName = 'courier_'.$input['country'].'_'.$input['order_no'].'_' . time() . '_' . Str::random(8) . '.' . $extension;
+
+                            $fileName = 'courier_' . $input['country'] . '_' . $input['order_no'] . '_' . time() . '_' . Str::random(8) . '.' . $extension;
                             $filePath = $uploadPath . '/' . $fileName;
                             if (file_put_contents($filePath, $file_data) !== false) {
                                 chmod($filePath, 0644);
@@ -681,8 +715,18 @@ class SaleRepository extends BaseRepository
                 //get different ids & update
                 $saleItmOldIds[$key] = $saleItem['sale_item_id'];
                 $saleItemArray = Arr::only($saleItem, [
-                    'sale_item_id', 'product_id', 'product_price', 'net_unit_price', 'tax_type', 'tax_value',
-                    'tax_amount', 'discount_type', 'discount_value', 'discount_amount', 'sale_unit', 'quantity',
+                    'sale_item_id',
+                    'product_id',
+                    'product_price',
+                    'net_unit_price',
+                    'tax_type',
+                    'tax_value',
+                    'tax_amount',
+                    'discount_type',
+                    'discount_value',
+                    'discount_amount',
+                    'sale_unit',
+                    'quantity',
                     'sub_total'
                 ]);
 
@@ -693,18 +737,28 @@ class SaleRepository extends BaseRepository
                 if (is_null($saleItem['sale_item_id'])) {
                     $saleItem = $this->calculationSaleItems($saleItem);
                     $saleItemArray = Arr::only($saleItem, [
-                        'product_id', 'product_price', 'net_unit_price', 'tax_type', 'tax_value', 'tax_amount',
-                        'discount_type', 'discount_value', 'discount_amount', 'sale_unit', 'quantity', 'sub_total',
+                        'product_id',
+                        'product_price',
+                        'net_unit_price',
+                        'tax_type',
+                        'tax_value',
+                        'tax_amount',
+                        'discount_type',
+                        'discount_value',
+                        'discount_amount',
+                        'sale_unit',
+                        'quantity',
+                        'sub_total',
                     ]);
                     $sale->saleItems()->create($saleItemArray);
-                    
+
                     /** @var \App\Services\StockService $stockService */
                     $stockService = app(\App\Services\StockService::class);
-                    
+
                     $product = ManageStock::whereWarehouseId($input['warehouse_id'])->whereProductId($saleItem['product_id'])->first();
                     if ($product) {
                         if ($product->quantity >= $saleItem['quantity']) {
-                             $stockService->updateStock(
+                            $stockService->updateStock(
                                 $input['warehouse_id'],
                                 $saleItem['product_id'],
                                 -1 * $saleItem['quantity'], // Decrease
@@ -726,14 +780,14 @@ class SaleRepository extends BaseRepository
                     // remove quantity manage storage
                     $oldProduct = SaleItem::whereId($removeItemId)->first();
                     $productQuantity = ManageStock::whereWarehouseId($input['warehouse_id'])->whereProductId($oldProduct->product_id)->first();
-                    
+
                     if ($productQuantity) {
                         if ($oldProduct) {
-                             /** @var \App\Services\StockService $stockService */
-                             $stockService = app(\App\Services\StockService::class);
-                             
-                             // Add back the quantity
-                             $stockService->updateStock(
+                            /** @var \App\Services\StockService $stockService */
+                            $stockService = app(\App\Services\StockService::class);
+
+                            // Add back the quantity
+                            $stockService->updateStock(
                                 $input['warehouse_id'],
                                 $oldProduct->product_id,
                                 $oldProduct->quantity, // Increase back
@@ -746,16 +800,16 @@ class SaleRepository extends BaseRepository
                     } else {
                         // If no stock record exists, we should create it or handled by StockService if we pass +qty? 
                         // StockService creates if +qty.
-                         /** @var \App\Services\StockService $stockService */
-                         $stockService = app(\App\Services\StockService::class);
-                         $stockService->updateStock(
-                                $input['warehouse_id'],
-                                $oldProduct->product_id,
-                                $oldProduct->quantity,
-                                Sale::class,
-                                $sale->id,
-                                'sale_update_remove',
-                                'Sale Item Removed'
+                        /** @var \App\Services\StockService $stockService */
+                        $stockService = app(\App\Services\StockService::class);
+                        $stockService->updateStock(
+                            $input['warehouse_id'],
+                            $oldProduct->product_id,
+                            $oldProduct->quantity,
+                            Sale::class,
+                            $sale->id,
+                            'sale_update_remove',
+                            'Sale Item Removed'
                         );
                     }
                 }
@@ -771,7 +825,8 @@ class SaleRepository extends BaseRepository
                 if ($parcel != null) {
                     $parcel->update([
                         'parcel_company_id' => $input['parcel_company_id'],
-                        'parcel_number' => $input['parcel_number']]);
+                        'parcel_number' => $input['parcel_number']
+                    ]);
                     if ($input['status'] == 2 && $parcel->parcel_company_id == 1) {
 
                         $credential = ['gls_username', 'gls_password'];
@@ -863,7 +918,30 @@ class SaleRepository extends BaseRepository
                 }
 
             }
+
+            if ($isTransitioningToCancel) {
+                $sale->load('saleItems.product');
+                /** @var \App\Services\StockService $stockService */
+                $stockService = app(\App\Services\StockService::class);
+                foreach ($sale->saleItems as $saleItem) {
+                    $stockService->updateStock(
+                        $sale->warehouse_id,
+                        $saleItem->product_id,
+                        $saleItem->quantity,
+                        Sale::class,
+                        $sale->id,
+                        'sale_cancel_restock',
+                        'Sale Cancelled/Failed Restock',
+                        false
+                    );
+                }
+            }
+
             DB::commit();
+
+            if ($isTransitioningToCancel) {
+                $this->syncSaleStockToExternalAndPostgres($sale);
+            }
 
             return $sale;
         } catch (Exception $e) {
@@ -1080,19 +1158,19 @@ class SaleRepository extends BaseRepository
                 $diff = $saleItem['quantity'] - $oldItem->quantity;
                 /** @var \App\Services\StockService $stockService */
                 $stockService = app(\App\Services\StockService::class);
-                
+
                 // If diff is positive (increased qty), we need to DECREASE stock.
                 // If diff is negative (decreased qty), we need to INCREASE stock.
                 // So change to stock = -1 * diff.
-                
+
                 $stockChange = -1 * $diff;
-                
-                 if ($stockChange < 0) { // We are decreasing stock
-                       if (($product->quantity + $stockChange) < 0) {
-                            throw new UnprocessableEntityHttpException('Quantity must be less than Available quantity.');
-                       }
-                 }
-                
+
+                if ($stockChange < 0) { // We are decreasing stock
+                    if (($product->quantity + $stockChange) < 0) {
+                        throw new UnprocessableEntityHttpException('Quantity must be less than Available quantity.');
+                    }
+                }
+
                 $stockService->updateStock(
                     $warehouseId,
                     $saleItem['product_id'],
@@ -1139,9 +1217,24 @@ class SaleRepository extends BaseRepository
         $sale->first();
 
         $saleInputArray = Arr::only($input, [
-            'warehouse_id', 'tax_rate', 'tax_amount', 'discount', 'shipping', 'grand_total',
-            'received_amount', 'paid_amount', 'payment_type', 'note', 'date', 'status',
-            'payment_status', 'market_place', 'order_no', 'country', 'currency','cod'
+            'warehouse_id',
+            'tax_rate',
+            'tax_amount',
+            'discount',
+            'shipping',
+            'grand_total',
+            'received_amount',
+            'paid_amount',
+            'payment_type',
+            'note',
+            'date',
+            'status',
+            'payment_status',
+            'market_place',
+            'order_no',
+            'country',
+            'currency',
+            'cod'
         ]);
         $sale->update($saleInputArray);
 
@@ -1157,9 +1250,135 @@ class SaleRepository extends BaseRepository
         $generator = new BarcodeGeneratorPNG();
         $barcodeType = $generator::TYPE_CODE_128;
 
-        Storage::disk(config('app.media_disc'))->put('sales/barcode-' . $code . '.png',
-            $generator->getBarcode(Sale::CODE128, $barcodeType, 4, 70));
+        Storage::disk(config('app.media_disc'))->put(
+            'sales/barcode-' . $code . '.png',
+            $generator->getBarcode(Sale::CODE128, $barcodeType, 4, 70)
+        );
 
         return true;
+    }
+
+    public function syncSaleStockToExternalAndPostgres($sale)
+    {
+        $warehouse = $sale->warehouse;
+        if (!$warehouse) {
+            return;
+        }
+
+        $sale->load(['saleItems.product']);
+
+        $productIds = $sale->saleItems->pluck('product_id')->unique()->toArray();
+        if (empty($productIds)) {
+            return;
+        }
+
+        // Fetch all products in bulk
+        $products = Product::whereIn('id', $productIds)->get()->keyBy('id');
+
+        // Fetch all stock records in bulk
+        $stocks = ManageStock::where('warehouse_id', $warehouse->id)
+            ->whereIn('product_id', $productIds)
+            ->get()
+            ->keyBy('product_id');
+
+        // Combos containing direct products
+        $combosContainingProducts = \App\Models\ComboProduct::whereIn('product_id', $productIds)
+            ->where('warehouse_id', $warehouse->id)
+            ->get();
+
+        $relatedComboIds = $combosContainingProducts->pluck('combo_id')->unique()->toArray();
+
+        // All constituent products of related combos
+        $allComboConstituents = collect();
+        if (!empty($relatedComboIds)) {
+            $allComboConstituents = \App\Models\ComboProduct::whereIn('combo_id', $relatedComboIds)
+                ->where('warehouse_id', $warehouse->id)
+                ->get();
+        }
+
+        $comboProductIds = $allComboConstituents->pluck('product_id')->unique()->toArray();
+        $allProductIds = array_unique(array_merge($productIds, $comboProductIds));
+
+        // Fetch all products/stocks needed for combos too
+        $preloadedProducts = Product::whereIn('id', $allProductIds)->get()->keyBy('id');
+        $preloadedStocks = ManageStock::where('warehouse_id', $warehouse->id)
+            ->whereIn('product_id', $allProductIds)
+            ->get()
+            ->keyBy('product_id');
+
+        $combosContainingProductGrouped = $combosContainingProducts->groupBy('product_id');
+        $allComboConstituentsGrouped = $allComboConstituents->groupBy('combo_id');
+
+        $preparedItems = [];
+        $comboRelatedItems = [];
+        $skusToSync = [];
+
+        foreach ($sale->saleItems as $saleItem) {
+            $product = $preloadedProducts->get($saleItem->product_id);
+            if (!$product) {
+                continue;
+            }
+
+            $manageStockProduct = $preloadedStocks->get($product->id);
+            if ($manageStockProduct) {
+                $preparedItems[] = [
+                    'sku' => $product->code,
+                    'quantity' => $manageStockProduct->quantity,
+                ];
+
+                $combos = $combosContainingProductGrouped->get($product->id) ?? collect();
+                foreach ($combos as $comboInstance) {
+                    $comboId = $comboInstance->combo_id;
+                    $comboRelatedProductIds = $allComboConstituentsGrouped->get($comboId) ?? collect();
+
+                    $smallestQuantity = null;
+
+                    foreach ($comboRelatedProductIds as $comboProductRelation) {
+                        $comboProductId = $comboProductRelation->product_id;
+                        $comboProductModel = $preloadedProducts->get($comboProductId);
+                        $comboStockProduct = $preloadedStocks->get($comboProductId);
+
+                        if ($comboProductModel && $comboStockProduct) {
+                            $currentComboProductQuantity = $comboStockProduct->quantity;
+
+                            if ($smallestQuantity === null || $currentComboProductQuantity < $smallestQuantity) {
+                                $smallestQuantity = $currentComboProductQuantity;
+                            }
+
+                            $comboRelatedItems[] = [
+                                'sku' => $comboProductModel->code,
+                                'quantity' => $comboStockProduct->quantity,
+                            ];
+                        }
+                    }
+
+                    if ($smallestQuantity !== null) {
+                        $preparedItems[] = [
+                            'sku' => $comboInstance->code,
+                            'quantity' => $smallestQuantity,
+                        ];
+                    }
+                }
+            }
+
+            $skusToSync[] = $product->code;
+        }
+
+        foreach ($combosContainingProducts as $comboProductRelation) {
+            $skusToSync[] = $comboProductRelation->code;
+        }
+
+        $skusToSync = array_unique(array_filter($skusToSync));
+
+        if (!empty($skusToSync)) {
+            \App\Jobs\SyncWebhookOrderStocks::dispatch(
+                $warehouse->id,
+                $warehouse->country_code,
+                'inventory',
+                $preparedItems,
+                $comboRelatedItems,
+                $skusToSync
+            );
+        }
     }
 }

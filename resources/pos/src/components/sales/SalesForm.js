@@ -372,77 +372,86 @@ const SalesForm = (props) => {
     };
 
     const onWarehouseChange = (obj) => {
-            setSaleValue(inputs => ({ ...inputs, warehouse_id: obj }));
-            setErrors(prev => ({ ...prev, warehouse_id: '' }));
-            dispatch(setWarehouseId(obj.value));
-        };
+        setSaleValue(inputs => ({ ...inputs, warehouse_id: obj }));
+        setErrors(prev => ({ ...prev, warehouse_id: '' }));
+        dispatch(setWarehouseId(obj.value));
+    };
 
 
-        const onParcelCompanyChange = (obj) => {
-            setSaleValue(inputs => ({ ...inputs, parcel_company_id: obj }));
-        };
+    const onParcelCompanyChange = (obj) => {
+        setSaleValue(inputs => ({ ...inputs, parcel_company_id: obj }));
+    };
 
-        const onCurrencyChange = (obj) => {
+    const onCurrencyChange = (obj) => {
 
-            if (singleSale) {
-                singleSale.currency = obj.value
+        if (singleSale) {
+            singleSale.currency = obj.value
+        }
+
+        setSaleValue(inputs => ({ ...inputs, currency: obj }));
+    };
+
+
+    const onChangeInput = (e) => {
+        e.preventDefault();
+        const { value } = e.target;
+        // check if value includes a decimal point
+        if (value.match(/\./g)) {
+            const [, decimal] = value.split('.');
+            // restrict value to only 2 decimal places
+            if (decimal?.length > 2) {
+                // do nothing
+                return;
             }
+        }
+        setSaleValue(inputs => ({ ...inputs, [e.target.name]: value && value }));
+        setErrors(prev => ({ ...prev, [e.target.name]: '' }));
+    };
 
-            setSaleValue(inputs => ({ ...inputs, currency: obj }));
-        };
 
+    const onChangeText = (e) => {
+        e.preventDefault();
+        setSaleValue(inputs => ({ ...inputs, [e.target.name]: e.target.value }));
+        setErrors(prev => ({ ...prev, [e.target.name]: '' }));
+    };
 
-        const onChangeInput = (e) => {
-            e.preventDefault();
-            const { value } = e.target;
-            // check if value includes a decimal point
-            if (value.match(/\./g)) {
-                const [, decimal] = value.split('.');
-                // restrict value to only 2 decimal places
-                if (decimal?.length > 2) {
-                    // do nothing
-                    return;
-                }
+    const onChangeEmail = (e) => {
+        e.preventDefault();
+        const { value } = e.target;
+        setSaleValue(inputs => ({ ...inputs, [e.target.name]: value && value }));
+        setErrors(prev => ({ ...prev, [e.target.name]: '' }));
+    };
+
+    const onNotesChangeInput = (e) => {
+        e.preventDefault();
+        setSaleValue(inputs => ({ ...inputs, notes: e.target.value }));
+    };
+
+    const onStatusChange = (obj) => {
+        if (obj && (obj.value === 6 || obj.value === 7)) {
+            const message = getFormattedMessage(
+                obj.value === 6 ? 'sale.status.confirm-cancelled.message' : 'sale.status.confirm-failed.message'
+            );
+            const isConfirmed = window.confirm(message);
+            if (!isConfirmed) {
+                return; // Revert change / do not update
             }
-            setSaleValue(inputs => ({ ...inputs, [e.target.name]: value && value }));
-            setErrors(prev => ({ ...prev, [e.target.name]: '' }));
-        };
+        }
+        setSaleValue(inputs => ({ ...inputs, status_id: obj }));
+        setErrors(prev => ({ ...prev, status_id: '' }));
+    };
 
+    const onPaymentStatusChange = (obj) => {
+        setSaleValue(inputs => ({ ...inputs, payment_status: obj }));
+        obj.value !== 2 ? setIsPaymentType(true) : setIsPaymentType(false);
+        setSaleValue(input => ({ ...input, payment_type: { label: getFormattedMessage("payment-type.filter.cash.label"), value: 1 } }));
+        setErrors(prev => ({ ...prev, payment_status: '', payment_type: '' }));
+    };
 
-        const onChangeText = (e) => {
-            e.preventDefault();
-            setSaleValue(inputs => ({ ...inputs, [e.target.name]: e.target.value }));
-            setErrors(prev => ({ ...prev, [e.target.name]: '' }));
-        };
-
-        const onChangeEmail = (e) => {
-            e.preventDefault();
-            const { value } = e.target;
-            setSaleValue(inputs => ({ ...inputs, [e.target.name]: value && value }));
-            setErrors(prev => ({ ...prev, [e.target.name]: '' }));
-        };
-
-        const onNotesChangeInput = (e) => {
-            e.preventDefault();
-            setSaleValue(inputs => ({ ...inputs, notes: e.target.value }));
-        };
-
-        const onStatusChange = (obj) => {
-            setSaleValue(inputs => ({ ...inputs, status_id: obj }));
-            setErrors(prev => ({ ...prev, status_id: '' }));
-        };
-
-        const onPaymentStatusChange = (obj) => {
-            setSaleValue(inputs => ({ ...inputs, payment_status: obj }));
-            obj.value !== 2 ? setIsPaymentType(true) : setIsPaymentType(false);
-            setSaleValue(input => ({ ...input, payment_type: { label: getFormattedMessage("payment-type.filter.cash.label"), value: 1 } }));
-            setErrors(prev => ({ ...prev, payment_status: '', payment_type: '' }));
-        };
-
-        const onPaymentTypeChange = (obj) => {
-            setSaleValue(inputs => ({ ...inputs, payment_type: obj }));
-            setErrors(prev => ({ ...prev, payment_type: '' }));
-        };
+    const onPaymentTypeChange = (obj) => {
+        setSaleValue(inputs => ({ ...inputs, payment_type: obj }));
+        setErrors(prev => ({ ...prev, payment_type: '' }));
+    };
 
     const updatedQty = (qty) => {
         setQuantity(qty);
@@ -691,6 +700,8 @@ const SalesForm = (props) => {
         }
     })
 
+    const isStatusDisabled = singleSale && (singleSale.status_id?.value === 6 || singleSale.status_id?.value === 7);
+
     return (
         <div className='card'>
             <div className='card-body'>
@@ -920,6 +931,7 @@ const SalesForm = (props) => {
                             title={getFormattedMessage('purchase.select.status.label')}
                             value={saleValue.status_id} errors={errors['status_id']}
                             defaultValue={statusDefaultValue[0]}
+                            isDisabled={isStatusDisabled}
                             placeholder={getFormattedMessage('purchase.select.status.label')} />
                     </div>
                     {/* parcel start */}
