@@ -51,7 +51,9 @@ const CreateSaleReturn = (props) => {
         sale_items: sales.attributes.sale_items.map((item) => ({
             code: item.product && item.product.code,
             name: item.product && item.product.name,
-            product_unit: item.product.product_unit,
+            pan_style: item.product && item.product.product_abstract && item.product.product_abstract.pan_style,
+            variant: item.product && item.product.variant && item.product.variant.variant,
+            product_unit: item.product && item.product.product_unit,
             product_id: item.product_id,
             short_name: item.sale_unit && item.sale_unit.short_name,
             stock_alert:  item.product && item.product.stock_alert,

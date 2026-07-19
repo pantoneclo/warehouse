@@ -403,12 +403,15 @@ export default [
         fontIcon: <FontAwesomeIcon icon={faChartColumn} />,
         to: '/app/report/report-warehouse',
         path: '/app/report/report-sale',
+        saleReturnPath: '/app/report/report-sale-return',
         stockPath: '/app/report/report-stock',
         purchasePath: '/app/report/report-purchase',
         topSellingPath: '/app/report/report-top-selling-products',
         stockDetailPath: '/app/report/report-detail-stock',
         productQuantityAlertPath: '/app/report/report-product-quantity',
         supplierReportPath: '/app/report/suppliers',
+        profitLossReportPath: '/app/report/profit-loss',
+        supplierReportDetailsPath: '/app/report/suppliers/details',
         profitLossReportPath: '/app/report/profit-loss',
         supplierReportDetailsPath: '/app/report/suppliers/details',
         bestCustomerReportPath: '/app/report/best-customers',
@@ -420,6 +423,7 @@ export default [
         subTitles: [
             { title: 'warehouse.reports.title' },
             { title: 'sale.reports.title' },
+            { title: 'sale-return.reports.title' },
             { title: 'stock.reports.title' },
             { title: 'purchase.reports.title' },
             { title: 'top-selling-product.reports.title' },
@@ -439,6 +443,10 @@ export default [
             {
                 title: getFormattedMessage('sale.reports.title'),
                 to: '/app/report/report-sale'
+            },
+            {
+                title: getFormattedMessage('sale-return.reports.title'),
+                to: '/app/report/report-sale-return'
             },
             {
                 title: getFormattedMessage('stock.reports.title'),

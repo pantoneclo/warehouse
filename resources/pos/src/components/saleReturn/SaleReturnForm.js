@@ -37,7 +37,7 @@ const SaleReturnForm = (props) => {
     const [newTax, setNewTax] = useState('');
     const [subTotal, setSubTotal] = useState('');
     const [newSaleUnit, setNewSaleUnit] = useState('');
-    const [selectedStatus, setSelectedStatus] = useState({label: 'Received', value: 1});
+    const [selectedStatus, setSelectedStatus] = useState({label: 'Returned', value: 1});
 
     const [saleReturnValue, setSaleReturnValue] = useState({
         date: new Date(),
@@ -82,7 +82,7 @@ const SaleReturnForm = (props) => {
                 shipping: singleSale ? singleSale.shipping.toFixed(2) : '0.00',
                 grand_total: Number(singleSale ? singleSale.grand_total : '0.00'),
                 status: singleSale ? singleSale.status_id === 1 ?
-                {label: getFormattedMessage("status.filter.received.label"), value: 1} :
+                {label: getFormattedMessage("status.filter.returned.label"), value: 1} :
                 {label: getFormattedMessage("status.filter.pending.label"), value: 2} : '',
                 notes: singleSale ? singleSale.note === null ? "" : singleSale.note : '',
                 sale_id: singleSale ? singleSale.sale_id : '',

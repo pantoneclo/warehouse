@@ -143,6 +143,8 @@ const AsideTopSubMenuItem = (props) => {
                                             mainItems.mailSettingsPath ||
                                         location.pathname ===
                                             mainItems.profitLossReportPath ||
+                                        (location.pathname.includes('/app/report') &&
+                                            mainItems.to?.includes('/app/report')) ||
                                         location.pathname.includes(
                                             mainItems.to
                                         ) ||

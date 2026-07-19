@@ -940,7 +940,7 @@ export const smsStatusOptions = [
 
 
 export const saleReturnStatusOptions = [
-    { id: 1, name: 'status.filter.received.label' },
+    { id: 1, name: 'status.filter.returned.label' },
     { id: 2, name: 'status.filter.pending.label' }
 ];
 

@@ -146,7 +146,7 @@ const SaleReturnDetails = (props) => {
                                         <span className='me-2'>{getFormattedMessage('globally.detail.status')} :</span>
                                         {saleReturnDetails && saleReturnDetails.status === 1 &&
                                         <span className='badge bg-light-success'>
-                                        <span>Received</span>
+                                        <span>Returned</span>
                                     </span> || saleReturnDetails.status === 2 &&
                                         <span className='badge bg-light-primary'>
                                         <span>Pending</span>

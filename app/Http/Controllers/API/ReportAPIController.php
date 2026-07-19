@@ -11,6 +11,7 @@ use App\Exports\PurchaseReportExport;
 use App\Exports\PurchaseReturnWarehouseReportExport;
 use App\Exports\PurchasesWarehouseReportExport;
 use App\Exports\SaleReportExport;
+use App\Exports\TotalSaleReturnReportExport;
 use App\Exports\SaleReturnWarehouseReportExport;
 use App\Exports\SalesWarehouseReportExport;
 use App\Exports\StockReportExport;
@@ -192,6 +193,33 @@ class ReportAPIController extends AppBaseController
         $data['total_sale_excel_url'] = Storage::url($filename);
 
         return $this->sendResponse($data, 'Sale Report retrieved successfully');
+    }
+
+    /**
+     * @param  Request  $request
+     * @return JsonResponse
+     */
+    public function getSalesReturnReportExcel(Request $request): JsonResponse
+    {
+        $startDate = $request->input('start_date');
+        $endDate = $request->input('end_date');
+        $status = $request->input('status');
+
+        $filename = 'excel/total-sales-return-report-' . time() . '.xlsx';
+
+        // Clean up old report files
+        $oldFiles = Storage::files('excel');
+        foreach ($oldFiles as $file) {
+            if (str_starts_with(basename($file), 'total-sales-return-report-')) {
+                Storage::delete($file);
+            }
+        }
+
+        Excel::store(new TotalSaleReturnReportExport($startDate, $endDate, $status), $filename);
+
+        $data['total_sale_return_excel_url'] = Storage::url($filename);
+
+        return $this->sendResponse($data, 'Sale Return Report retrieved successfully');
     }
 
     /**

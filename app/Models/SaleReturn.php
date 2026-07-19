@@ -201,6 +201,15 @@ class SaleReturn extends BaseModel implements HasMedia, JsonResourceful
             // Include country and currency from related sale or direct fields
             'country' => $this->sale ? $this->sale->country : null,
             'currency' => $this->currency ?? ($this->sale ? $this->sale->currency : null),
+            'order_no' => $this->sale ? $this->sale->order_no : null,
+            'market_place' => $this->sale ? $this->sale->market_place : null,
+            'marketplace_commission' => $this->sale ? $this->sale->marketplace_commission : null,
+            'order_process_fee' => $this->sale ? $this->sale->order_process_fee : null,
+            'courier_fee' => $this->sale ? $this->sale->courier_fee : null,
+            'other_income' => $this->sale ? $this->sale->other_income : null,
+            'other_cost' => $this->sale ? $this->sale->other_cost : null,
+            'selling_value_eur' => $this->sale ? $this->sale->selling_value_eur : null,
+            'shipment' => $this->sale ? $this->sale->shipment : null,
         ];
 
         return $fields;

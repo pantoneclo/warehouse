@@ -83,7 +83,7 @@ export const editSale = (saleId, sale, navigate) => async (dispatch) => {
         });
 };
 
-export const editSaleReport = (saleId, sale, navigate, isLoading = true) => async (dispatch) => {
+export const editSaleReport = (saleId, sale, navigate, redirectTo = '/app/report/report-sale', isLoading = true) => async (dispatch) => {
     dispatch(setSavingButton(true))
     if (isLoading) {
         dispatch(setLoading(true))
@@ -92,7 +92,7 @@ export const editSaleReport = (saleId, sale, navigate, isLoading = true) => asyn
         .then((response) => {
             dispatch(addToast({ text: getFormattedMessage('sale.report.success.edit.message') }));
             console.log('API Response:', response);
-            navigate('/app/report/report-sale');
+            navigate(redirectTo);
             dispatch({ type: saleActionType.EDIT_SALE_REPORT_FROM_REPORT, payload: response.data.data });
             dispatch(setSavingButton(false))
             if (isLoading) {

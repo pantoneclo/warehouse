@@ -57,7 +57,7 @@ class SaleReturnAPIController extends AppBaseController
         $search = $request->filter['search'] ?? '';
         $customer = (Customer::where('name', 'LIKE', "%$search%")->get()->count() != 0);
         $warehouse = (Warehouse::where('name', 'LIKE', "%$search%")->get()->count() != 0);
-        $salesReturn = $this->saleReturnRepository;
+        $salesReturn = $this->saleReturnRepository->with(['sale.shipment', 'customer', 'warehouse']);
         if ($customer || $warehouse) {
             $salesReturn->whereHas('customer', function (Builder $q) use ($search, $customer) {
                 if ($customer) {

@@ -123,7 +123,7 @@ const SaleReturn = (props) => {
                 return (
                     row.status === 1 &&
                     <span className='badge bg-light-success'>
-                        <span>{getFormattedMessage("status.filter.received.label")}</span>
+                        <span>{getFormattedMessage("status.filter.returned.label")}</span>
                     </span> ||
                     row.status === 2 &&
                     <span className='badge bg-light-primary'>
