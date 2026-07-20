@@ -199,7 +199,7 @@ class SaleReturn extends BaseModel implements HasMedia, JsonResourceful
             'sale_return_items' => $this->saleReturnItems,
             'created_at' => $this->created_at,
             // Include country and currency from related sale or direct fields
-            'country' => $this->sale ? $this->sale->country : null,
+            'country' => $this->country,
             'currency' => $this->currency ?? ($this->sale ? $this->sale->currency : null),
             'order_no' => $this->sale ? $this->sale->order_no : null,
             'market_place' => $this->sale ? $this->sale->market_place : null,
@@ -245,6 +245,67 @@ class SaleReturn extends BaseModel implements HasMedia, JsonResourceful
     public function sale(): BelongsTo
     {
         return $this->belongsTo(Sale::class, 'sale_id', 'id');
+    }
+
+    /**
+     * Get country name from associated sale or direct field
+     */
+    public function getCountryAttribute()
+    {
+        $code = null;
+        if ($this->relationLoaded('sale') && $this->sale) {
+            $code = $this->sale->getRawOriginal('country');
+            if (empty($code) && $this->sale->country) {
+                $code = is_object($this->sale->country)
+                    ? ($this->sale->country->code ?? $this->sale->country->short_code ?? $this->sale->country->name)
+                    : $this->sale->country;
+            }
+        } elseif ($this->sale_id) {
+            $sale = $this->sale;
+            if ($sale) {
+                $code = $sale->getRawOriginal('country');
+                if (empty($code) && $sale->country) {
+                    $code = is_object($sale->country)
+                        ? ($sale->country->code ?? $sale->country->short_code ?? $sale->country->name)
+                        : $sale->country;
+                }
+            }
+        }
+        if (empty($code)) {
+            $code = $this->attributes['country'] ?? null;
+        }
+
+        if (!empty($code)) {
+            $countryMap = [
+                'BD' => 'Bangladesh',
+                'SI' => 'Slovenia',
+                'IT' => 'Italy',
+                'SK' => 'Slovakia',
+                'PL' => 'Poland',
+                'GR' => 'Greece',
+                'RO' => 'Romania',
+                'LT' => 'Lithuania',
+                'BG' => 'Bulgaria',
+                'AT' => 'Austria',
+                'ES' => 'Spain',
+                'PT' => 'Portugal',
+                'DE' => 'Germany',
+                'HR' => 'Croatia',
+                'CZ' => 'Czech Republic',
+                'HU' => 'Hungry',
+                'EE' => 'Estonia',
+                'LV' => 'Latvia',
+                'IN' => 'India',
+                'BE' => 'Belgium',
+                'NL' => 'Netherland',
+                'DK' => 'Denmark',
+                'SE' => 'Sweden',
+            ];
+            $upperCode = strtoupper(trim($code));
+            return $countryMap[$upperCode] ?? $code;
+        }
+
+        return null;
     }
 
     /**

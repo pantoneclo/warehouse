@@ -14,6 +14,7 @@ import { fetchSalesReturn } from '../../../store/action/salesReturnAction';
 import { totalSaleReturnReportExcel } from '../../../store/action/totalSaleReturnReportExcel';
 import { fetchCurrencies } from '../../../store/action/currencyAction';
 import TopProgressBar from "../../../shared/components/loaders/TopProgressBar";
+import { countryOptions } from '../../../constants';
 import EditSaleReturnReportModal from './EditSaleReturnReportModal';
 
 const SaleReturnReport = (props) => {
@@ -66,6 +67,10 @@ const SaleReturnReport = (props) => {
 
     const itemsValue = currencySymbol && salesReturn.length > 0 ? salesReturn.map(sale => {
         const currency = currencies.find(currency => currency.attributes.code === sale.attributes?.currency);
+        const country = countryOptions.find(c =>
+            c.code?.toLowerCase() === (sale.attributes?.country || '').toLowerCase() ||
+            c.name?.toLowerCase() === (sale.attributes?.country || '').toLowerCase()
+        );
         return {
             reference_code: sale.attributes?.reference_code,
             customer_name: sale.attributes?.customer_name,
@@ -91,7 +96,7 @@ const SaleReturnReport = (props) => {
             other_cost: sale.attributes?.other_cost ? sale.attributes.other_cost : parseFloat(0.00).toFixed(2),
             selling_value_eur: sale.attributes?.selling_value_eur ? sale.attributes.selling_value_eur : parseFloat(0.00).toFixed(2),
 
-            country: sale.attributes?.country,
+            country: country ? country.name : (sale.attributes?.country || ''),
             note: sale.attributes?.note,
             barcode_symbol: sale.attributes?.barcode_symbol,
             market_place: sale.attributes?.market_place,
@@ -217,6 +222,13 @@ const SaleReturnReport = (props) => {
             sortField: 'country',
             selector: row => row.country,
             sortable: false,
+            cell: row => {
+                const country = countryOptions.find(c =>
+                    c.code?.toLowerCase() === (row.country || '').toLowerCase() ||
+                    c.name?.toLowerCase() === (row.country || '').toLowerCase()
+                );
+                return <span>{country ? country.name : (row.country || '')}</span>;
+            }
         },
         {
             name: getFormattedMessage('marketplace.label'),
