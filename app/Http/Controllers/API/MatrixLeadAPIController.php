@@ -25,11 +25,11 @@ class MatrixLeadAPIController extends AppBaseController
         $query = MatrixLead::query();
 
         if ($search) {
-            $query->where(function($q) use ($search) {
+            $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', '%' . $search . '%')
-                  ->orWhere('company_name', 'like', '%' . $search . '%')
-                  ->orWhere('email', 'like', '%' . $search . '%')
-                  ->orWhere('profile_name', 'like', '%' . $search . '%');
+                    ->orWhere('company_name', 'like', '%' . $search . '%')
+                    ->orWhere('email', 'like', '%' . $search . '%')
+                    ->orWhere('profile_name', 'like', '%' . $search . '%');
             });
         }
 
@@ -71,7 +71,7 @@ class MatrixLeadAPIController extends AppBaseController
         $matrixLead = MatrixLead::create($input);
 
         // Send Email
-        Mail::to('atiq@matrixapparels.com')->send(new MatrixLeadMail($matrixLead));
+        Mail::to('info@pantoneclo.com')->send(new MatrixLeadMail($matrixLead));
 
         return $this->sendResponse($matrixLead, 'Matrix Lead saved and email sent successfully.');
     }
