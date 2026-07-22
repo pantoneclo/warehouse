@@ -2,10 +2,8 @@
 
 namespace App\Repositories;
 
-use App\Mail\MailSender;
 use App\Models\Currency;
 use App\Models\Customer;
-use App\Models\MailTemplate;
 use App\Models\ManageStock;
 use App\Models\Product;
 use App\Models\Quotation;
@@ -14,20 +12,19 @@ use App\Models\SaleItem;
 use App\Models\SalesPayment;
 use App\Models\Setting;
 use App\Models\Shipment;
-use App\Models\SmsSetting;
-use App\Models\SmsTemplate;
+use App\Models\StockHistory;
 use App\Services\Expedico\Expedico;
 use App\Services\Parcel\GlsParcel;
+use App\Jobs\SyncPostgresStock;
 use Carbon\Carbon;
 use Exception;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use Picqer\Barcode\BarcodeGeneratorPNG;
 use Symfony\Component\HttpKernel\Exception\UnprocessableEntityHttpException;
-use App\Http\Controllers\API\StockManagementAPIController;
 use App\Helpers\StockHelper;
 
 use Illuminate\Support\Str;
@@ -97,10 +94,11 @@ class SaleRepository extends BaseRepository
      */
     public function storeSale($input): Sale
     {
+        // Allow enough time for large sale creation
+        set_time_limit(0);
 
         try {
             DB::beginTransaction();
-
 
             $input['date'] = $input['date'] ?? date('Y/m/d');
             $input['is_sale_created'] = $input['is_sale_created'] ?? false;
@@ -108,27 +106,25 @@ class SaleRepository extends BaseRepository
 
             // Step 1: Create the customer
             $customerData = [
-                'name' => $input['name'],
-                'email' => $input['email'],
-                'phone' => $input['phone'],
+                'name'    => $input['name'],
+                'email'   => $input['email'],
+                'phone'   => $input['phone'],
                 'address' => $input['address'],
-                'city' => $input['city'],
+                'city'    => $input['city'],
                 'country' => $input['country'],
             ];
 
-            $customer = Customer::create($customerData);
+            $customer   = Customer::create($customerData);
             $customerId = $customer->id;
-
 
             // Generate order_no if not provided
             if (empty($input['order_no'])) {
                 do {
-                    $generatedOrderNo = str_pad(mt_rand(0, 99999999), 8, '0', STR_PAD_LEFT); // 8-digit number
+                    $generatedOrderNo = str_pad(mt_rand(0, 99999999), 8, '0', STR_PAD_LEFT);
                 } while (Sale::where('order_no', $generatedOrderNo)->exists());
 
                 $input['order_no'] = $generatedOrderNo;
             }
-
 
             // Step 2: Prepare sale input array
             $saleInputArray = Arr::only($input, [
@@ -149,201 +145,125 @@ class SaleRepository extends BaseRepository
                 'order_no',
                 'country',
                 'currency',
-                'cod'
+                'cod',
             ]);
 
-            // Step 3: Add customer_id to the sale input array
-            $saleInputArray['customer_id'] = $customerId; // Use the customer_id
-            $saleInputArray['order_process_fee'] = 0.85; //order_process_fee
-            $saleInputArray['conversion_rate'] = Currency::where('code', $input['currency'])->value('conversion_rate') ?? 1;
-
-            //conversion_rate
+            $saleInputArray['customer_id']      = $customerId;
+            $saleInputArray['order_process_fee'] = 0.85;
+            $saleInputArray['conversion_rate']   = Currency::where('code', $input['currency'])->value('conversion_rate') ?? 1;
             $saleInputArray['selling_value_eur'] = $input['grand_total'] * $saleInputArray['conversion_rate'];
-            // Step 4: Create the sale
-            /** @var Sale $sale */
 
+            // Step 3: Create the sale
+            /** @var Sale $sale */
             $sale = Sale::create($saleInputArray);
 
-            if ($input['market_place'] == "MIMOVRSTE" && $input['payment_type'] == "5") {
+            // Marketplace commission
+            if ($input['market_place'] == 'MIMOVRSTE' && $input['payment_type'] == '5') {
                 $sale->marketplace_commission = ($sale->grand_total - 5) * 0.18;
                 $sale->save();
-            } elseif ($input['market_place'] == "MIMOVRSTE" && $input['payment_type'] != "5") {
+            } elseif ($input['market_place'] == 'MIMOVRSTE' && $input['payment_type'] != '5') {
                 $sale->marketplace_commission = ($sale->grand_total - 3) * 0.18;
                 $sale->save();
-            } elseif ($input['market_place'] == "PIGU") {
+            } elseif ($input['market_place'] == 'PIGU') {
                 $sale->marketplace_commission = ($sale->grand_total - $sale->shipping) * 0.1;
                 $sale->save();
             }
 
-
-            // invoice upload
+            // ── Invoice upload ────────────────────────────────────────────
             if (!empty($input['file'])) {
                 try {
                     $base64_str = $input['file'];
-
-                    // Validate base64 string format
                     if (!preg_match("/^data:(.*?);base64,/", $base64_str, $matches)) {
                         throw new \Exception('Invalid base64 file format');
                     }
-
-                    $mimeType = $matches[1];
+                    $mimeType  = $matches[1];
                     $extension = $this->mimeToExtension($mimeType);
-
-                    // Validate allowed file types
                     $allowedTypes = [
-                        'pdf' => 'application/pdf',
-                        'doc' => 'application/msword',
-                        'docx' => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-                        'xls' => 'application/vnd.ms-excel',
-                        'xlsx' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-                        'jpg' => 'image/jpeg',
-                        'jpeg' => 'image/jpeg',
-                        'png' => 'image/png',
-                        'gif' => 'image/gif',
-                        'webp' => 'image/webp'
+                        'application/pdf', 'application/msword',
+                        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+                        'application/vnd.ms-excel',
+                        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                        'image/jpeg', 'image/png', 'image/gif', 'image/webp',
                     ];
-
                     if (!in_array($mimeType, $allowedTypes)) {
                         throw new \Exception('Unsupported file type. Only documents and images are allowed.');
                     }
-
-                    // Extract the base64 data
                     $base64_data = substr($base64_str, strpos($base64_str, ',') + 1);
-                    $file_data = base64_decode($base64_data);
-
-                    // Validate the decoded data
+                    $file_data   = base64_decode($base64_data);
                     if ($file_data === false) {
                         throw new \Exception('Base64 decoding failed');
                     }
-
-                    // Check file size (max 5MB)
-                    $fileSize = strlen($file_data);
-                    $maxSize = 5 * 1024 * 1024; // 5MB
-                    if ($fileSize > $maxSize) {
+                    if (strlen($file_data) > 5 * 1024 * 1024) {
                         throw new \Exception('File size exceeds maximum limit of 5MB');
                     }
-
-                    // Additional validation for images
-                    if (strpos($mimeType, 'image/') === 0) {
-                        if (!@getimagesizefromstring($file_data)) {
-                            throw new \Exception('Invalid image data');
-                        }
+                    if (strpos($mimeType, 'image/') === 0 && !@getimagesizefromstring($file_data)) {
+                        throw new \Exception('Invalid image data');
                     }
-
-                    // Create sales/invoices directory structure if it doesn't exist
                     $uploadPath = public_path('uploads/sales/invoices');
                     if (!file_exists($uploadPath)) {
                         mkdir($uploadPath, 0755, true);
                     }
-
-                    // Generate unique filename with correct extension
                     $fileName = 'invoice_' . $input['country'] . '_' . $input['order_no'] . '_' . time() . '_' . Str::random(8) . '.' . $extension;
                     $filePath = $uploadPath . '/' . $fileName;
-
-                    // Save the file with error handling
                     if (file_put_contents($filePath, $file_data) === false) {
                         throw new \Exception('Failed to save file');
                     }
-
-                    // Set proper permissions
                     chmod($filePath, 0644);
-
-                    // Store ONLY the filename in database
-                    // Remove any existing file reference from input/data array
                     unset($input['file']);
-                    unset($input['file']);
-
-                    // Save only the filename to database
                     $sale->file = $fileName;
                     $sale->save();
-
                 } catch (\Exception $e) {
-                    // Delete the file if it was created
                     if (isset($filePath) && file_exists($filePath)) {
                         unlink($filePath);
                     }
-
                     \Log::error('Invoice upload error: ' . $e->getMessage());
                     throw new \Exception('Invoice upload failed: ' . $e->getMessage());
                 }
             }
-            // invoice upload End
 
-            // courier document upload
+            // ── Courier document upload ───────────────────────────────────
             if (!empty($input['courier_document'])) {
                 try {
                     $base64_str = $input['courier_document'];
-
-                    // Validate base64 string format
                     if (!preg_match("/^data:(.*?);base64,/", $base64_str, $matches)) {
                         throw new \Exception('Invalid base64 file format');
                     }
-
-                    $mimeType = $matches[1];
+                    $mimeType  = $matches[1];
                     $extension = $this->mimeToExtension($mimeType);
-
-                    // Validate allowed file types
                     $allowedTypes = [
-                        'pdf' => 'application/pdf',
-                        'doc' => 'application/msword',
-                        'docx' => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-                        'jpg' => 'image/jpeg',
-                        'jpeg' => 'image/jpeg',
-                        'png' => 'image/png',
-                        'gif' => 'image/gif',
-                        'webp' => 'image/webp'
+                        'application/pdf', 'application/msword',
+                        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+                        'image/jpeg', 'image/png', 'image/gif', 'image/webp',
                     ];
-
                     if (!in_array($mimeType, $allowedTypes)) {
-                        throw new \Exception('Unsupported file type for courier document. Only documents and images are allowed.');
+                        throw new \Exception('Unsupported file type for courier document.');
                     }
-
-                    // Extract the base64 data
                     $base64_data = substr($base64_str, strpos($base64_str, ',') + 1);
-                    $file_data = base64_decode($base64_data);
-
+                    $file_data   = base64_decode($base64_data);
                     if ($file_data === false) {
                         throw new \Exception('Base64 decoding failed');
                     }
-
-                    // Check file size (max 5MB)
-                    $fileSize = strlen($file_data);
-                    $maxSize = 5 * 1024 * 1024; // 5MB
-                    if ($fileSize > $maxSize) {
+                    if (strlen($file_data) > 5 * 1024 * 1024) {
                         throw new \Exception('Courier document size exceeds maximum limit of 5MB');
                     }
-
-                    // Additional validation for images
-                    if (strpos($mimeType, 'image/') === 0) {
-                        if (!@getimagesizefromstring($file_data)) {
-                            throw new \Exception('Invalid image data');
-                        }
+                    if (strpos($mimeType, 'image/') === 0 && !@getimagesizefromstring($file_data)) {
+                        throw new \Exception('Invalid image data');
                     }
-
-                    // Create sales/couriers directory structure if it doesn't exist
                     $uploadPath = public_path('uploads/sales/couriers');
                     if (!file_exists($uploadPath)) {
                         mkdir($uploadPath, 0755, true);
                     }
-
-                    // Generate unique filename with correct extension
                     $fileName = 'courier_' . $input['country'] . '_' . $input['order_no'] . '_' . time() . '_' . Str::random(8) . '.' . $extension;
                     $filePath = $uploadPath . '/' . $fileName;
-
-                    // Save the file with error handling
                     if (file_put_contents($filePath, $file_data) === false) {
                         throw new \Exception('Failed to save courier document');
                     }
-
                     chmod($filePath, 0644);
-
-                    // Save to database
                     $sale->courier_document = $fileName;
                     if (!empty($input['courier_document_name'])) {
                         $sale->courier_document_name = $input['courier_document_name'];
                     }
                     $sale->save();
-
                 } catch (\Exception $e) {
                     if (isset($filePath) && file_exists($filePath)) {
                         unlink($filePath);
@@ -352,127 +272,100 @@ class SaleRepository extends BaseRepository
                     throw new \Exception('Courier document upload failed: ' . $e->getMessage());
                 }
             }
-            // courier document upload End
 
-
+            // Mark quotation as converted
             if ($input['is_sale_created'] && $QuotationId) {
-                $quotation = Quotation::find($QuotationId);
-                $quotation->update([
-                    'is_sale_created' => true,
-                ]);
+                Quotation::where('id', $QuotationId)->update(['is_sale_created' => true]);
             }
+
+            // ── Bulk-save sale items (single INSERT) ──────────────────────
             $sale = $this->storeSaleItems($sale, $input);
-            if ((isset($input['parcel_number']) && !empty($input['parcel_number'])) || (isset($input['parcel_company_id']) && !empty($input['parcel_company_id']))) {
+
+            // ── Parcel ────────────────────────────────────────────────────
+            if ((isset($input['parcel_number']) && !empty($input['parcel_number']))
+                || (isset($input['parcel_company_id']) && !empty($input['parcel_company_id']))) {
                 $this->ParcelStatusCreate($input, $sale);
             }
+
+            // Barcode
             $reference_code = getSettingValue('sale_code') . '_111' . $sale->id;
             $this->generateBarcode($reference_code);
             $sale['barcode_image_url'] = Storage::url('sales/barcode-' . $reference_code . '.png');
 
-            foreach ($input['sale_items'] as $saleItem) {
-                // Refactored to use StockService
-                /** @var \App\Services\StockService $stockService */
-                $stockService = app(\App\Services\StockService::class);
+            // ── Batch stock update (2 queries total) ──────────────────────
+            $saleItemsList  = $input['sale_items'];
+            $warehouseId    = $input['warehouse_id'];
+            $productIds     = array_column($saleItemsList, 'product_id');
 
-                // Check availability first if needed, though StockService can handle or we can check here for better error message
-                $product = ManageStock::whereWarehouseId($input['warehouse_id'])->whereProductId($saleItem['product_id'])->first();
-                if ($product && $product->quantity >= $saleItem['quantity']) {
-                    $stockService->updateStock(
-                        $input['warehouse_id'],
-                        $saleItem['product_id'],
-                        -1 * $saleItem['quantity'], // Decrease stock
-                        Sale::class,
-                        $sale->id,
-                        'sale',
-                        'Sale Created'
+            // 1. Load all ManageStock rows in ONE query, keyed by product_id
+            $stockMap = ManageStock::whereWarehouseId($warehouseId)
+                ->whereIn('product_id', $productIds)
+                ->lockForUpdate()
+                ->get()
+                ->keyBy('product_id');
+
+            // 2. Validate all quantities upfront
+            foreach ($saleItemsList as $saleItem) {
+                $stock = $stockMap->get($saleItem['product_id']);
+                if (!$stock || $stock->quantity < $saleItem['quantity']) {
+                    throw new UnprocessableEntityHttpException(
+                        'Quantity must be less than Available quantity for product ID ' . $saleItem['product_id'] . '.'
                     );
-                } else {
-                    throw new UnprocessableEntityHttpException('Quantity must be less than Available quantity.');
                 }
             }
 
-            $mailTemplate = MailTemplate::where('type', MailTemplate::MAIL_TYPE_SALE)->first();
-            $smsTemplate = SmsTemplate::where('type', SmsTemplate::SMS_TYPE_SALE)->first();
+            // 3. Apply all deductions and build bulk history rows
+            $now          = now();
+            $userId       = Auth::id();
+            $historyRows  = [];
+            $skusToSync   = [];
 
-            $subject = 'Customer sale';
+            foreach ($saleItemsList as $saleItem) {
+                $stock       = $stockMap->get($saleItem['product_id']);
+                $oldQty      = $stock->quantity;
+                $deduct      = (int) $saleItem['quantity'];
+                $newQty      = max(0, $oldQty - $deduct);
 
-            $customer = Customer::whereId($sale->customer_id)->first();
+                // Update stock row directly (no extra query per item)
+                ManageStock::where('warehouse_id', $warehouseId)
+                    ->where('product_id', $saleItem['product_id'])
+                    ->update(['quantity' => $newQty, 'updated_at' => $now]);
 
-            $search = [
-                '{customer_name}',
-                '{sales_id}',
-                '{sales_date}',
-                '{sales_amount}',
-                '{paid_amount}',
-                '{due_amount}',
-                '{app_name}',
-            ];
+                $historyRows[] = [
+                    'warehouse_id'   => $warehouseId,
+                    'product_id'     => $saleItem['product_id'],
+                    'quantity'       => -1 * ($oldQty - $newQty),
+                    'old_quantity'   => $oldQty,
+                    'new_quantity'   => $newQty,
+                    'reference_type' => Sale::class,
+                    'reference_id'   => $sale->id,
+                    'action'         => 'sale',
+                    'user_id'        => $userId,
+                    'note'           => 'Sale Created',
+                    'created_at'     => $now,
+                    'updated_at'     => $now,
+                ];
 
-            $totalPayAmount = SalesPayment::whereSaleId($sale->id)->sum('amount');
-
-            $dueAmount = $sale->grand_total - $totalPayAmount;
-
-            $payAmount = 0;
-
-            if (($dueAmount < 0) || ($sale->payment_status == Sale::PAID)) {
-                $dueAmount = 0;
-                $payAmount = $sale->grand_total;
+                // Collect SKU for Postgres sync
+                $product = $stockMap->get($saleItem['product_id']);
+                if ($product && $product->relationLoaded('product')) {
+                    $skusToSync[] = $product->product->code ?? null;
+                }
             }
 
-            $payAmount = number_format($payAmount, 2);
-            $dueAmount = number_format($dueAmount, 2);
-
-            $replace = [
-                $customer->name,
-                $sale->reference_code,
-                $sale->date,
-                number_format($sale->grand_total, 2),
-                $payAmount,
-                $dueAmount,
-                getSettingValue('company_name'),
-            ];
-
-            if (!empty($mailTemplate) && $mailTemplate->status == MailTemplate::ACTIVE) {
-                $data['data'] = str_replace($search, $replace, $mailTemplate->content);
-
-                Mail::to($customer->email)
-                    ->send(new MailSender('emails.mail-sender', $subject, $data));
+            // 4. Bulk insert all stock history rows in ONE query
+            if (!empty($historyRows)) {
+                StockHistory::insert($historyRows);
             }
-
-            if (!empty($smsTemplate) && $smsTemplate->status == SmsTemplate::ACTIVE) {
-                $message = str_replace($search, $replace, $smsTemplate->content);
-
-                $client = new \GuzzleHttp\Client();
-
-                $url = SmsSetting::where('key', 'url')->value('value');
-                // $token = SmsSetting::where('key', 'token')->value('value');
-                //            $url = "https://xrjv8e.api.infobip.com/sms/2/text/advanced";
-
-                $data = SmsSetting::where('key', 'payload')->value('value');
-
-                $data = preg_replace('/\s/', '', $data);
-
-                $data = json_decode($data, true);
-
-                $toKey = SmsSetting::where('key', 'mobile_key')->value('value');
-                $number = $customer->phone;
-
-                $messageKey = SmsSetting::where('key', 'message_key')->value('value');
-
-                $data = replaceArrayValue($data, $toKey, $number);
-                $data = replaceArrayValue($data, $messageKey, $message);
-
-                $response = $client->post($url, [
-                    'headers' => [
-                        'Content-Type' => 'application/json',
-                        'Accept' => 'application/json',
-                    ],
-                    'form_params' => [$data],
-                ]);
-            }
-
 
             DB::commit();
+
+            // ── Dispatch ONE Postgres sync job for all SKUs ───────────────
+            // Resolve SKUs from product codes (batch query, outside transaction)
+            $productCodes = Product::whereIn('id', $productIds)->pluck('code')->filter()->unique()->values()->toArray();
+            if (!empty($productCodes)) {
+                SyncPostgresStock::dispatch($warehouseId, $productCodes);
+            }
 
             return $sale;
         } catch (Exception $e) {
@@ -535,18 +428,6 @@ class SaleRepository extends BaseRepository
         // $perItemTaxAmount = 0;
         // if ($saleItem['tax_value'] <= 100 && $saleItem['tax_value'] >= 0) {
         //     if ($saleItem['tax_type'] == Sale::EXCLUSIVE) {
-        //         $saleItem['tax_amount'] = (($saleItem['net_unit_price'] * $saleItem['tax_value']) / 100) * $saleItem['quantity'];
-        //         $perItemTaxAmount = $saleItem['tax_amount'] / $saleItem['quantity'];
-        //     } elseif ($saleItem['tax_type'] == Sale::INCLUSIVE) {
-        //         $saleItem['tax_amount'] = ($saleItem['net_unit_price'] * $saleItem['tax_value']) / (100 + $saleItem['tax_value']) * $saleItem['quantity'];
-        //         $perItemTaxAmount = $saleItem['tax_amount'] / $saleItem['quantity'];
-        //         $saleItem['net_unit_price'] -= $perItemTaxAmount;
-        //     }
-        // } else {
-        //     throw new UnprocessableEntityHttpException('Please enter tax value between 0 to 100 ');
-        // }
-        // $saleItem['sub_total'] = ($saleItem['net_unit_price'] + $perItemTaxAmount) * $saleItem['quantity'];
-
         return $saleItem;
     }
 
@@ -557,44 +438,63 @@ class SaleRepository extends BaseRepository
      */
     public function storeSaleItems($sale, $input)
     {
-        foreach ($input['sale_items'] as $saleItem) {
-            $product = Product::whereId($saleItem['product_id'])->first();
+        $saleItemsList = $input['sale_items'];
+        $now           = now();
 
-            if (!empty($product) && isset($product->quantity_limit) && $saleItem['quantity'] > $product->quantity_limit) {
-                throw new UnprocessableEntityHttpException('Please enter less than ' . $product->quantity_limit . ' quantity of ' . $product->name . ' product.');
+        // ── Batch validate quantity_limit for all products in ONE query ────
+        $productIds = array_column($saleItemsList, 'product_id');
+        $products   = Product::whereIn('id', $productIds)
+            ->get()
+            ->keyBy('id');
+
+        foreach ($saleItemsList as $saleItem) {
+            $product = $products->get($saleItem['product_id']);
+            if ($product && isset($product->quantity_limit) && $saleItem['quantity'] > $product->quantity_limit) {
+                throw new UnprocessableEntityHttpException(
+                    'Please enter less than ' . $product->quantity_limit . ' quantity of ' . $product->name . ' product.'
+                );
             }
-            $item = $this->calculationSaleItems($saleItem);
-
-            $saleItem = new SaleItem($item);
-            $sale->saleItems()->save($saleItem);
         }
 
-        $subTotalAmount = $sale->saleItems()->sum('sub_total');
+        // ── Build rows and bulk-insert all sale items in ONE query ────────
+        $insertRows = [];
+        foreach ($saleItemsList as $saleItem) {
+            $item = $this->calculationSaleItems($saleItem);
+            $insertRows[] = array_merge(
+                Arr::only($item, [
+                    'product_id',
+                    'product_price',
+                    'net_unit_price',
+                    'tax_type',
+                    'tax_value',
+                    'tax_amount',
+                    'discount_type',
+                    'discount_value',
+                    'discount_amount',
+                    'sale_unit',
+                    'quantity',
+                    'sub_total',
+                ]),
+                [
+                    'sale_id'    => $sale->id,
+                    'created_at' => $now,
+                    'updated_at' => $now,
+                ]
+            );
+        }
 
-        //        if ($input['discount'] <= $subTotalAmount) {
-        //            $input['grand_total'] = $subTotalAmount - $input['discount'];
-        //        } else {
-        //            throw new UnprocessableEntityHttpException('Discount amount should not be greater than total.');
-        //        }
-        //        if ($input['tax_rate'] <= 100 && $input['tax_rate'] >= 0) {
-        //            $input['tax_amount'] = $input['grand_total'] * $input['tax_rate'] / 100;
-        //        } else {
-        //            throw new UnprocessableEntityHttpException('Please enter tax value between 0 to 100.');
-        //        }
-        //        $input['grand_total'] += $input['tax_amount'];
-        //        if ($input['shipping'] <= $input['grand_total'] && $input['shipping'] >= 0) {
-        //            $input['grand_total'] += $input['shipping'];
-        //        } else {
-        //            throw new UnprocessableEntityHttpException('Shipping amount should not be greater than total.');
-        //        }
+        if (!empty($insertRows)) {
+            SaleItem::insert($insertRows);
+        }
 
+        // Payment
         if ($input['payment_status'] == Sale::PAID) {
             $input['paid_amount'] = $input['grand_total'];
             SalesPayment::create([
-                'sale_id' => $sale->id,
-                'payment_date' => Carbon::now(),
-                'payment_type' => $input['payment_type'],
-                'amount' => $input['paid_amount'],
+                'sale_id'         => $sale->id,
+                'payment_date'    => Carbon::now(),
+                'payment_type'    => $input['payment_type'],
+                'amount'          => $input['paid_amount'],
                 'received_amount' => $input['paid_amount'],
             ]);
         } elseif ($input['payment_status'] == Sale::UNPAID) {
