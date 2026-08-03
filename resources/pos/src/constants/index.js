@@ -891,6 +891,7 @@ export const paymentMethodOptions = [
     { id: 5, name: 'payment-type.filter.cod.label' },
     { id: 6, name: 'payment-type.filter.ssl.label' },
     { id: 7, name: 'payment-type.filter.stripe.label' },
+    { id: 8, name: 'payment-type.filter.revolut.label' },
 ];
 
 
@@ -1037,7 +1038,7 @@ export const countryOptions = [
     { id: 21, code: 'NL', currency: "EUR", currencySymbol: currencySymbols.EUR, name: 'Netherland', vat: 21 },
     { id: 22, code: 'DK', currency: "EUR", currencySymbol: currencySymbols.EUR, name: 'Denmark', vat: 25 },
     { id: 23, code: 'SE', currency: "EUR", currencySymbol: currencySymbols.EUR, name: 'Sweden', vat: 25 },
-    
+
 
     // Add more countries as needed
 ];

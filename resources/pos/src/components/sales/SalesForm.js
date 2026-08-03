@@ -176,6 +176,7 @@ const SalesForm = (props) => {
                 warehouse_id: singleSale ? singleSale.warehouse_id : '',
                 tax_rate: singleSale.tax_rate ? singleSale.tax_rate.toFixed(2) : '0.00',
                 tax_amount: singleSale.tax_amount ? singleSale.tax_amount.toFixed(2) : '0.00',
+                order_tax_type: singleSale && (singleSale.order_tax_type || singleSale.tax_type) ? (singleSale.order_tax_type || singleSale.tax_type).toString() : (singleSale && singleSale.sale_items && singleSale.sale_items[0] && singleSale.sale_items[0].tax_type ? singleSale.sale_items[0].tax_type.toString() : '1'),
                 discount: singleSale.discount ? singleSale.discount.toFixed(2) : '0.00',
                 shipping: singleSale.shipping ? singleSale.shipping.toFixed(2) : '0.00',
                 cod: singleSale.cod ? singleSale.cod.toFixed(2) : '0.00',
@@ -253,10 +254,14 @@ const SalesForm = (props) => {
     }, [singleSale]);
 
     useEffect(() => {
-        if (singleSale) {
-            setUpdateProducts(singleSale.sale_items);
+        if (singleSale && singleSale.sale_items) {
+            const taxTypeToUse = singleSale.order_tax_type || singleSale.tax_type || (singleSale.sale_items[0] && singleSale.sale_items[0].tax_type) || '1';
+            setUpdateProducts(singleSale.sale_items.map(item => ({
+                ...item,
+                tax_type: item.tax_type ? item.tax_type : taxTypeToUse
+            })));
         }
-    }, []);
+    }, [singleSale]);
 
     useEffect(() => {
         saleValue.warehouse_id.value && fetchProductsByWarehouse(saleValue?.warehouse_id?.value)
@@ -871,7 +876,14 @@ const SalesForm = (props) => {
                     <div className='col-md-4'>
                         <ReactSelect
                             data={taxTypeDefaultValue}
-                            onChange={(obj) => setSaleValue(inputs => ({ ...inputs, order_tax_type: obj.value }))}
+                            onChange={(obj) => {
+                                const newTaxType = obj.value ? obj.value.toString() : '1';
+                                setSaleValue(inputs => ({ ...inputs, order_tax_type: newTaxType }));
+                                setUpdateProducts(prevProducts => prevProducts.map(item => ({
+                                    ...item,
+                                    tax_type: newTaxType
+                                })));
+                            }}
                             name='order_tax_type'
                             title={getFormattedMessage('product.input.tax-type.label')}
                             value={taxTypeDefaultValue.find(opt => opt.value == saleValue.order_tax_type)}

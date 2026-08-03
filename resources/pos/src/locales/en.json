@@ -665,6 +665,7 @@
   "payment-type.filter.cod.label": "COD",
   "payment-type.filter.ssl.label": "SSLCOMMERZ",
   "payment-type.filter.stripe.label": "Stripe",
+  "payment-type.filter.revolut.label": "Revolut",
   "paying-amount-title": "Paying Amount",
   "create-payment-title": "Create Payment",
   "reference-placeholder-label": "Enter Reference",

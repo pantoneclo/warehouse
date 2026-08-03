@@ -95,8 +95,8 @@ const ProductModal = (props) => {
         setProductModalData(product);
         setNetUnit(prev => (prev !== null && prev !== undefined && prev !== '' ? Number(prev) : Number(product.net_unit_price)));
         setTaxValue(product.tax_value ? Number(product.tax_value).toFixed(2) : '0.00')
-        setTaxType(product.tax_type === '1' || product.tax_type === 1 ? { value: taxTypeFilterOptions[0].id, label: taxTypeFilterOptions[0].name } : {
-            value: taxTypeFilterOptions[1].id, label: taxTypeFilterOptions[1].name
+        setTaxType(product.tax_type === '2' || product.tax_type === 2 ? { value: taxTypeFilterOptions[1].id, label: taxTypeFilterOptions[1].name } : {
+            value: taxTypeFilterOptions[0].id, label: taxTypeFilterOptions[0].name
         });
         setDiscountValue(product.discount_value ? Number(product.discount_value).toFixed(2) : '0.00')
         setDiscountType(product.discount_type === '1' || product.discount_type === 1 ? {

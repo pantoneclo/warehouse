@@ -492,6 +492,10 @@ const Sales = (props) => {
                     row.payment_type === 7 &&
                     <span className='badge bg-light-primary'>
                         <span>{getFormattedMessage('payment-type.filter.stripe.label')}</span>
+                    </span> ||
+                    row.payment_type === 8 &&
+                    <span className='badge bg-light-primary'>
+                        <span>{getFormattedMessage('payment-type.filter.revolut.label')}</span>
                     </span>
                 )
             }

@@ -68,6 +68,8 @@ console.log(sales.attributes , 'this is from sales attributes')
         address:sales.attributes.customer_address,
         tax_rate: sales.attributes.tax_rate,
         tax_amount: sales.attributes.tax_amount,
+        order_tax_type: sales.attributes.order_tax_type ? sales.attributes.order_tax_type : (sales.attributes.tax_type ? sales.attributes.tax_type : (sales.attributes.sale_items && sales.attributes.sale_items[0] && sales.attributes.sale_items[0].tax_type ? sales.attributes.sale_items[0].tax_type : '1')),
+        tax_type: sales.attributes.tax_type ? sales.attributes.tax_type : (sales.attributes.sale_items && sales.attributes.sale_items[0] && sales.attributes.sale_items[0].tax_type ? sales.attributes.sale_items[0].tax_type : '1'),
         discount: sales.attributes.discount,
         shipping: sales.attributes.shipping,
         grand_total: sales.attributes.grand_total,

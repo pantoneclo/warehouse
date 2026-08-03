@@ -218,15 +218,19 @@ class PurchaseRepository extends BaseRepository
             $purchaseItmOldIds = [];
             foreach ($input['purchase_items'] as $key => $purchaseItem) {
                 //get different ids & update
-                $purchaseItmOldIds[$key] = $purchaseItem['purchase_item_id'];
+                $purchaseItemId = $purchaseItem['purchase_item_id'] ?? $purchaseItem['id'] ?? null;
+                $purchaseItmOldIds[$key] = $purchaseItemId;
+                $purchaseItem['purchase_item_id'] = $purchaseItemId;
                 $purchaseItemArr = Arr::only($purchaseItem, [
                     'purchase_item_id', 'product_id', 'product_cost', 'net_unit_cost', 'tax_type', 'tax_value',
                     'tax_amount', 'discount_type', 'discount_value', 'discount_amount', 'purchase_unit', 'quantity',
                     'sub_total',
                 ]);
-                $this->updateItem($purchaseItemArr, $input['warehouse_id']);
+                if (!is_null($purchaseItemId)) {
+                    $this->updateItem($purchaseItemArr, $input['warehouse_id']);
+                }
                 //create new product items
-                if (is_null($purchaseItem['purchase_item_id'])) {
+                if (is_null($purchaseItemId)) {
                     $purchaseItem = $this->calculationPurchaseItems($purchaseItem);
                     $purchaseItemArr = Arr::only($purchaseItem, [
                         'purchase_item_id', 'product_id', 'product_cost', 'net_unit_cost', 'tax_type', 'tax_value',
@@ -333,10 +337,14 @@ class PurchaseRepository extends BaseRepository
     {
         try {
             $purchaseItem = $this->calculationPurchaseItems($purchaseItem);
-            $item = PurchaseItem::whereId($purchaseItem['purchase_item_id']);
+            $purchaseItemId = $purchaseItem['purchase_item_id'] ?? null;
+            if (!$purchaseItemId) {
+                return true;
+            }
+            $item = PurchaseItem::whereId($purchaseItemId);
             // update stock manage
             $product = ManageStock::whereWarehouseId($warehouseId)->whereProductId($purchaseItem['product_id'])->first();
-            $oldItem = PurchaseItem::whereId($purchaseItem['purchase_item_id'])->first();
+            $oldItem = PurchaseItem::whereId($purchaseItemId)->first();
             $totalQuantity = 0;
             if ($product && $oldItem && $oldItem->quantity != $purchaseItem['quantity']) {
                 $quantityDiff = $purchaseItem['quantity'] - $oldItem->quantity;
@@ -353,7 +361,9 @@ class PurchaseRepository extends BaseRepository
                 );
             }
 
-            unset($purchaseItem['purchase_item_id']);
+            if (isset($purchaseItem['purchase_item_id'])) {
+                unset($purchaseItem['purchase_item_id']);
+            }
             $item->update($purchaseItem);
 
             return true;

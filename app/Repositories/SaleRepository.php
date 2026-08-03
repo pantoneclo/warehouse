@@ -612,8 +612,25 @@ class SaleRepository extends BaseRepository
                     throw new UnprocessableEntityHttpException('Please enter less than ' . $product->quantity_limit . ' quantity of ' . $product->name . ' product.');
                 }
 
-                //get different ids & update
-                $saleItmOldIds[$key] = $saleItem['sale_item_id'];
+                // Resolving sale_item_id safely
+                $saleItemId = null;
+                if (isset($saleItem['sale_item_id']) && !is_null($saleItem['sale_item_id']) && $saleItem['sale_item_id'] !== '') {
+                    $saleItemId = $saleItem['sale_item_id'];
+                } elseif (isset($saleItem['id']) && in_array($saleItem['id'], $saleItemIds) && !in_array($saleItem['id'], array_filter($saleItmOldIds))) {
+                    $saleItemId = $saleItem['id'];
+                } else {
+                    $existingItem = SaleItem::whereSaleId($id)
+                        ->whereProductId($saleItem['product_id'])
+                        ->whereNotIn('id', array_filter($saleItmOldIds))
+                        ->first();
+                    if ($existingItem) {
+                        $saleItemId = $existingItem->id;
+                    }
+                }
+
+                $saleItmOldIds[$key] = $saleItemId;
+                $saleItem['sale_item_id'] = $saleItemId;
+
                 $saleItemArray = Arr::only($saleItem, [
                     'sale_item_id',
                     'product_id',
@@ -630,11 +647,10 @@ class SaleRepository extends BaseRepository
                     'sub_total'
                 ]);
 
-
-                $this->updateItem($saleItemArray, $input['warehouse_id']);
-                //create new product items
-                //create new product items
-                if (is_null($saleItem['sale_item_id'])) {
+                if (!is_null($saleItemId)) {
+                    $this->updateItem($saleItemArray, $input['warehouse_id']);
+                } else {
+                    //create new product items
                     $saleItem = $this->calculationSaleItems($saleItem);
                     $saleItemArray = Arr::only($saleItem, [
                         'product_id',
@@ -673,7 +689,7 @@ class SaleRepository extends BaseRepository
                     }
                 }
             }
-            $removeItemIds = array_diff($saleItemIds, $saleItmOldIds);
+            $removeItemIds = array_diff($saleItemIds, array_filter($saleItmOldIds));
             //delete remove product
             if (!empty(array_values($removeItemIds))) {
                 foreach ($removeItemIds as $removeItemId) {
@@ -1050,9 +1066,13 @@ class SaleRepository extends BaseRepository
     {
         try {
             $saleItem = $this->calculationSaleItems($saleItem);
-            $item = SaleItem::whereId($saleItem['sale_item_id']);
+            $saleItemId = $saleItem['sale_item_id'] ?? null;
+            if (!$saleItemId) {
+                return true;
+            }
+            $item = SaleItem::whereId($saleItemId);
             $product = ManageStock::whereWarehouseId($warehouseId)->whereProductId($saleItem['product_id'])->first();
-            $oldItem = SaleItem::whereId($saleItem['sale_item_id'])->first();
+            $oldItem = SaleItem::whereId($saleItemId)->first();
 
             if ($oldItem && $oldItem->quantity != $saleItem['quantity']) {
                 $diff = $saleItem['quantity'] - $oldItem->quantity;
@@ -1066,7 +1086,7 @@ class SaleRepository extends BaseRepository
                 $stockChange = -1 * $diff;
 
                 if ($stockChange < 0) { // We are decreasing stock
-                    if (($product->quantity + $stockChange) < 0) {
+                    if ($product && ($product->quantity + $stockChange) < 0) {
                         throw new UnprocessableEntityHttpException('Quantity must be less than Available quantity.');
                     }
                 }
@@ -1081,7 +1101,9 @@ class SaleRepository extends BaseRepository
                     'Sale Item Quantity Changed'
                 );
             }
-            unset($saleItem['sale_item_id']);
+            if (isset($saleItem['sale_item_id'])) {
+                unset($saleItem['sale_item_id']);
+            }
             $item->update($saleItem);
 
             return true;
