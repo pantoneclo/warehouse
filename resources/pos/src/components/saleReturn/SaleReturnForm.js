@@ -73,7 +73,7 @@ const SaleReturnForm = (props) => {
     useEffect(() => {
         if (singleSale) {
             setSaleReturnValue({
-                date: singleSale ? moment(singleSale.date).toDate() : '',
+                date: (singleSale && singleSale.isCreateSaleReturn) ? moment().toDate() : (singleSale ? moment(singleSale.date).toDate() : moment().toDate()),
                 customer_id: singleSale ? singleSale.customer_id : '',
                 warehouse_id: singleSale ? singleSale.warehouse_id : '',
                 tax_rate: singleSale ? singleSale.tax_rate.toFixed(2) : '0.00',

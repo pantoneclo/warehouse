@@ -1,4 +1,5 @@
 import React, {useEffect} from 'react';
+import moment from 'moment';
 import {connect} from 'react-redux';
 import {useNavigate} from 'react-router-dom';
 import SaleReturnForm from './SaleReturnForm';
@@ -33,7 +34,7 @@ const CreateSaleReturn = (props) => {
     const selectedStatus = sales.attributes && sales.attributes.status && saleReturnStatus.filter((item) => item.value === sales.attributes.status)
 
     const itemsValue = sales && sales.attributes && {
-        date: sales.attributes.date,
+        date: moment().toDate(),
         warehouse_id: {
             value:  sales.attributes.warehouse_id,
             label: sales.attributes.warehouse_name,
