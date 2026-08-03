@@ -11,6 +11,8 @@ import { isArray, set } from 'lodash';
 import { use } from 'echarts';
 
 
+import { preparePurchaseProductArray } from '../../../prepareArray/preparePurchaseArray';
+
 const AdvanceSearch = (props) => {
     const {
         values,
@@ -30,36 +32,28 @@ const AdvanceSearch = (props) => {
     const isLoading = useSelector(state => state.isLoading);
     console.log("AdvanceSearch props values:", values);
 
-    // const filterProducts = products.data ? products.data.filter((item) => {
-    //     const attributes = item.attributes;
-    //     return attributes.stock && attributes.stock.quantity > 0;
-    // }).map((item) => ({
-    //     name: item.attributes.name,
-    //     code: item.attributes.code,
-    //     id: item.id,
-    //     variant: item.attributes.variant
-    // })) : [];
     const filterProducts = products ? isAllProducts ?
         products.map((item) => ({
-            name: item.attributes.name, brand: item.attributes.brand_name, code: item.attributes.code, id: item.id, variant: item.attributes.variant
+            name: item.attributes.name, brand: item.attributes.brand_name, code: item.attributes.code, id: item.id, variant: item.attributes.variant, pan_style: item.attributes.pan_style
         }))
-        : products.filter((qty) => qty && qty.attributes && qty.attributes.stock && qty.attributes.stock.quantity > 0).map((item) => ({
-            name: item.attributes.name, brand: item.attributes.brand_name, code: item.attributes.code, id: item.id, variant: item.attributes.variant
+        : products.filter((qty) => {
+            if (!qty || !qty.attributes) return false;
+            const whId = values?.warehouse_id?.value || values?.warehouse_id;
+            const stockInWh = qty.attributes.stocks?.find(s => s.warehouse_id === whId);
+            const qtyInWh = stockInWh ? stockInWh.quantity : (qty.attributes.stock ? qty.attributes.stock.quantity : 0);
+            return qtyInWh > 0 || isAllProducts;
+        }).map((item) => ({
+            name: item.attributes.name, brand: item.attributes.brand_name, code: item.attributes.code, id: item.id, variant: item.attributes.variant, pan_style: item.attributes.pan_style
         })) : [];
 
     console.log(products, 'After filterProducts');
     console.log(filterProducts, 'filterProducts');
 
-
-
-
-
-    // console.log(filterProducts, 'filterProducts')
     const onProductSearch = async (code) => {
         try {
             if (code.length >= 2) {
                 setIsSearching(true);
-                const warehouseId = values?.warehouse_id?.value;
+                const warehouseId = values?.warehouse_id?.value || values?.warehouse_id;
                 dispatch(fetchAdvancedSearch({ search: code, warehouse_id: warehouseId }));
 
                 console.log(code, 'code');
@@ -78,33 +72,34 @@ const AdvanceSearch = (props) => {
     useEffect(() => {
         console.log(products, 'products inside of useeffect')
 
-        function filterOutDuplicates(products, newProducts) {
+        function filterOutDuplicates(existingProducts, newProducts) {
             return newProducts.filter((newProduct) => {
-                return !products.find((exitId) => exitId?.product_id === newProduct?.product_id);
+                return newProduct && !existingProducts.find((exitItem) => (
+                    (exitItem?.product_id && exitItem?.product_id === newProduct?.product_id) ||
+                    (exitItem?.id && exitItem?.id === newProduct?.id)
+                ));
             });
         }
 
         if (products && products.length > 0) {
-            // Create a new array to store the new products
-            const newProducts = [];
+            const warehouseId = values?.warehouse_id?.value || values?.warehouse_id;
+            let preparedProducts = preparePurchaseProductArray(products, warehouseId);
 
-            products.forEach((product) => {
-                console.log(product, 'product inside of single product')
-                const newProduct = customProducts.find(element => element?.product_id === product.attributes?.product_id);
-                newProducts.push(newProduct); // Add each new product to the new array
-            });
+            if ((!preparedProducts || preparedProducts.length === 0 || preparedProducts.some(p => !p)) && customProducts && customProducts.length > 0) {
+                preparedProducts = products.map((product) => {
+                    return customProducts.find(element => element?.product_id === (product.attributes?.product_id || product.id)) || preparePurchaseProductArray([product], warehouseId)[0];
+                }).filter(Boolean);
+            }
 
-            // Filter out duplicates and add to updateProducts
             console.log(updateProducts, 'updateProducts before')
-            const filteredNewProducts = filterOutDuplicates(updateProducts, newProducts);
+            const filteredNewProducts = filterOutDuplicates(updateProducts, preparedProducts);
             console.log(filteredNewProducts, 'filteredNewProducts which i got')
 
             if (filteredNewProducts?.length > 0) {
-                setUpdateProducts([...updateProducts, ...filteredNewProducts]); // Spread the new products into updateProducts
+                setUpdateProducts([...updateProducts, ...filteredNewProducts]);
                 console.log(updateProducts, 'updateProducts after');
                 setSearchString('');
             } else {
-                // No new products found
                 dispatch(addToast({
                     text: getFormattedMessage('globally.product-already-added.validate.message'),
                     type: toastType.ERROR
@@ -113,7 +108,6 @@ const AdvanceSearch = (props) => {
             }
         }
 
-        // Clear searching state when products are loaded
         setIsSearching(false);
     }, [products]);
 
