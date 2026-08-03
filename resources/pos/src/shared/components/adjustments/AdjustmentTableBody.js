@@ -120,8 +120,8 @@ const AdjustmentTableBody = (props) => {
                     )
                 })
                 :
-                singleProduct.stock >= 0 ? <span className='badge bg-light-warning'>
-                    <span>{singleProduct.qty}&nbsp;{singleProduct.short_name}</span>
+                (singleProduct.stock >= 0 || singleProduct.qty >= 0) ? <span className='badge bg-light-warning'>
+                    <span>{singleProduct.stock ?? singleProduct.qty ?? 0}&nbsp;{singleProduct.short_name}</span>
                 </span>
                 :
                 ''}

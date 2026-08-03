@@ -69,19 +69,62 @@ const AdvanceSearch = (props) => {
     };
 
 
+    const processProductAddition = (newProd, prevProducts) => {
+        if (!newProd) return prevProducts;
+        const warehouseStock = Number(newProd.stock || 0);
+
+        const existingIndex = prevProducts.findIndex(exist =>
+            (exist.product_id != null && newProd.product_id != null && String(exist.product_id) === String(newProd.product_id)) ||
+            (exist.id != null && newProd.id != null && String(exist.id) === String(newProd.id)) ||
+            (exist.code && newProd.code && String(exist.code).trim().toLowerCase() === String(newProd.code).trim().toLowerCase())
+        );
+
+        if (existingIndex !== -1) {
+            const existingItem = prevProducts[existingIndex];
+            const currentQty = Number(existingItem.quantity || 0);
+            const newQty = currentQty + 1;
+
+            if (!isAllProducts && newQty > warehouseStock) {
+                dispatch(addToast({
+                    text: getFormattedMessage('sale.product-qty-validate.message') || `Quantity exceeds available warehouse stock (${warehouseStock})`,
+                    type: toastType.ERROR
+                }));
+                return prevProducts;
+            }
+
+            const unitPrice = Number(existingItem.net_unit_price || existingItem.product_price || 0);
+            const newSubTotal = Number(newQty * unitPrice).toFixed(2);
+            const updated = [...prevProducts];
+            updated[existingIndex] = {
+                ...existingItem,
+                quantity: newQty,
+                sub_total: newSubTotal
+            };
+            return updated;
+        } else {
+            if (!isAllProducts && warehouseStock < 1) {
+                dispatch(addToast({
+                    text: getFormattedMessage('globally.product-out-of-stock.validate.message') || `Product is out of stock in this warehouse`,
+                    type: toastType.ERROR
+                }));
+                return prevProducts;
+            }
+
+            const unitPrice = Number(newProd.net_unit_price || newProd.product_price || 0);
+            const initialQty = 1;
+            const formattedNewProd = {
+                ...newProd,
+                quantity: initialQty,
+                sub_total: (initialQty * unitPrice).toFixed(2)
+            };
+            return [...prevProducts, formattedNewProd];
+        }
+    };
+
     useEffect(() => {
         console.log(products, 'products inside of useeffect')
 
-        function filterOutDuplicates(existingProducts, newProducts) {
-            return newProducts.filter((newProduct) => {
-                return newProduct && !existingProducts.find((exitItem) => (
-                    (exitItem?.product_id && exitItem?.product_id === newProduct?.product_id) ||
-                    (exitItem?.id && exitItem?.id === newProduct?.id)
-                ));
-            });
-        }
-
-        if (products && products.length > 0) {
+        if (products && products.length > 0 && searchString) {
             const warehouseId = values?.warehouse_id?.value || values?.warehouse_id;
             let preparedProducts = preparePurchaseProductArray(products, warehouseId);
 
@@ -91,20 +134,31 @@ const AdvanceSearch = (props) => {
                 }).filter(Boolean);
             }
 
-            console.log(updateProducts, 'updateProducts before')
-            const filteredNewProducts = filterOutDuplicates(updateProducts, preparedProducts);
-            console.log(filteredNewProducts, 'filteredNewProducts which i got')
+            if (preparedProducts && preparedProducts.length > 0) {
+                const searchTrimmed = searchString.trim();
+                const searchLower = searchTrimmed.toLowerCase();
+                const isComboSearch = searchTrimmed.toUpperCase().startsWith('COMBO');
 
-            if (filteredNewProducts?.length > 0) {
-                setUpdateProducts([...updateProducts, ...filteredNewProducts]);
-                console.log(updateProducts, 'updateProducts after');
-                setSearchString('');
-            } else {
-                dispatch(addToast({
-                    text: getFormattedMessage('globally.product-already-added.validate.message'),
-                    type: toastType.ERROR
-                }));
-                setSearchString('');
+                if (isComboSearch) {
+                    setUpdateProducts(prevProducts => {
+                        let updated = [...prevProducts];
+                        preparedProducts.forEach(prod => {
+                            if (prod) {
+                                updated = processProductAddition(prod, updated);
+                            }
+                        });
+                        return updated;
+                    });
+                    setSearchString('');
+                } else {
+                    const exactMatch = preparedProducts.find(p => String(p.code).trim().toLowerCase() === searchLower);
+                    const targetProduct = exactMatch || (preparedProducts.length === 1 ? preparedProducts[0] : null);
+
+                    if (targetProduct) {
+                        setUpdateProducts(prevProducts => processProductAddition(targetProduct, prevProducts));
+                        setSearchString('');
+                    }
+                }
             }
         }
 
@@ -117,20 +171,27 @@ const AdvanceSearch = (props) => {
         onProductSearch(string);
     };
 
-    console.log(updateProducts, 'updateProducts this is update products');
-    console.log(products, 'products this is products search form')
-    console.log(customProducts, 'customProducts this is customProducts search form')
+    const handleOnSelect = (result) => {
+        if (!result) return;
+        const warehouseId = values?.warehouse_id?.value || values?.warehouse_id;
+        let matchedProduct = products && products.find(p => String(p.id) === String(result.id) || String(p.attributes?.code).trim().toLowerCase() === String(result.code).trim().toLowerCase());
+        let prepared = matchedProduct ? preparePurchaseProductArray([matchedProduct], warehouseId) : [];
 
-    // const handleOnSelect = (result) => {
-    //     console.log(result, 'result')
-    //     onProductSearch(result);
-    // }
+        if ((!prepared || prepared.length === 0 || !prepared[0]) && customProducts) {
+            const fallback = customProducts.find(p => String(p.product_id || p.id) === String(result.id) || String(p.code).trim().toLowerCase() === String(result.code).trim().toLowerCase());
+            if (fallback) prepared = [fallback];
+        }
+
+        if (prepared && prepared.length > 0 && prepared[0]) {
+            setUpdateProducts(prevProducts => processProductAddition(prepared[0], prevProducts));
+        }
+        setSearchString('');
+    };
 
     const formatResult = (item) => {
         console.log(item, 'item')
 
-        // Map over the 'item.variant' array and format its elements as a string
-        const variantKeys = Object.keys(item.variant);
+        const variantKeys = item.variant ? Object.keys(item.variant) : [];
         const formattedVariants = variantKeys.map((key) => {
             return `${key}: ${item.variant[key]}`;
         }).join(', ');
@@ -147,7 +208,7 @@ const AdvanceSearch = (props) => {
 
     const removeSearchClass = () => {
         const html = document.getElementsByClassName(`custom-search`)[0].firstChild.firstChild.lastChild;
-        html.style.display = 'none'
+        if (html) html.style.display = 'none'
     }
 
     return (
@@ -160,7 +221,7 @@ const AdvanceSearch = (props) => {
                 fuseOptions={{ keys: ['code', 'name', 'variant', 'pan_style'] }}
                 resultStringKeyName='code'
                 placeholder={placeholderText('globally.search.field.label')}
-                // onSelect={handleOnSelect}
+                onSelect={handleOnSelect}
                 formatResult={formatResult}
                 showIcon={false}
                 showClear={false}

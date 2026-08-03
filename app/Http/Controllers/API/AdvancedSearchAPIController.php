@@ -22,79 +22,64 @@ class AdvancedSearchAPIController extends AppBaseController
 
     public function searchProduct(Request $request)
     {
-        $search_data = $request->input("search");
-//        $warehouse_id = 1;
-        $result_of_search = [];
+        $search_data = trim($request->input("search", ""));
+        if (empty($search_data)) {
+            return response()->json(['data' => []]);
+        }
 
         if (substr($search_data, 0, 2) === "PR") {
-            $product = Product::where('code', $search_data)->pluck('id')->toArray(); // Use first() to get a single product
-            $products = Product::whereIn('id', $product)->get();
+            $products = Product::where('code', 'LIKE', '%' . $search_data . '%')
+                ->orWhere('code', $search_data)
+                ->get();
 
             if ($products->isNotEmpty()) {
-
                 ProductResource::usingWithCollection();
-                return new ProductCollection($products );
-            } else {
-                return $this->sendError('Product not found');
+                return new ProductCollection($products);
             }
+            return response()->json(['data' => []]);
         }
         elseif (substr($search_data, 0, 3) === 'PK_') {
-            $package_id = Package::where(Package::codeToSearchLogic($search_data))->pluck( 'id');
+            $package_id = Package::where(Package::codeToSearchLogic($search_data))->pluck('id');
 
-            if ($package_id!==null) {
-
-                $package_vs_product  = PackageVsProductVsVariant::whereIn('package_id', $package_id)->get() ;
-
-                //dd($package_vs_product) ;
+            if ($package_id !== null && count($package_id) > 0) {
+                $package_vs_product = PackageVsProductVsVariant::whereIn('package_id', $package_id)->get();
 
                 if (!empty($package_vs_product) && count($package_vs_product) > 0) {
                     PackageVsProductVsVariantResource::usingWithCollection();
-                    return new PackageVsProductVsVariantCollection($package_vs_product );
-                } else {
-                    return $this->sendError('Products not found');
+                    return new PackageVsProductVsVariantCollection($package_vs_product);
                 }
-
-            } else {
-                return $this->sendError('Product not found');
             }
-        }elseif (substr($search_data, 0, 5) === 'COMBO'){
-           $combo_products_ids = ComboProduct::where('code', $search_data)->pluck('product_id')->toArray();
+            return response()->json(['data' => []]);
+        }
+        elseif (substr($search_data, 0, 5) === 'COMBO') {
+            $combo_products_ids = ComboProduct::where('code', 'LIKE', '%' . $search_data . '%')
+                ->orWhere('code', $search_data)
+                ->pluck('product_id')
+                ->toArray();
 
             if (!empty($combo_products_ids)) {
                 $products = Product::whereIn('id', $combo_products_ids)->get();
 
-
                 if ($products->isNotEmpty()) {
                     ProductResource::usingWithCollection();
-
                     return new ProductCollection($products);
-                } else {
-                    return $this->sendError('Products not found');
                 }
             }
+            return response()->json(['data' => []]);
+        }
+        else {
+            $abstracts_id = ProductAbstract::where('pan_style', 'LIKE', '%' . $search_data . '%')->pluck('id')->toArray();
+            $products = Product::whereIn('product_abstract_id', $abstracts_id)
+                ->orWhere('code', 'LIKE', '%' . $search_data . '%')
+                ->orWhere('name', 'LIKE', '%' . $search_data . '%')
+                ->get();
 
-        } else {
-            $abstracts_id = ProductAbstract::where('pan_style', $search_data)->pluck('id')->toArray();
-
-            if (!empty($abstracts_id)) {
-                $products = Product::whereIn('product_abstract_id', $abstracts_id)->get();
-
-
-                if ($products->isNotEmpty()) {
-                    ProductResource::usingWithCollection();
-
-                    return new ProductCollection($products);
-                } else {
-                    return $this->sendError('Products not found');
-                }
+            if ($products->isNotEmpty()) {
+                ProductResource::usingWithCollection();
+                return new ProductCollection($products);
             }
+            return response()->json(['data' => []]);
         }
-
-        if (empty($result_of_search)) {
-            return $this->sendError('Product not found');
-        }
-
-        return $result_of_search;
     }
 
     public function warehouseProductsSearch(Request $request){

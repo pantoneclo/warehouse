@@ -251,7 +251,7 @@ const SalesForm = (props) => {
                 order_tax_type: singleSale && singleSale.order_tax_type ? singleSale.order_tax_type : '1'
             })
         }
-    }, [singleSale]);
+    }, [singleSale?.id]);
 
     useEffect(() => {
         if (singleSale && singleSale.sale_items) {
@@ -261,7 +261,7 @@ const SalesForm = (props) => {
                 tax_type: item.tax_type ? item.tax_type : taxTypeToUse
             })));
         }
-    }, [singleSale]);
+    }, [singleSale?.id]);
 
     useEffect(() => {
         saleValue.warehouse_id.value && fetchProductsByWarehouse(saleValue?.warehouse_id?.value)
@@ -836,6 +836,7 @@ const SalesForm = (props) => {
                             setUpdateProducts={setUpdateProducts}
                             customProducts={customProducts}
                             fetchAdvancedSearch={fetchAdvancedSearch}
+                            isAllProducts={true}
                         />
                     </div>
                     <div>
