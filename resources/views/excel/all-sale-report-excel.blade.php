@@ -226,8 +226,8 @@
                         <td>Delivered</td>
                     @elseif($sale->status == \App\Models\Sale::CANCLED)
                         <td>Canceled</td>
-                    @elseif($sale->status == \App\Models\Sale::FAILED_ORDER)
-                        <td>Failed Order</td>
+                    @elseif($sale->status == \App\Models\Sale::FAILED_ORDER || $sale->status == \App\Models\Sale::FAILED_DELIVERY)
+                        <td>Failed Delivery</td>
                     @elseif($sale->status == \App\Models\Sale::RETURNED)
                         <td>Returned</td>
                     @endif

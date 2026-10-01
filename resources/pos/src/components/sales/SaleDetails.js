@@ -155,17 +155,40 @@ const SaleDetails = (props) => {
                                     </div>
                                     <div className='pb-1'>
                                         <span className='me-2'>{getFormattedMessage('globally.detail.status')} :</span>
-                                        {saleDetails && saleDetails.status === 1 &&
-                                            <span className='badge bg-light-success'>
-                                                <span>Received</span>
-                                            </span> || saleDetails.status === 2 &&
+                                        {saleDetails && (
+                                            saleDetails.status === 1 &&
                                             <span className='badge bg-light-primary'>
-                                                <span>Pending</span>
-                                            </span> || saleDetails.status === 3 &&
+                                                <span>{getFormattedMessage("status.filter.received.label")}</span>
+                                            </span> ||
+                                            saleDetails.status === 2 &&
+                                            <span className='badge bg-primary'>
+                                                <span>{getFormattedMessage("status.filter.pending.label")}</span>
+                                            </span> ||
+                                            saleDetails.status === 3 &&
                                             <span className='badge bg-light-warning'>
-                                                <span>Ordered</span>
+                                                <span>{getFormattedMessage("status.filter.ordered.label")}</span>
+                                            </span> ||
+                                            saleDetails.status === 4 &&
+                                            <span className='badge bg-light-info'>
+                                                <span>{getFormattedMessage("status.filter.ontheway.label")}</span>
+                                            </span> ||
+                                            saleDetails.status === 5 &&
+                                            <span className='badge bg-light-success'>
+                                                <span>{getFormattedMessage("status.filter.delivered.label")}</span>
+                                            </span> ||
+                                            saleDetails.status === 6 &&
+                                            <span className='badge bg-light-danger'>
+                                                <span>{getFormattedMessage("status.filter.cancelled.label")}</span>
+                                            </span> ||
+                                            saleDetails.status === 7 &&
+                                            <span className='badge bg-light-danger'>
+                                                <span>{getFormattedMessage("status.filter.order_failed.label")}</span>
+                                            </span> ||
+                                            saleDetails.status === 8 &&
+                                            <span className='badge bg-light-warning'>
+                                                <span>{getFormattedMessage("status.filter.returned.label")}</span>
                                             </span>
-                                        }
+                                        )}
                                     </div>
                                     <div>
                                         <span

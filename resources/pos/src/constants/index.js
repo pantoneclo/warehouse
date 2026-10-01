@@ -859,7 +859,7 @@ export const saleStatusOptions = [
     { id: 4, name: 'status.filter.ontheway.label' }, //On The Way
     { id: 5, name: 'status.filter.delivered.label' },  //Delivered
     { id: 6, name: 'status.filter.cancelled.label' },  //Cancelled
-    { id: 7, name: 'status.filter.order_failed.label' }, //Failed Order
+    { id: 7, name: 'status.filter.order_failed.label' }, //Failed Delivery
     { id: 8, name: 'status.filter.returned.label' }, //Returned
 ];
 

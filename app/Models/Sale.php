@@ -190,6 +190,7 @@ class Sale extends BaseModel implements HasMedia, JsonResourceful
     const DELIVERED = 5;
     const CANCLED = 6;
     const FAILED_ORDER = 7;
+    const FAILED_DELIVERY = 7;
     const RETURNED = 8;
 
     // payment status

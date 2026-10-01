@@ -433,10 +433,14 @@ const SalesForm = (props) => {
     };
 
     const onStatusChange = (obj) => {
-        if (obj && (obj.value === 6 || obj.value === 7)) {
-            const message = getFormattedMessage(
-                obj.value === 6 ? 'sale.status.confirm-cancelled.message' : 'sale.status.confirm-failed.message'
-            );
+        if (obj && (obj.value === 6 || obj.value === 7 || obj.value === 8)) {
+            let messageKey = 'sale.status.confirm-failed.message';
+            if (obj.value === 6) {
+                messageKey = 'sale.status.confirm-cancelled.message';
+            } else if (obj.value === 8) {
+                messageKey = 'sale.status.confirm-returned.message';
+            }
+            const message = getFormattedMessage(messageKey);
             const isConfirmed = window.confirm(message);
             if (!isConfirmed) {
                 return; // Revert change / do not update
@@ -705,7 +709,7 @@ const SalesForm = (props) => {
         }
     })
 
-    const isStatusDisabled = singleSale && (singleSale.status_id?.value === 6 || singleSale.status_id?.value === 7);
+    const isStatusDisabled = singleSale && (singleSale.status_id?.value === 6 || singleSale.status_id?.value === 7 || singleSale.status_id?.value === 8);
 
     return (
         <div className='card'>

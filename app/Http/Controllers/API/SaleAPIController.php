@@ -266,7 +266,7 @@ class SaleAPIController extends AppBaseController
                 $sale->payments()->delete();
             }
 
-            if ($sale->status != 6 && $sale->status != 7) {
+            if (!in_array($sale->status, [Sale::CANCLED, Sale::FAILED_ORDER, Sale::RETURNED]) && $sale->is_return != 1) {
                 foreach ($sale->saleItems as $saleItem) {
 
                     manageStock($sale->warehouse_id, $saleItem['product_id'], $saleItem['quantity']);

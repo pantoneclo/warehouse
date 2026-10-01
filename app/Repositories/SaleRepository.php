@@ -9,6 +9,8 @@ use App\Models\Product;
 use App\Models\Quotation;
 use App\Models\Sale;
 use App\Models\SaleItem;
+use App\Models\SaleReturn;
+use App\Models\SaleReturnItem;
 use App\Models\SalesPayment;
 use App\Models\Setting;
 use App\Models\Shipment;
@@ -519,14 +521,17 @@ class SaleRepository extends BaseRepository
             DB::beginTransaction();
             $sale = Sale::findOrFail($id);
 
-            $oldStatus = $sale->status;
+            $oldStatus = (int) $sale->status;
             $newStatus = isset($input['status']) ? (int) $input['status'] : $oldStatus;
 
-            if (in_array($oldStatus, [Sale::CANCLED, Sale::FAILED_ORDER]) && $newStatus !== $oldStatus) {
-                throw new UnprocessableEntityHttpException("Cannot change status because the sale is already Cancelled or Failed Order.");
+            $terminalStatuses = [Sale::CANCLED, Sale::FAILED_ORDER, Sale::RETURNED];
+
+            if (in_array($oldStatus, $terminalStatuses) && $newStatus !== $oldStatus) {
+                throw new UnprocessableEntityHttpException("Cannot change status because the sale is already Cancelled, Failed Delivery, or Returned.");
             }
 
-            $isTransitioningToCancel = !in_array($oldStatus, [Sale::CANCLED, Sale::FAILED_ORDER]) && in_array($newStatus, [Sale::CANCLED, Sale::FAILED_ORDER]);
+            $isTransitioningToCancelOrFailed = !in_array($oldStatus, $terminalStatuses) && in_array($newStatus, [Sale::CANCLED, Sale::FAILED_ORDER]);
+            $isTransitioningToReturned = !in_array($oldStatus, $terminalStatuses) && $newStatus === Sale::RETURNED;
 
             // Update invoice file if a new one is uploaded
             if (!empty($input['file']) && str_starts_with($input['file'], 'data:')) {
@@ -835,7 +840,7 @@ class SaleRepository extends BaseRepository
 
             }
 
-            if ($isTransitioningToCancel) {
+            if ($isTransitioningToCancelOrFailed) {
                 $sale->load('saleItems.product');
                 /** @var \App\Services\StockService $stockService */
                 $stockService = app(\App\Services\StockService::class);
@@ -847,15 +852,78 @@ class SaleRepository extends BaseRepository
                         Sale::class,
                         $sale->id,
                         'sale_cancel_restock',
-                        'Sale Cancelled/Failed Restock',
+                        'Sale Cancelled/Failed Delivery Restock',
                         false
                     );
                 }
             }
 
+            if ($isTransitioningToReturned) {
+                $sale->update([
+                    'is_return' => 1,
+                    'status' => Sale::RETURNED,
+                    'payment_status' => Sale::REFUND,
+                ]);
+
+                // Create SaleReturn if not already created
+                $existingSaleReturn = SaleReturn::where('sale_id', $sale->id)->first();
+                if (!$existingSaleReturn) {
+                    $sale->load('saleItems');
+                    $saleReturn = SaleReturn::create([
+                        'date' => now()->format('Y-m-d'),
+                        'customer_id' => $sale->customer_id,
+                        'warehouse_id' => $sale->warehouse_id,
+                        'sale_id' => $sale->id,
+                        'tax_rate' => $sale->tax_rate ?? 0,
+                        'tax_amount' => $sale->tax_amount ?? 0,
+                        'discount' => $sale->discount ?? 0,
+                        'shipping' => $sale->shipping ?? 0,
+                        'grand_total' => $sale->grand_total,
+                        'grand_total_original' => $sale->grand_total_original ?? $sale->grand_total,
+                        'conversion_rate' => $sale->conversion_rate ?? 1,
+                        'currency' => $sale->currency,
+                        'order_number' => $sale->order_no,
+                        'paid_amount' => 0,
+                        'payment_type' => $sale->payment_type ?? 1,
+                        'note' => 'Sales return created from sale edit (Status changed to Returned)',
+                        'status' => SaleReturn::PENDING, // 2: Pending
+                        'return_status' => SaleReturn::RETURN_STATUS_PENDING,
+                        'stock_updated' => false,
+                        'reference_code' => 'SR-' . ($sale->order_no ?: $sale->id) . '-' . time()
+                    ]);
+
+                    $returnItems = [];
+                    foreach ($sale->saleItems as $saleItem) {
+                        $returnItems[] = [
+                            'sale_return_id' => $saleReturn->id,
+                            'product_id' => $saleItem->product_id,
+                            'product_price' => $saleItem->product_price,
+                            'net_unit_price' => $saleItem->net_unit_price,
+                            'tax_type' => $saleItem->tax_type,
+                            'tax_value' => $saleItem->tax_value,
+                            'tax_amount' => $saleItem->tax_amount,
+                            'discount_type' => $saleItem->discount_type,
+                            'discount_value' => $saleItem->discount_value,
+                            'discount_amount' => $saleItem->discount_amount,
+                            'sale_unit' => $saleItem->sale_unit,
+                            'quantity' => $saleItem->quantity,
+                            'sold_quantity' => $saleItem->quantity,
+                            'sub_total' => $saleItem->sub_total,
+                            'is_approved' => false,
+                            'created_at' => now(),
+                            'updated_at' => now()
+                        ];
+                    }
+
+                    if (!empty($returnItems)) {
+                        SaleReturnItem::insert($returnItems);
+                    }
+                }
+            }
+
             DB::commit();
 
-            if ($isTransitioningToCancel) {
+            if ($isTransitioningToCancelOrFailed) {
                 $this->syncSaleStockToExternalAndPostgres($sale);
             }
 

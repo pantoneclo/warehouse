@@ -636,7 +636,7 @@
   "status.filter.ontheway.label": "On The Way",
   "status.filter.delivered.label": "Delivered",
   "status.filter.cancelled.label": "Canceled",
-  "status.filter.order_failed.label": "Failed Order",
+  "status.filter.order_failed.label": "Failed Delivery",
   "status.filter.returned.label": "Returned",
   "payment-status.filter.paid.label": "Paid",
   "payment-status.filter.unpaid.label": "Unpaid",
@@ -978,5 +978,6 @@
   "sale.report.edit.enter.other.cost": "Please Enter Other Cost",
   "sale.report.success.edit.message": "Sale Report updated successfully",
   "sale.status.confirm-cancelled.message": "Are you sure you want to change the status to Cancelled? Once saved, you will not be able to change it again.",
-  "sale.status.confirm-failed.message": "Are you sure you want to change the status to Failed Order? Once saved, you will not be able to change it again."
+  "sale.status.confirm-failed.message": "Are you sure you want to change the status to Failed Delivery? Once saved, you will not be able to change it again.",
+  "sale.status.confirm-returned.message": "Are you sure you want to change the status to Returned? Once saved, you will not be able to change it again and a Sales Return will be created for approval."
 }
