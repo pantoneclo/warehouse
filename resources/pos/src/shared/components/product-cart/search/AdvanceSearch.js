@@ -32,9 +32,15 @@ const AdvanceSearch = (props) => {
     const isLoading = useSelector(state => state.isLoading);
     console.log("AdvanceSearch props values:", values);
 
+    const formatVariantText = (variant) => {
+        if (!variant) return '';
+        if (typeof variant === 'string') return variant;
+        return Object.keys(variant).map(k => `${k}: ${variant[k]}`).join(', ');
+    };
+
     const filterProducts = products ? isAllProducts ?
         products.map((item) => ({
-            name: item.attributes.name, brand: item.attributes.brand_name, code: item.attributes.code, id: item.id, variant: item.attributes.variant, pan_style: item.attributes.pan_style
+            name: item.attributes.name, brand: item.attributes.brand_name, code: item.attributes.code, id: item.id, variant: item.attributes.variant, pan_style: item.attributes.pan_style, variant_text: formatVariantText(item.attributes.variant)
         }))
         : products.filter((qty) => {
             if (!qty || !qty.attributes) return false;
@@ -43,7 +49,7 @@ const AdvanceSearch = (props) => {
             const qtyInWh = stockInWh ? stockInWh.quantity : (qty.attributes.stock ? qty.attributes.stock.quantity : 0);
             return qtyInWh > 0 || isAllProducts;
         }).map((item) => ({
-            name: item.attributes.name, brand: item.attributes.brand_name, code: item.attributes.code, id: item.id, variant: item.attributes.variant, pan_style: item.attributes.pan_style
+            name: item.attributes.name, brand: item.attributes.brand_name, code: item.attributes.code, id: item.id, variant: item.attributes.variant, pan_style: item.attributes.pan_style, variant_text: formatVariantText(item.attributes.variant)
         })) : [];
 
     console.log(products, 'After filterProducts');
@@ -138,8 +144,22 @@ const AdvanceSearch = (props) => {
                 const searchTrimmed = searchString.trim();
                 const searchLower = searchTrimmed.toLowerCase();
                 const isComboSearch = searchTrimmed.toUpperCase().startsWith('COMBO');
+                const isPackageSearch = searchTrimmed.toUpperCase().startsWith('PK_');
 
-                if (isComboSearch) {
+                // Check if search matches a single product code exactly
+                const exactCodeMatch = preparedProducts.find(p => String(p.code).trim().toLowerCase() === searchLower);
+
+                if (exactCodeMatch) {
+                    // Exact product code match (user scanned or searched a specific product barcode/code)
+                    setUpdateProducts(prevProducts => processProductAddition(exactCodeMatch, prevProducts));
+                    setSearchString('');
+                } else if (preparedProducts.length === 1 && !isComboSearch && !isPackageSearch) {
+                    // Only 1 single product returned
+                    setUpdateProducts(prevProducts => processProductAddition(preparedProducts[0], prevProducts));
+                    setSearchString('');
+                } else {
+                    // Multiple products returned (e.g. pan_style, package, combo, or style with all variants)
+                    // Add ALL variant products to updateProducts without any restriction
                     setUpdateProducts(prevProducts => {
                         let updated = [...prevProducts];
                         preparedProducts.forEach(prod => {
@@ -150,14 +170,6 @@ const AdvanceSearch = (props) => {
                         return updated;
                     });
                     setSearchString('');
-                } else {
-                    const exactMatch = preparedProducts.find(p => String(p.code).trim().toLowerCase() === searchLower);
-                    const targetProduct = exactMatch || (preparedProducts.length === 1 ? preparedProducts[0] : null);
-
-                    if (targetProduct) {
-                        setUpdateProducts(prevProducts => processProductAddition(targetProduct, prevProducts));
-                        setSearchString('');
-                    }
                 }
             }
         }
@@ -218,7 +230,7 @@ const AdvanceSearch = (props) => {
                 items={filterProducts}
                 onSearch={handleOnSearch}
                 inputSearchString={searchString}
-                fuseOptions={{ keys: ['code', 'name', 'variant', 'pan_style'] }}
+                fuseOptions={{ keys: ['code', 'name', 'variant_text', 'pan_style'] }}
                 resultStringKeyName='code'
                 placeholder={placeholderText('globally.search.field.label')}
                 onSelect={handleOnSelect}

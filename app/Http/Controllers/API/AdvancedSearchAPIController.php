@@ -27,18 +27,7 @@ class AdvancedSearchAPIController extends AppBaseController
             return response()->json(['data' => []]);
         }
 
-        if (substr($search_data, 0, 2) === "PR") {
-            $products = Product::where('code', 'LIKE', '%' . $search_data . '%')
-                ->orWhere('code', $search_data)
-                ->get();
-
-            if ($products->isNotEmpty()) {
-                ProductResource::usingWithCollection();
-                return new ProductCollection($products);
-            }
-            return response()->json(['data' => []]);
-        }
-        elseif (substr($search_data, 0, 3) === 'PK_') {
+        if (substr($search_data, 0, 3) === 'PK_') {
             $package_id = Package::where(Package::codeToSearchLogic($search_data))->pluck('id');
 
             if ($package_id !== null && count($package_id) > 0) {
@@ -58,7 +47,9 @@ class AdvancedSearchAPIController extends AppBaseController
                 ->toArray();
 
             if (!empty($combo_products_ids)) {
-                $products = Product::whereIn('id', $combo_products_ids)->get();
+                $products = Product::with(['productAbstract.productCategory', 'productAbstract.brand', 'variant', 'stock', 'stocks'])
+                    ->whereIn('id', $combo_products_ids)
+                    ->get();
 
                 if ($products->isNotEmpty()) {
                     ProductResource::usingWithCollection();
@@ -68,10 +59,19 @@ class AdvancedSearchAPIController extends AppBaseController
             return response()->json(['data' => []]);
         }
         else {
-            $abstracts_id = ProductAbstract::where('pan_style', 'LIKE', '%' . $search_data . '%')->pluck('id')->toArray();
-            $products = Product::whereIn('product_abstract_id', $abstracts_id)
-                ->orWhere('code', 'LIKE', '%' . $search_data . '%')
+            $abstracts_id = ProductAbstract::where('pan_style', 'LIKE', '%' . $search_data . '%')
                 ->orWhere('name', 'LIKE', '%' . $search_data . '%')
+                ->pluck('id')
+                ->toArray();
+
+            $products = Product::with(['productAbstract.productCategory', 'productAbstract.brand', 'variant', 'stock', 'stocks'])
+                ->where(function ($query) use ($abstracts_id, $search_data) {
+                    if (!empty($abstracts_id)) {
+                        $query->whereIn('product_abstract_id', $abstracts_id);
+                    }
+                    $query->orWhere('code', 'LIKE', '%' . $search_data . '%')
+                          ->orWhere('name', 'LIKE', '%' . $search_data . '%');
+                })
                 ->get();
 
             if ($products->isNotEmpty()) {
