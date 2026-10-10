@@ -6,6 +6,9 @@ import ReactDataTable from '../../shared/table/ReactDataTable';
 import DeletCurrency from './DeletCurrency';
 import CreateCurrency from './CreateCurrency';
 import EditCurrency from './EditCurrency';
+import CurrencyHistoryModal from './CurrencyHistoryModal';
+import {FontAwesomeIcon} from '@fortawesome/react-fontawesome';
+import {faEye} from '@fortawesome/free-solid-svg-icons';
 import TabTitle from '../../shared/tab-title/TabTitle';
 import {getFormattedMessage, placeholderText} from '../../shared/sharedMethod';
 import ActionButton from '../../shared/action-buttons/ActionButton';
@@ -17,6 +20,13 @@ const Currencies = (props) => {
     const [isDelete, setIsDelete] = useState(null);
     const [toggle, setToggle] = useState(false);
     const [currency, setCurrency] = useState();
+    const [historyModal, setHistoryModal] = useState(false);
+    const [historyCurrency, setHistoryCurrency] = useState(null);
+
+    const handleHistoryModal = (item) => {
+        setHistoryCurrency(item);
+        setHistoryModal(true);
+    };
 
     const handleClose = (item = null) => {
         setToggle(!toggle);
@@ -85,8 +95,23 @@ const Currencies = (props) => {
             allowOverflow: true,
             button: true,
             cell: row => {
-                return <ActionButton item={row} goToEditProduct={handleClose} isEditMode={true}
+                return (
+                    <div className='d-flex align-items-center justify-content-end'>
+                        <button
+                            type="button"
+                            title="Rate Change History"
+                            className='btn text-info fs-3 border-0 px-xxl-2 px-1'
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                handleHistoryModal(row);
+                            }}
+                        >
+                            <FontAwesomeIcon icon={faEye}/>
+                        </button>
+                        <ActionButton item={row} goToEditProduct={handleClose} isEditMode={true}
                                      onClickDeleteModel={onClickDeleteModel}/>
+                    </div>
+                );
             }
         }
     ];
@@ -99,6 +124,11 @@ const Currencies = (props) => {
                             totalRows={totalRecord} AddButton={<CreateCurrency/>}/>
             <EditCurrency handleClose={handleClose} show={toggle} currency={currency}/>
             <DeletCurrency onClickDeleteModel={onClickDeleteModel} deleteModel={deleteModel} onDelete={isDelete}/>
+            <CurrencyHistoryModal
+                show={historyModal}
+                handleClose={() => setHistoryModal(false)}
+                currency={historyCurrency}
+            />
         </MasterLayout>
     )
 };
