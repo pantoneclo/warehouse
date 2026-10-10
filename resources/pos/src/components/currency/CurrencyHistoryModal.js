@@ -22,6 +22,10 @@ const CurrencyHistoryModal = ({show, handleClose, currency}) => {
         }
     }, [show, currency]);
 
+    const activeRate = historyList.length > 0
+        ? parseFloat(historyList[0].conversion_rate).toFixed(4)
+        : (currency?.conversion_rate ? parseFloat(currency.conversion_rate).toFixed(4) : '-');
+
     return (
         <Modal show={show} onHide={handleClose} size="lg" centered>
             <Modal.Header closeButton>
@@ -32,7 +36,7 @@ const CurrencyHistoryModal = ({show, handleClose, currency}) => {
             <Modal.Body>
                 <div className="mb-3 text-muted">
                     Base Currency: <span className="badge bg-light-primary fw-bold">EUR (1.0000)</span>
-                    <span className="ms-3">Current Active Rate: <strong>{currency?.conversion_rate}</strong></span>
+                    <span className="ms-3">Current Active Rate: <strong>{activeRate}</strong></span>
                 </div>
                 {loading ? (
                     <div className="text-center py-5">

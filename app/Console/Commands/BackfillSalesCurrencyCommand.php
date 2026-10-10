@@ -200,7 +200,15 @@ class BackfillSalesCurrencyCommand extends Command
             }
         }
 
-        $this->info('Yearly currency histories (2025-01-01 & 2026-01-01) successfully synced.');
+        // Always sync the active rate in currencies table with the latest rate (2026)
+        $latestRates = $this->yearlyRates[2026] ?? end($this->yearlyRates);
+        foreach ($latestRates as $code => $rate) {
+            if (isset($currencies[$code])) {
+                $currencies[$code]->update(['conversion_rate' => (float) $rate]);
+            }
+        }
+
+        $this->info('Yearly currency histories (2025-01-01 & 2026-01-01) and active currency rates successfully synced.');
     }
 
     /**
