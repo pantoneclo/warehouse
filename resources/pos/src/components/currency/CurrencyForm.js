@@ -1,4 +1,4 @@
-import React, {useState, createRef} from 'react';
+import React, {useState, useEffect, createRef} from 'react';
 import Form from 'react-bootstrap/Form';
 import {connect} from 'react-redux';
 import {Modal} from 'react-bootstrap-v5';
@@ -13,36 +13,50 @@ const CurrencyForm = (props) => {
         name: singleCurrency ? singleCurrency.name : '',
         code: singleCurrency ? singleCurrency.code : '',
         symbol: singleCurrency ? singleCurrency.symbol : '',
-        conversion_rate: singleCurrency ? singleCurrency.conversion_rate : ''
+        conversion_rate: singleCurrency ? String(singleCurrency.conversion_rate ?? '') : ''
     });
 
     const [errors, setErrors] = useState({
         name: '',
         code: '',
         symbol: '',
-        conversion_rate:''
+        conversion_rate: ''
     });
 
-    const disabled = singleCurrency && singleCurrency.name === formValue.name.trim() && singleCurrency.code === formValue.code.trim() && singleCurrency.symbol === formValue.symbol.trim()&&
-        parseFloat(singleCurrency.conversion_rate) === parseFloat(formValue.conversion_rate);
+    useEffect(() => {
+        if (singleCurrency) {
+            setFormValue({
+                name: singleCurrency.name || '',
+                code: singleCurrency.code || '',
+                symbol: singleCurrency.symbol || '',
+                conversion_rate: singleCurrency.conversion_rate !== undefined && singleCurrency.conversion_rate !== null ? String(singleCurrency.conversion_rate) : ''
+            });
+            setErrors({});
+        }
+    }, [singleCurrency]);
+
+    const disabled = singleCurrency &&
+        String(singleCurrency.name || '').trim() === String(formValue.name || '').trim() &&
+        String(singleCurrency.code || '').trim() === String(formValue.code || '').trim() &&
+        String(singleCurrency.symbol || '').trim() === String(formValue.symbol || '').trim() &&
+        parseFloat(singleCurrency.conversion_rate || 0) === parseFloat(formValue.conversion_rate || 0);
 
     const handleValidation = () => {
         let errorss = {};
         let isValid = false;
-        if (!formValue['name'].trim()) {
+        if (!String(formValue['name'] || '').trim()) {
             errorss['name'] = getFormattedMessage("currency.modal.input.name.validate.label");
-        } else if ((formValue['name'] && formValue['name'].length > 50)) {
+        } else if (String(formValue['name'] || '').length > 50) {
             errorss['name'] = getFormattedMessage("globally.input.name.validate.label");
-        } else if (!formValue['code'].trim()) {
+        } else if (!String(formValue['code'] || '').trim()) {
             errorss['code'] = getFormattedMessage("currency.modal.input.code.validate.label");
-        } else if ((formValue['code'] && formValue['code'].length > 20)) {
+        } else if (String(formValue['code'] || '').length > 20) {
             errorss['code'] = getFormattedMessage("currency.modal.input.code.valid.validate.label");
-        } else if (!formValue['symbol'].trim()) {
+        } else if (!String(formValue['symbol'] || '').trim()) {
             errorss['symbol'] = getFormattedMessage("currency.modal.input.symbol.validate.label");
-        }else if (!formValue['conversion_rate'].trim()) {
+        } else if (!String(formValue['conversion_rate'] ?? '').trim()) {
             errorss['conversion_rate'] = getFormattedMessage("currency.modal.input.conversion_rate.validate.label");
-        }
-        else {
+        } else {
             isValid = true;
         }
         setErrors(errorss);
@@ -143,11 +157,12 @@ const CurrencyForm = (props) => {
                                 className='form-label'>{getFormattedMessage("currency.modal.input.symbol.conversion_rate")} : </label>
                             <span className='required'/>
                             <input type='number' name='conversion_rate'
+                                   step='any'
                                    placeholder={placeholderText("currency.modal.input.conversion_rate.placeholder.label")}
                                    className='form-control' value={formValue.conversion_rate}
                                    onChange={(e) => onChangeInput(e)}/>
                             <span
-                                className='text-danger d-block fw-400 fs-small mt-2'>{errors['symbol'] ? errors['symbol'] : null}</span>
+                                className='text-danger d-block fw-400 fs-small mt-2'>{errors['conversion_rate'] ? errors['conversion_rate'] : null}</span>
                         </div>
                     </div>
                 </Modal.Body>

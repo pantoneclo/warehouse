@@ -57,6 +57,7 @@ export const editCurrency = (currencyId, currency, handleClose) => async (dispat
         .then((response) => {
             dispatch({type: currencyActionType.EDIT_CURRENCY, payload: response.data.data});
             handleClose(false);
+            dispatch(fetchCurrencies({}, false));
             dispatch(addToast({text: getFormattedMessage('currency.success.edit.message')}));
         })
         .catch(({response}) => {

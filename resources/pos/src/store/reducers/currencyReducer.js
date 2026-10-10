@@ -9,9 +9,9 @@ export default (state = [], action) => {
         case currencyActionType.ADD_CURRENCY:
             return [...state, action.payload];
         case currencyActionType.EDIT_CURRENCY:
-            return state.map(item => item.id === +action.payload.id ? action.payload : item);
+            return state.map(item => String(item.id) === String(action.payload.id) ? action.payload : item);
         case currencyActionType.DELETE_CURRENCY:
-            return state.filter(item => item.id !== action.payload);
+            return state.filter(item => String(item.id) !== String(action.payload));
         default:
             return state;
     }
