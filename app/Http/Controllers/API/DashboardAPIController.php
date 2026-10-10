@@ -30,9 +30,9 @@ class DashboardAPIController extends AppBaseController
         $data = [];
         $today = Carbon::today();
 
-        $data['today_sales'] = (float) Sale::where('date', $today)->sum('grand_total');
+        $data['today_sales'] = (float) Sale::where('date', $today)->sum('selling_value_eur');
         $data['today_purchases'] = (float) Purchase::where('date', $today)->sum('grand_total');
-        $data['today_sale_return'] = (float) SaleReturn::where('date', $today)->sum('grand_total');
+        $data['today_sale_return'] = (float) SaleReturn::where('date', $today)->sum('selling_value_eur');
         $data['today_purchase_return'] = (float) PurchaseReturn::where('date', $today)->sum('grand_total');
         $data['today_sales_received_count'] = (float) SalesPayment::where('payment_date', $today)->sum('amount');
         $data['today_expense_count'] = (float) Expense::where('date', $today)->sum('amount');
@@ -47,9 +47,9 @@ class DashboardAPIController extends AppBaseController
     {
         $data = [];
 
-        $data['all_sales_count'] = (float) Sale::sum('grand_total');
+        $data['all_sales_count'] = (float) Sale::sum('selling_value_eur');
         $data['all_purchases_count'] = (float) Purchase::sum('grand_total');
-        $data['all_sale_return_count'] = (float) SaleReturn::sum('grand_total');
+        $data['all_sale_return_count'] = (float) SaleReturn::sum('selling_value_eur');
         $data['all_purchase_return_count'] = (float) PurchaseReturn::sum('grand_total');
         $data['all_sales_received_count'] = (float) SalesPayment::sum('amount');
         $data['all_expense_count'] = (float) Expense::sum('amount');
@@ -110,7 +110,7 @@ class DashboardAPIController extends AppBaseController
             ->groupBy('date')
             ->get([
                 DB::raw('DATE_FORMAT(date,"%Y-%m-%d") as week'),
-                DB::raw('SUM(grand_total) as grand_total'),
+                DB::raw('SUM(selling_value_eur) as grand_total'),
             ])->keyBy('week');
         $period = CarbonPeriod::create($day['days'][0], $day['days'][6]);
         $data['dates'] = array_map(function ($datePeriod) {

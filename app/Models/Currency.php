@@ -48,6 +48,60 @@ class Currency extends BaseModel
         'conversion_rate' => 'required',
     ];
 
+    public function currencyHistories()
+    {
+        return $this->hasMany(CurrencyHistory::class, 'currency_id');
+    }
+
+    protected static function booted()
+    {
+        static::saved(function ($currency) {
+            if ($currency->conversion_rate !== null) {
+                CurrencyHistory::updateOrCreate(
+                    [
+                        'currency_id' => $currency->id,
+                        'date' => now()->toDateString(),
+                    ],
+                    [
+                        'conversion_rate' => (float) $currency->conversion_rate,
+                    ]
+                );
+            }
+        });
+    }
+
+    /**
+     * Get effective conversion rate for a currency code on a specific date.
+     *
+     * @param string $currencyCode
+     * @param string|null $date
+     * @return float
+     */
+    public static function getEffectiveRate(string $currencyCode, ?string $date = null): float
+    {
+        if (strtoupper($currencyCode) === 'EUR') {
+            return 1.0;
+        }
+
+        $currency = self::where('code', $currencyCode)->first();
+        if (!$currency) {
+            return 1.0;
+        }
+
+        if ($date) {
+            $historyRate = CurrencyHistory::where('currency_id', $currency->id)
+                ->where('date', '<=', $date)
+                ->orderBy('date', 'desc')
+                ->value('conversion_rate');
+
+            if ($historyRate !== null && (float) $historyRate > 0) {
+                return (float) $historyRate;
+            }
+        }
+
+        return (float) ($currency->conversion_rate ?? 1.0);
+    }
+
     /**
      * @return array
      */

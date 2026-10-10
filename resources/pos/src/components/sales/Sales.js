@@ -53,6 +53,7 @@ const Sales = (props) => {
     const [createPaymentItem, setCreatePaymentItem] = useState({})
     const { allSalePayments } = useSelector(state => state)
     const [tableArray, setTableArray] = useState([])
+    const [displayCurrency, setDisplayCurrency] = useState('EUR');
     useEffect(() => {
         fetchFrontSetting();
         fetchCurrencies();
@@ -227,15 +228,20 @@ const Sales = (props) => {
     const create_payment_permission = usePermission(Permissions.MANAGE_SALE_PAYMENT);
 
 
+    const usdCurrency = currencies?.find(c => (c.attributes ? c.attributes.code : c.code) === 'USD');
+    const usdRate = Number(usdCurrency?.attributes ? usdCurrency.attributes.conversion_rate : usdCurrency?.conversion_rate) || 0.92;
+
     const itemsValue = currencySymbol && sales.length >= 0 && sales.map(sale => {
         // Get currency symbol from country mapping first, fallback to database currency
         const country = countryOptions.find(country => country.code === sale.attributes?.country);
-        const currency = currencies.find(currency => currency.attributes.code === sale.attributes?.currency);
+        const currency = currencies.find(currency => (currency.attributes ? currency.attributes.code : currency.code) === sale.attributes?.currency);
         const currencySymbolToUse = country?.currencySymbol || getCurrencySymbol(sale.attributes?.currency) || currency?.attributes?.symbol || '';
+        const eurVal = Number(sale.attributes?.selling_value_eur) || (Number(sale.attributes?.grand_total) * (Number(sale.attributes?.conversion_rate) || 1));
+        const usdVal = usdRate > 0 ? (eurVal / usdRate) : eurVal;
+        const convertedAmount = displayCurrency === 'USD' ? usdVal : eurVal;
 
         return {
             date: getFormattedDate(sale.attributes.date, allConfigData && allConfigData),
-            // date_for_payment: sale.attributes.date,
             time: moment(sale.attributes.created_at).format('LT'),
             reference_code: sale.attributes.reference_code,
             customer_name: sale.attributes.customer_name,
@@ -244,6 +250,9 @@ const Sales = (props) => {
             payment_status: sale.attributes.payment_status,
             payment_type: sale.attributes.payment_type,
             grand_total: sale.attributes.grand_total,
+            conversion_rate: sale.attributes.conversion_rate,
+            selling_value_eur: eurVal,
+            converted_amount: convertedAmount,
             paid_amount: sale.attributes.paid_amount ? sale.attributes.paid_amount : 0.00.toFixed(2),
             id: sale.id,
             currency: currencySymbolToUse,
@@ -256,27 +265,26 @@ const Sales = (props) => {
             create_payment_permission: create_payment_permission,
             order_no: sale.attributes.order_no,
             market_place: sale.attributes.market_place,
-
         }
     });
 
     useEffect(() => {
         const grandTotalSum = () => {
             let x = 0;
-            itemsValue.length && itemsValue.map((item) => {
-                x = x + Number(item.grand_total);
-                return x;
+            itemsValue && itemsValue.length && itemsValue.forEach((item) => {
+                x += Number(item.converted_amount || 0);
             });
             return x;
-        }
-        const paidTotalSum = (itemsValue) => {
+        };
+        const paidTotalSum = () => {
             let x = 0;
-            itemsValue.length && itemsValue.map((item) => {
-                x = x + Number(item.paid_amount);
-                return x;
+            itemsValue && itemsValue.length && itemsValue.forEach((item) => {
+                const rate = Number(item.conversion_rate) || 1;
+                const eurPaid = Number(item.paid_amount || 0) * rate;
+                x += displayCurrency === 'USD' && usdRate > 0 ? (eurPaid / usdRate) : eurPaid;
             });
             return x;
-        }
+        };
         if (sales.length) {
             const newObject = itemsValue.length && {
                 date: "",
@@ -287,16 +295,17 @@ const Sales = (props) => {
                 status: "",
                 payment_status: "",
                 payment_type: "",
-                grand_total: grandTotalSum(itemsValue),
-                paid_amount: paidTotalSum(itemsValue),
+                grand_total: "-",
+                converted_amount: grandTotalSum(),
+                paid_amount: paidTotalSum(),
                 id: "",
-                currency: currencySymbol
-            }
-            const newItemValue = itemsValue.length && newObject && itemsValue.concat(newObject)
-            const latestArray = newItemValue.map((item) => item)
-            newItemValue.length && setTableArray(latestArray)
+                currency: displayCurrency === 'USD' ? '$' : '€'
+            };
+            const newItemValue = itemsValue.length && newObject && itemsValue.concat(newObject);
+            const latestArray = newItemValue.map((item) => item);
+            newItemValue.length && setTableArray(latestArray);
         }
-    }, [sales])
+    }, [sales, displayCurrency, currencies]);
 
     const columns = [
         {
@@ -448,14 +457,33 @@ const Sales = (props) => {
         },
 
         {
-            name: getFormattedMessage('purchase.grant-total.label'),
+            name: getFormattedMessage('purchase.grant-total.label') + ' (Original)',
             sortField: 'grand_total',
             cell: row => {
-                return row.reference_code === "Total" ? <span
-                    className="fw-bold fs-4">{currencySymbolHendling(allConfigData, row.currency, row.grand_total)}</span> :
-                    <span>{currencySymbolHendling(allConfigData, row.currency, row.grand_total)}</span>
+                return row.reference_code === "Total" ? 
+                    <span className="text-muted fs-7">-</span> :
+                    <span>{currencySymbolHendling(allConfigData, row.currency, row.grand_total)}</span>;
             },
             sortable: true,
+        },
+        {
+            name: displayCurrency === 'USD' ? 'Total (USD)' : 'Total (EUR)',
+            sortField: 'converted_amount',
+            cell: row => {
+                const isTotal = row.reference_code === "Total";
+                const symbol = displayCurrency === 'USD' ? '$' : '€';
+                const val = Number(row.converted_amount || 0).toFixed(2);
+                return isTotal ? (
+                    <span className="fw-bolder fs-5 text-primary">
+                        {symbol}{val}
+                    </span>
+                ) : (
+                    <span className="fw-semibold">
+                        {symbol}{val}
+                    </span>
+                );
+            },
+            sortable: false,
         },
 
 
@@ -575,6 +603,27 @@ const Sales = (props) => {
                     <div className="text-end mb-1">
                         <label className="form-label d-block text-start">{getFormattedMessage('date-picker.filter.title')}</label>
                         <DateRangePicker onDateSelector={onDateSelector} selectDate={selectDate} />
+                    </div>
+                </div>
+            </div>
+            <div className='d-flex align-items-center justify-content-between mb-3 px-1'>
+                <div className='d-flex align-items-center'>
+                    <span className='fw-bold me-2 text-gray-700'>Currency View:</span>
+                    <div className='btn-group' role='group' aria-label='Currency View Switcher'>
+                        <button
+                            type='button'
+                            className={`btn btn-sm ${displayCurrency === 'EUR' ? 'btn-primary' : 'btn-outline-primary'}`}
+                            onClick={() => setDisplayCurrency('EUR')}
+                        >
+                            💶 EURO (€)
+                        </button>
+                        <button
+                            type='button'
+                            className={`btn btn-sm ${displayCurrency === 'USD' ? 'btn-primary' : 'btn-outline-primary'}`}
+                            onClick={() => setDisplayCurrency('USD')}
+                        >
+                            💵 USD ($)
+                        </button>
                     </div>
                 </div>
             </div>

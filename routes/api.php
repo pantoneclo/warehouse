@@ -110,6 +110,7 @@ Route::middleware('auth:sanctum')->group(function () {
     //    });
     Route::get('currencies', [CurrencyAPIController::class, 'index']);
     Route::get('currencies/by-country/{countryId}', [CurrencyAPIController::class, 'getCurrencyByCountry']);
+    Route::get('currencies/{currency}/history', [CurrencyAPIController::class, 'getCurrencyHistory']);
 
     // warehouses route
     //    Route::middleware('permission:manage.warehouses')->group(function () {

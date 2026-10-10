@@ -96,6 +96,10 @@ class SaleReturnRepository extends BaseRepository
                 'paid_amount', 'payment_type', 'note', 'date', 'status', 'sale_id',
             ]);
 
+            $saleReturnInputArray['currency'] = $sale->currency ?? 'EUR';
+            $saleReturnInputArray['conversion_rate'] = $sale->conversion_rate ?? \App\Models\Currency::getEffectiveRate($saleReturnInputArray['currency'], $input['date']);
+            $saleReturnInputArray['selling_value_eur'] = round((float)$saleReturnInputArray['grand_total'] * $saleReturnInputArray['conversion_rate'], 4);
+
             /** @var Sale $sale */
             $saleReturn = SaleReturn::create($saleReturnInputArray);
             $saleUpdate = $sale->update([

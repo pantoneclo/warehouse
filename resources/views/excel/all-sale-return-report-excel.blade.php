@@ -154,6 +154,13 @@
         </tr>
     @endforeach
     </tbody>
+    <tfoot>
+        <tr class="footer-row" style="background-color: #f2f2f2; font-weight: bold;">
+            <td colspan="10" style="text-align: right; font-weight: bold;">TOTAL (EUR):</td>
+            <td style="text-align: center; font-weight: bold;">€{{ number_format($sum_selling_value_euro_total, 2) }}</td>
+            <td colspan="11"></td>
+        </tr>
+    </tfoot>
 </table>
 </body>
 </html>

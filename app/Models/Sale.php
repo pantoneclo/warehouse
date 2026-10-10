@@ -265,6 +265,7 @@ class Sale extends BaseModel implements HasMedia, JsonResourceful
             'courier_fee'=>$this->courier_fee,
             'other_cost'=>$this->other_cost,
             'other_income'=>$this->other_income,
+            'conversion_rate'=>$this->conversion_rate,
             'selling_value_eur'=>$this->selling_value_eur,
             'cod'=>$this->cod,
             'file' => $this->file,

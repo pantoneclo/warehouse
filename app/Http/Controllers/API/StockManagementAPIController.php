@@ -155,15 +155,16 @@ class StockManagementAPIController extends AppBaseController
                 ], 404);
             }
 
-            $conversion_rate = Currency::where('code', $request->currency)->value('conversion_rate') ?? 1;
-            $selling_value_eur = $request->grand_total * $conversion_rate;
+            $saleDate = $request->date ?? date('Y-m-d');
+            $conversion_rate = Currency::getEffectiveRate($request->currency ?? 'EUR', $saleDate);
+            $selling_value_eur = round((float) $request->grand_total * $conversion_rate, 4);
 
             // Additional fields not directly available in the request
             $additionalFields = [
                 'customer_id' => $customer->id,
                 'warehouse_id' => $warehouse->id,
                 'selling_value_eur' => $selling_value_eur,
-                'conversion_rate' => $conversion_rate ?? 1,
+                'conversion_rate' => $conversion_rate,
             ];
             
             // Extract sale input data and merge additional fields
@@ -544,8 +545,21 @@ class StockManagementAPIController extends AppBaseController
     public function webHookOrderCancel(Request $request){
         $input = $request->all();
 
-        $sale = Sale::where('order_no', $input['order_no'])->first();
+        $sale = Sale::where('order_no', $input['order_no'] ?? null)->first();
+        if (!$sale) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Order not found for cancellation',
+            ], 404);
+        }
 
+        $sale->update(['status' => 6]); // 6 = Cancelled
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Webhook Order cancelled successfully',
+            'data' => $sale,
+        ]);
     }
 
     public function webHookOrderReturn(Request $request){
@@ -627,8 +641,15 @@ class StockManagementAPIController extends AppBaseController
 
 
 
-    public function manageStock($warehouse, $operation, $items)
+    public function manageStock($warehouse, $operation = null, $items = null)
     {
+        if ($warehouse instanceof Request) {
+            $request = $warehouse;
+            $warehouse = $request->input('warehouse');
+            $operation = $request->input('operation');
+            $items = $request->input('items', []);
+        }
+
         // Attempt to retrieve the cached token
         $token = Cache::get('api_token');
 
@@ -1337,12 +1358,21 @@ class StockManagementAPIController extends AppBaseController
 
         DB::beginTransaction();
         try {
+            $returnDate = now()->format('Y-m-d');
+            $currency = $order->currency ?? 'EUR';
+            $conversionRate = $order->conversion_rate ?? Currency::getEffectiveRate($currency, $order->date ?? $returnDate);
+            $sellingValueEur = round((float) $order->grand_total * $conversionRate, 4);
+
             // Prepare sale return data
             $saleReturnData = [
-                'date' => now()->format('Y-m-d'),
+                'date' => $returnDate,
                 'customer_id' => $order->customer_id,
                 'warehouse_id' => $warehouse->id,
                 'sale_id' => $order->id,
+                'currency' => $currency,
+                'conversion_rate' => $conversionRate,
+                'selling_value_eur' => $sellingValueEur,
+                'grand_total_original' => $order->grand_total,
                 'tax_rate' => $order->tax_rate ?? 0,
                 'tax_amount' => $order->tax_amount ?? 0,
                 'discount' => $order->discount ?? 0,
@@ -1650,6 +1680,9 @@ class StockManagementAPIController extends AppBaseController
                     ], 404);
                 }
 
+                $returnCurrency = $sale->currency ?? 'EUR';
+                $returnRate = $sale->conversion_rate ?? Currency::getEffectiveRate($returnCurrency, $sale->date ?? now()->toDateString());
+
                 // Create new sales return record
                 $saleReturn = SaleReturn::create([
                     'date' => now(),
@@ -1658,10 +1691,11 @@ class StockManagementAPIController extends AppBaseController
                     'sale_id' => $sale->id,
                     'order_number' => $orderNumber,
                     'return_status' => $status,
-                    'currency' => $sale->currency ?? 'USD',
-                    'conversion_rate' => $sale->conversion_rate ?? 1.0000,
+                    'currency' => $returnCurrency,
+                    'conversion_rate' => $returnRate,
                     'grand_total' => 0, // Will be calculated from items
                     'grand_total_original' => 0,
+                    'selling_value_eur' => 0,
                     'webhook_data' => json_encode($request->all()),
                     'stock_updated' => false,
                     'status' => SaleReturn::PENDING, // Default status
@@ -1710,9 +1744,11 @@ class StockManagementAPIController extends AppBaseController
             }
 
             // Update total amounts
+            $conversionRate = $saleReturn->conversion_rate ?: 1.0000;
             $saleReturn->update([
                 'grand_total' => $totalAmount,
-                'grand_total_original' => $totalAmount / $saleReturn->conversion_rate,
+                'grand_total_original' => $totalAmount,
+                'selling_value_eur' => round($totalAmount * $conversionRate, 4),
             ]);
 
             // Handle stock updates based on status
@@ -1780,9 +1816,14 @@ class StockManagementAPIController extends AppBaseController
         }
     }
 
-    public  function webHookOrderCourierAssign(Request $request)
+    public function webHookOrderCourierAssign(Request $request)
     {
-          dd($request);
+        Log::info("Webhook order courier assign received", $request->all());
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Order courier assigned successfully',
+            'data' => $request->all(),
+        ], 200);
     }
 
     /**

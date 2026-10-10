@@ -33,6 +33,7 @@ const SaleReport = (props) => {
     const [isEditSaleReportOpen, setIsEditSaleReportOpen] = useState(false);
     const [selectedSaleReportItem, setSelectedSaleReportItem] = useState(null);
     const [isWarehouseValue, setIsWarehouseValue] = useState(false);
+    const [displayCurrency, setDisplayCurrency] = useState('EUR');
     const filterDatesRef = useRef({ start_date: null, end_date: null });
     const currencySymbol = frontSetting && frontSetting.value && frontSetting.value.currency_symbol
 
@@ -109,8 +110,32 @@ const SaleReport = (props) => {
     console.log("Currency", currencies);
     console.log("Sales Report", sales);
 
-    const totalGrandTotal = Array.isArray(itemsValue) ? itemsValue.reduce((acc, row) => acc + (row.grand_total || 0), 0) : 0;
+    const usdCurrency = currencies?.find(c => (c.attributes ? c.attributes.code : c.code) === 'USD');
+    const usdRate = Number(usdCurrency?.attributes ? usdCurrency.attributes.conversion_rate : usdCurrency?.conversion_rate) || 0.92;
 
+    const totalSellingValueEur = Array.isArray(itemsValue) ? itemsValue.reduce((acc, row) => acc + Number(row.selling_value_eur || 0), 0) : 0;
+    const totalSellingValueUsd = usdRate > 0 ? (totalSellingValueEur / usdRate) : 0;
+
+    const reportTableItems = Array.isArray(itemsValue) ? [...itemsValue] : [];
+    if (reportTableItems.length > 0) {
+        reportTableItems.push({
+            reference_code: "Total",
+            order_no: "-",
+            date: "",
+            time: "",
+            customer_name: "",
+            status: "",
+            payment_status: "",
+            tax_rate: "",
+            tax_amount: "",
+            grand_total: "-",
+            paid_amount: "",
+            selling_value_eur: totalSellingValueEur.toFixed(2),
+            converted_amount: displayCurrency === 'USD' ? totalSellingValueUsd.toFixed(2) : totalSellingValueEur.toFixed(2),
+            isFooter: true,
+            id: 'total_summary_row'
+        });
+    }
 
     const columns = [
         {
@@ -244,10 +269,25 @@ const SaleReport = (props) => {
             }
         },
         {
-            name: ' SELLING VALUE (EUR)',
+            name: displayCurrency === 'USD' ? 'SELLING VALUE (USD)' : 'SELLING VALUE (EUR)',
             selector: row => row.selling_value_eur,
             sortField: 'selling_value_eur',
             sortable: true,
+            cell: row => {
+                const isTotal = row.reference_code === "Total";
+                const symbol = displayCurrency === 'USD' ? '$' : '€';
+                const eurVal = Number(row.selling_value_eur || 0);
+                const val = displayCurrency === 'USD' && usdRate > 0 ? (eurVal / usdRate) : eurVal;
+                return isTotal ? (
+                    <span className="fw-bolder fs-5 text-primary">
+                        {symbol}{val.toFixed(2)}
+                    </span>
+                ) : (
+                    <span>
+                        {symbol}{val.toFixed(2)}
+                    </span>
+                );
+            }
         },
         {
             name: 'TOTAL SALES ITEMS',
@@ -352,7 +392,31 @@ const SaleReport = (props) => {
         <MasterLayout>
             <TopProgressBar />
             <TabTitle title={placeholderText('sale.reports.title')} />
-            <ReactDataTable columns={columns} items={itemsValue} onChange={onChange} isLoading={isLoading}
+            <div className='d-flex align-items-center justify-content-between mb-3 px-1'>
+                <div className='d-flex align-items-center'>
+                    <span className='fw-bold me-2 text-gray-700'>Currency View:</span>
+                    <div className='btn-group' role='group' aria-label='Currency View Switcher'>
+                        <button
+                            type='button'
+                            className={`btn btn-sm ${displayCurrency === 'EUR' ? 'btn-primary' : 'btn-outline-primary'}`}
+                            onClick={() => setDisplayCurrency('EUR')}
+                        >
+                            💶 EURO (€)
+                        </button>
+                        <button
+                            type='button'
+                            className={`btn btn-sm ${displayCurrency === 'USD' ? 'btn-primary' : 'btn-outline-primary'}`}
+                            onClick={() => setDisplayCurrency('USD')}
+                        >
+                            💵 USD ($)
+                        </button>
+                    </div>
+                </div>
+                <span className='badge bg-light-info text-info fs-7'>
+                    Sum in {displayCurrency === 'EUR' ? 'EURO (€)' : 'USD ($)'}: {displayCurrency === 'EUR' ? `€${totalSellingValueEur.toFixed(2)}` : `$${totalSellingValueUsd.toFixed(2)}`}
+                </span>
+            </div>
+            <ReactDataTable columns={columns} items={reportTableItems} onChange={onChange} isLoading={isLoading}
                 totalRows={totalRecord} isShowDateRangeField isEXCEL isShowFilterField
                 isStatus isPaymentStatus isCountry onExcelClick={onExcelClick}
                 customStyles={{

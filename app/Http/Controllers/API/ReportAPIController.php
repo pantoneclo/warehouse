@@ -616,11 +616,11 @@ class ReportAPIController extends AppBaseController
     {
         $data = [];
         $data['sales'] = Sale::whereBetween('date',
-            [$request->get('start_date'), $request->get('end_date')])->sum('grand_total');
+            [$request->get('start_date'), $request->get('end_date')])->sum('selling_value_eur');
         $data['purchases'] = Purchase::whereBetween('date',
             [$request->get('start_date'), $request->get('end_date')])->sum('grand_total');
         $data['sale_returns'] = SaleReturn::whereBetween('date',
-            [$request->get('start_date'), $request->get('end_date')])->sum('grand_total');
+            [$request->get('start_date'), $request->get('end_date')])->sum('selling_value_eur');
         $data['purchase_returns'] = PurchaseReturn::whereBetween('date',
             [$request->get('start_date'), $request->get('end_date')])->sum('grand_total');
         $data['expenses'] = Expense::whereBetween('date',

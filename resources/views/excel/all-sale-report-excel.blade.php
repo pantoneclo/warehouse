@@ -46,7 +46,7 @@
     <table width="100%" cellspacing="0" cellpadding="10" style="margin-top: 40px;">
         <thead>
             <tr style="background-color: dodgerblue; border: 5px solid black; font-weight: bold;">
-                <th style="text-align: center;" colspan="22">RETAILS REPORT.</th>
+                <th style="text-align: center;" colspan="23">RETAILS REPORT.</th>
             </tr>
             <tr style="background-color: dodgerblue; border: 5px solid black; font-weight: bold; height:">
                 <th style=" text-align: center; ">{{ __('messages.sl_no') }}</th>
@@ -64,6 +64,7 @@
                 <th style=" text-align: center; width: 200%">{{ __('messages.pdf.selling_value') }}</th>
                 <th style=" text-align: center; width: 200%">{{ __('messages.pdf.conversion_rate') }}</th>
                 <th style=" text-align: center; width: 200%">{{ __('messages.pdf.selling_value_eur') }}</th>
+                <th style=" text-align: center; width: 200%">SELLING VALUE (USD)</th>
                 <th style=" text-align: center; width: 200%">{{ __('messages.pdf.vat') }}</th>
                 <th style=" text-align: center; width: 200%">{{ __('messages.pdf.mp_comm') }}</th>
                 <th style=" text-align: center; width: 200%">{{ __('messages.pdf.mp_mf') }}</th>
@@ -95,11 +96,16 @@
             @php
                 $sum_grand_total = 0;
                 $sum_selling_value_euro_total = 0;
+                $sum_selling_value_usd_total = 0;
+                $usdRate = (float) (\App\Models\Currency::where('code', 'USD')->value('conversion_rate') ?? 0.92);
             @endphp
             @foreach($sales as $key => $sale)
                 @php
-                    $sum_grand_total += $sale->grand_total;
-                    $sum_selling_value_euro_total += $sale->selling_value_eur;
+                    $sellingValueEur = (float) $sale->selling_value_eur;
+                    $sellingValueUsd = $usdRate > 0 ? round($sellingValueEur / $usdRate, 2) : 0;
+                    $sum_grand_total += (float) $sale->grand_total;
+                    $sum_selling_value_euro_total += $sellingValueEur;
+                    $sum_selling_value_usd_total += $sellingValueUsd;
 
                     $panStyles = $sale->saleItems
                         ->map(function ($item) {
@@ -143,7 +149,8 @@
 
                     <td style="text-align: center;">{{ (float) str_replace(',', '', $sale->grand_total) }}</td>
                     <td style="text-align: center;">{{$sale->conversion_rate ?? 1}}</td>
-                    <td style="text-align: center;">{{$sale->selling_value_eur}}</td>
+                    <td style="text-align: center;">{{ number_format($sellingValueEur, 2) }}</td>
+                    <td style="text-align: center;">{{ number_format($sellingValueUsd, 2) }}</td>
                     <td style="text-align: center;">{{$sale->tax_amount}}</td>
                     <td style="text-align: center;">{{$sale->marketplace_commission}}</td>
                     <td style="text-align: center;"></td>
@@ -246,21 +253,14 @@
                 </tr>
             @endforeach
         </tbody>
-        {{-- <tfoot style="border: 2px solid black;">--}}
-            {{-- <tr class="footer-row">--}}
-                {{-- <td colspan="2" style="text-align: center;">Total:</td>--}}
-                {{-- <td></td>--}}
-                {{-- <td></td>--}}
-                {{-- <td></td>--}}
-                {{-- <td></td>--}}
-                {{-- <td></td>--}}
-                {{-- <td></td>--}}
-                {{-- <td>{{ number_format($sum_grand_total)}}</td>--}}
-                {{-- <td>{{ number_format( $sum_selling_value_euro_total, 2) }}</td>--}}
-                {{-- <td>{{ number_format($sales->sum('tax_amount'), 2) }}</td>--}}
-                {{-- <td colspan="14"></td> <!-- Empty cells for the rest of the columns -->--}}
-                {{-- </tr>--}}
-            {{-- </tfoot>--}}
+        <tfoot style="border: 2px solid black;">
+            <tr class="footer-row" style="background-color: #f2f2f2; font-weight: bold;">
+                <td colspan="11" style="text-align: right; font-weight: bold;">TOTAL:</td>
+                <td style="text-align: center; font-weight: bold;">€{{ number_format($sum_selling_value_euro_total, 2) }}</td>
+                <td style="text-align: center; font-weight: bold;">${{ number_format($sum_selling_value_usd_total, 2) }}</td>
+                <td colspan="15"></td>
+            </tr>
+        </tfoot>
     </table>
 </body>
 

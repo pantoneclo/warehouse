@@ -120,4 +120,24 @@ class CurrencyAPIController extends AppBaseController
             ]
         ], 'Currency retrieved successfully');
     }
+
+    /**
+     * Get conversion rate history for a currency.
+     *
+     * @param int $id
+     * @return JsonResponse
+     */
+    public function getCurrencyHistory($id): JsonResponse
+    {
+        $currency = \App\Models\Currency::find($id);
+        if (!$currency) {
+            return $this->sendError('Currency not found', 404);
+        }
+
+        $histories = \App\Models\CurrencyHistory::where('currency_id', $id)
+            ->orderBy('date', 'desc')
+            ->get();
+
+        return $this->sendResponse($histories, 'Currency history retrieved successfully');
+    }
 }
