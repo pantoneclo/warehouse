@@ -6,6 +6,7 @@ import {currencySymbolHendling, getFormattedMessage} from '../../../shared/share
 import {fetchSales} from '../../../store/action/salesAction';
 import {fetchFrontSetting} from '../../../store/action/frontSettingAction';
 import {saleExcelAction} from '../../../store/action/salesExcelAction';
+import {countryOptions, getCurrencySymbol} from '../../../constants';
 
 const SalesTab = (props) => {
     const {
@@ -20,23 +21,33 @@ const SalesTab = (props) => {
     } = props;
     const currencySymbol = frontSetting && frontSetting.value && frontSetting.value.currency_symbol
     const [isWarehouseValue, setIsWarehouseValue] = useState(false);
+    const [displayCurrency, setDisplayCurrency] = useState('EUR');
 
     useEffect(() => {
         fetchFrontSetting();
     }, [warehouseValue]);
 
-    const itemsValue = currencySymbol && sales.length >= 0 && sales.map(sale => ({
-        time: moment(sale.attributes.created_at).format('LT'),
-        reference_code: sale.attributes.reference_code,
-        customer_name: sale.attributes.customer_name,
-        warehouse_name: sale.attributes.warehouse_name,
-        status: sale.attributes.status,
-        payment_status: sale.attributes.payment_status,
-        grand_total: sale.attributes.grand_total,
-        paid_amount: sale.attributes.paid_amount ? sale.attributes.paid_amount : 0.00.toFixed(2),
-        id: sale.id,
-        currency: currencySymbol
-    }));
+    const itemsValue = currencySymbol && sales.length >= 0 && sales.map(sale => {
+        const country = countryOptions.find(country => country.code === sale.attributes?.country);
+        const currencySymbolToUse = country?.currencySymbol || getCurrencySymbol(sale.attributes?.currency) || currencySymbol;
+        return {
+            time: moment(sale.attributes.created_at).format('LT'),
+            reference_code: sale.attributes.reference_code,
+            customer_name: sale.attributes.customer_name,
+            warehouse_name: sale.attributes.warehouse_name,
+            status: sale.attributes.status,
+            payment_status: sale.attributes.payment_status,
+            grand_total: sale.attributes.grand_total,
+            selling_value_eur: sale.attributes?.selling_value_eur,
+            selling_value_usd: sale.attributes?.selling_value_usd,
+            paid_amount: sale.attributes.paid_amount ? sale.attributes.paid_amount : 0.00.toFixed(2),
+            id: sale.id,
+            currency: currencySymbolToUse
+        };
+    });
+
+    const totalEur = (itemsValue || []).reduce((acc, curr) => acc + (parseFloat(curr.selling_value_eur) || 0), 0);
+    const totalUsd = (itemsValue || []).reduce((acc, curr) => acc + (parseFloat(curr.selling_value_usd) || 0), 0);
 
     useEffect(() => {
         if(isWarehouseValue === true) {
@@ -95,6 +106,20 @@ const SalesTab = (props) => {
             sortable: true,
         },
         {
+            name: displayCurrency === 'USD' ? 'SELLING VALUE (USD)' : 'SELLING VALUE (EUR)',
+            sortField: displayCurrency === 'USD' ? 'selling_value_usd' : 'selling_value_eur',
+            sortable: false,
+            cell: row => {
+                const symbol = displayCurrency === 'USD' ? '$' : '€';
+                const val = displayCurrency === 'USD' ? row.selling_value_usd : row.selling_value_eur;
+                return (
+                    <span className={`fw-bold ${displayCurrency === 'USD' ? 'text-info' : 'text-success'}`}>
+                        {symbol}{parseFloat(val || 0).toFixed(2)}
+                    </span>
+                );
+            }
+        },
+        {
             name: getFormattedMessage('dashboard.recentSales.paid.label'),
             selector: row => currencySymbolHendling(allConfigData, row.currency, row.paid_amount),
             sortField: 'paid_amount',
@@ -139,9 +164,33 @@ const SalesTab = (props) => {
 
     return (
         <div className='warehouse_sale_report_table'>
-        <ReactDataTable columns={columns} items={itemsValue} onChange={onChange} warehouseValue={warehouseValue}
-                        isLoading={isLoading} totalRows={totalRecord} isEXCEL onExcelClick={onExcelClick}
-                        isPaymentStatus isStatus isShowFilterField/>
+            <div className='d-flex align-items-center justify-content-between mb-3 px-1'>
+                <div className='d-flex align-items-center'>
+                    <span className='fw-bold me-2 text-gray-700'>Currency View:</span>
+                    <div className='btn-group' role='group' aria-label='Currency View Switcher'>
+                        <button
+                            type='button'
+                            className={`btn btn-sm ${displayCurrency === 'EUR' ? 'btn-primary' : 'btn-outline-primary'}`}
+                            onClick={() => setDisplayCurrency('EUR')}
+                        >
+                            💶 EURO (€)
+                        </button>
+                        <button
+                            type='button'
+                            className={`btn btn-sm ${displayCurrency === 'USD' ? 'btn-primary' : 'btn-outline-primary'}`}
+                            onClick={() => setDisplayCurrency('USD')}
+                        >
+                            💵 USD ($)
+                        </button>
+                    </div>
+                </div>
+                <span className='badge bg-light-info text-info fs-7'>
+                    Sum in {displayCurrency === 'EUR' ? 'EURO (€)' : 'USD ($)'}: {displayCurrency === 'EUR' ? `€${totalEur.toFixed(2)}` : `$${totalUsd.toFixed(2)}`}
+                </span>
+            </div>
+            <ReactDataTable columns={columns} items={itemsValue} onChange={onChange} warehouseValue={warehouseValue}
+                            isLoading={isLoading} totalRows={totalRecord} isEXCEL onExcelClick={onExcelClick}
+                            isPaymentStatus isStatus isShowFilterField/>
         </div>
     )
 };

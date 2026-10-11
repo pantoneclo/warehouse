@@ -28,6 +28,7 @@ const RecentSale = (props) => {
                                     <th>{getFormattedMessage('dashboard.recentSales.customer.label')}</th>
                                     <th>{getFormattedMessage('dashboard.recentSales.status.label')}</th>
                                     <th>{getFormattedMessage('dashboard.grantTotal.label')}</th>
+                                    <th>SELLING VALUE (EUR)</th>
                                     <th>{getFormattedMessage('dashboard.recentSales.paid.label')}</th>
                                     <th>{getFormattedMessage('dashboard.recentSales.due.label')}</th>
                                     <th>{getFormattedMessage('dashboard.recentSales.paymentStatus.label')}</th>
@@ -36,9 +37,10 @@ const RecentSale = (props) => {
                                 </thead>
                                 <tbody className='text-nowrap'>
                                 {recentSalesDashboard && recentSalesDashboard.map((recentSale, index) => {
+                                    const saleCurrency = recentSale.attributes.currency || (frontSetting?.value?.currency_symbol || '€');
                                     const renderTooltip = (props) => (
                                         <Tooltip id="button-tooltip" {...props}>
-                                            {currencySymbolHendling(allConfigData, frontSetting.value && frontSetting.value.currency_symbol, recentSale.attributes.grand_total)}
+                                            {currencySymbolHendling(allConfigData, saleCurrency, recentSale.attributes.grand_total)}
                                         </Tooltip>
                                     );
 
@@ -59,12 +61,15 @@ const RecentSale = (props) => {
                                                     overlay={renderTooltip}
                                                 >
                                                 <span>
-                                                    {currencySymbolHendling(allConfigData, frontSetting.value && frontSetting.value.currency_symbol, recentSale.attributes.grand_total )}
+                                                    {currencySymbolHendling(allConfigData, saleCurrency, recentSale.attributes.grand_total)}
                                                 </span>
                                                 </OverlayTrigger>
                                             </td>
-                                            <td className='py-4'>{currencySymbolHendling(allConfigData, frontSetting.value && frontSetting.value.currency_symbol, recentSale.attributes.paid_amount === null ? '0.00' : recentSale.attributes.paid_amount)}</td>
-                                            <td className='py-4'>{currencySymbolHendling(allConfigData, frontSetting.value && frontSetting.value.currency_symbol, '0.00')}</td>
+                                            <td className='py-4 fw-bold text-success'>
+                                                €{parseFloat(recentSale.attributes.selling_value_eur !== undefined && recentSale.attributes.selling_value_eur !== null ? recentSale.attributes.selling_value_eur : recentSale.attributes.grand_total || 0).toFixed(2)}
+                                            </td>
+                                            <td className='py-4'>{currencySymbolHendling(allConfigData, saleCurrency, recentSale.attributes.paid_amount === null ? '0.00' : recentSale.attributes.paid_amount)}</td>
+                                            <td className='py-4'>{currencySymbolHendling(allConfigData, saleCurrency, '0.00')}</td>
                                             <td className='py-4'>{recentSale.attributes.payment_status === 1 &&
                                             <span className='badge bg-light-success'>{getFormattedMessage("payment-status.filter.paid.label")}</span> ||
                                             recentSale.attributes.payment_status === 2 &&
@@ -84,8 +89,8 @@ const RecentSale = (props) => {
 };
 
 const mapStateToProps = (state) => {
-    const {recentSalesDashboard, allConfigData} = state;
-    return {recentSalesDashboard, allConfigData}
+    const {recentSalesDashboard, allConfigData, frontSetting} = state;
+    return {recentSalesDashboard, allConfigData, frontSetting}
 };
 
 export default connect(mapStateToProps, {recentSales})(RecentSale);

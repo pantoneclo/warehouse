@@ -3,7 +3,7 @@ import ReactECharts from 'echarts-for-react';
 
 const TopSellingProductChart = (props) => {
     const {frontSetting, yearTopProduct} = props
-    const currency = frontSetting ? frontSetting.value && frontSetting.value.currency_symbol : ' $';
+    const currency = (frontSetting && frontSetting.value && frontSetting.value.currency_symbol) || '€';
     const allQuantity = yearTopProduct ? yearTopProduct.total_quantity : [];
     const allName = yearTopProduct ? yearTopProduct.name : [];
     const [allData, setAllData] = useState([])

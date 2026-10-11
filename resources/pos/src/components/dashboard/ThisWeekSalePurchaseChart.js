@@ -42,7 +42,7 @@ const ThisWeekSalePurchaseChart = (props) => {
     }, []);
 
 
-    const currency = frontSetting ? frontSetting.value && frontSetting.value.currency_symbol : '$';
+    const currency = (frontSetting && frontSetting.value && frontSetting.value.currency_symbol) || '€';
 
     const valueFormatter = (tooltipItems) => {
         const value = (tooltipItems.dataset.data[tooltipItems.dataIndex])
@@ -147,8 +147,8 @@ const ThisWeekSalePurchaseChart = (props) => {
 }
 
 const mapStateToProps = (state) => {
-    const {weekSalePurchase, yearTopProduct, allConfigData} = state;
-    return {weekSalePurchase, yearTopProduct, allConfigData}
+    const {weekSalePurchase, yearTopProduct, allConfigData, frontSetting} = state;
+    return {weekSalePurchase, yearTopProduct, allConfigData, frontSetting}
 };
 
 export default connect(mapStateToProps, {weekSalePurchases, yearlyTopProduct})(ThisWeekSalePurchaseChart);

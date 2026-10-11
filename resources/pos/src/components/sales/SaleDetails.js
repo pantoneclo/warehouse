@@ -271,6 +271,28 @@ const SaleDetails = (props) => {
                                                     {currencySymbolHendling(allConfigData, currencySymbolToUse, saleDetails && saleDetails.grand_total)}
                                                 </td>
                                             </tr>
+                                            {saleDetails?.conversion_rate && (
+                                                <tr>
+                                                    <td className='py-3 text-muted'>Conversion Rate (to EUR)</td>
+                                                    <td className='py-3 text-muted'>{saleDetails.conversion_rate}</td>
+                                                </tr>
+                                            )}
+                                            {saleDetails?.selling_value_eur !== undefined && (
+                                                <tr>
+                                                    <td className='py-3 fw-bold text-success'>Selling Value (EUR)</td>
+                                                    <td className='py-3 fw-bold text-success'>
+                                                        €{parseFloat(saleDetails.selling_value_eur || 0).toFixed(2)}
+                                                    </td>
+                                                </tr>
+                                            )}
+                                            {saleDetails?.selling_value_usd !== undefined && (
+                                                <tr>
+                                                    <td className='py-3 fw-bold text-info'>Selling Value (USD)</td>
+                                                    <td className='py-3 fw-bold text-info'>
+                                                        ${parseFloat(saleDetails.selling_value_usd || 0).toFixed(2)}
+                                                    </td>
+                                                </tr>
+                                            )}
                                             </tbody>
                                         </table>
                                     </div>

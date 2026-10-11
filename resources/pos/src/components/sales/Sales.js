@@ -457,10 +457,10 @@ const Sales = (props) => {
         },
 
         {
-            name: getFormattedMessage('purchase.grant-total.label') + ' (Original)',
+            name: 'Total',
             sortField: 'grand_total',
             cell: row => {
-                return row.reference_code === "Total" ? 
+                return row.reference_code === "Total" ?
                     <span className="text-muted fs-7">-</span> :
                     <span>{currencySymbolHendling(allConfigData, row.currency, row.grand_total)}</span>;
             },

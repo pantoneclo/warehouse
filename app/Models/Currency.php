@@ -103,6 +103,30 @@ class Currency extends BaseModel
     }
 
     /**
+     * Convert an amount in any currency to both EUR and USD based on effective historical rates for the given date.
+     *
+     * @param float $amount
+     * @param string $currencyCode
+     * @param string|null $date
+     * @return array
+     */
+    public static function convertToEurAndUsd(float $amount, string $currencyCode, ?string $date = null): array
+    {
+        $eurRate = self::getEffectiveRate($currencyCode, $date);
+        $eurAmount = round($amount * $eurRate, 4);
+
+        $usdRateToEur = self::getEffectiveRate('USD', $date);
+        $usdAmount = $usdRateToEur > 0 ? round($eurAmount / $usdRateToEur, 4) : 0.0;
+
+        return [
+            'eur' => $eurAmount,
+            'usd' => $usdAmount,
+            'rate_eur' => $eurRate,
+            'rate_usd' => $usdRateToEur,
+        ];
+    }
+
+    /**
      * @return array
      */
     public function prepareLinks(): array

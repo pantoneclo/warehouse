@@ -103,6 +103,7 @@ class SaleReturn extends BaseModel implements HasMedia, JsonResourceful
         'currency',
         'conversion_rate',
         'selling_value_eur',
+        'selling_value_usd',
         'grand_total_original',
         'webhook_data',
         'stock_updated',
@@ -211,6 +212,7 @@ class SaleReturn extends BaseModel implements HasMedia, JsonResourceful
             'other_cost' => $this->sale ? $this->sale->other_cost : null,
             'conversion_rate' => $this->conversion_rate ?? ($this->sale ? $this->sale->conversion_rate : 1.0),
             'selling_value_eur' => $this->selling_value_eur ?? round((float)$this->grand_total * ($this->conversion_rate ?? ($this->sale->conversion_rate ?? 1.0)), 4),
+            'selling_value_usd' => $this->selling_value_usd,
             'shipment' => $this->sale ? $this->sale->shipment : null,
         ];
 

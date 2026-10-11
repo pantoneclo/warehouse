@@ -97,12 +97,15 @@
                 $sum_grand_total = 0;
                 $sum_selling_value_euro_total = 0;
                 $sum_selling_value_usd_total = 0;
-                $usdRate = (float) (\App\Models\Currency::where('code', 'USD')->value('conversion_rate') ?? 0.92);
             @endphp
             @foreach($sales as $key => $sale)
                 @php
                     $sellingValueEur = (float) $sale->selling_value_eur;
-                    $sellingValueUsd = $usdRate > 0 ? round($sellingValueEur / $usdRate, 2) : 0;
+                    $sellingValueUsd = (float) ($sale->selling_value_usd ?? 0);
+                    if ($sellingValueUsd <= 0 && $sellingValueEur > 0) {
+                        $dateUsdRate = (float) \App\Models\Currency::getEffectiveRate('USD', $sale->date);
+                        $sellingValueUsd = $dateUsdRate > 0 ? round($sellingValueEur / $dateUsdRate, 2) : 0;
+                    }
                     $sum_grand_total += (float) $sale->grand_total;
                     $sum_selling_value_euro_total += $sellingValueEur;
                     $sum_selling_value_usd_total += $sellingValueUsd;

@@ -127,6 +127,7 @@ class Sale extends BaseModel implements HasMedia, JsonResourceful
         'courier_document_name',
         'conversion_rate',
         'selling_value_eur',
+        'selling_value_usd',
     ];
 
     public static $rules = [
@@ -267,6 +268,7 @@ class Sale extends BaseModel implements HasMedia, JsonResourceful
             'other_income'=>$this->other_income,
             'conversion_rate'=>$this->conversion_rate,
             'selling_value_eur'=>$this->selling_value_eur,
+            'selling_value_usd'=>$this->selling_value_usd,
             'cod'=>$this->cod,
             'file' => $this->file,
             'fileName' => $this->file,

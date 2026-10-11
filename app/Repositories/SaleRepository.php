@@ -154,9 +154,10 @@ class SaleRepository extends BaseRepository
             $saleInputArray['order_process_fee'] = 0.85;
             $saleDate                           = $input['date'] ?? date('Y-m-d');
             $currencyCode                       = $input['currency'] ?? 'EUR';
-            $conversionRate                     = Currency::getEffectiveRate($currencyCode, $saleDate);
-            $saleInputArray['conversion_rate']   = $conversionRate;
-            $saleInputArray['selling_value_eur'] = round((float)$input['grand_total'] * $conversionRate, 4);
+            $converted                          = Currency::convertToEurAndUsd((float)$input['grand_total'], $currencyCode, $saleDate);
+            $saleInputArray['conversion_rate']   = $converted['rate_eur'];
+            $saleInputArray['selling_value_eur'] = $converted['eur'];
+            $saleInputArray['selling_value_usd'] = $converted['usd'];
 
             // Step 3: Create the sale
             /** @var Sale $sale */
@@ -1232,9 +1233,11 @@ class SaleRepository extends BaseRepository
 
         $currencyCode                       = $input['currency'] ?? $sale->currency ?? 'EUR';
         $saleDate                           = $input['date'] ?? $sale->date ?? date('Y-m-d');
-        $conversionRate                     = Currency::getEffectiveRate($currencyCode, $saleDate);
-        $saleInputArray['conversion_rate']   = $conversionRate;
-        $saleInputArray['selling_value_eur'] = round((float)($input['grand_total'] ?? $sale->grand_total) * $conversionRate, 4);
+        $grandTotal                         = (float)($input['grand_total'] ?? $sale->grand_total);
+        $converted                          = Currency::convertToEurAndUsd($grandTotal, $currencyCode, $saleDate);
+        $saleInputArray['conversion_rate']   = $converted['rate_eur'];
+        $saleInputArray['selling_value_eur'] = $converted['eur'];
+        $saleInputArray['selling_value_usd'] = $converted['usd'];
 
         $sale->update($saleInputArray);
 

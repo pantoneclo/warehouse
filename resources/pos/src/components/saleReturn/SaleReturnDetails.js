@@ -305,6 +305,28 @@ const SaleReturnDetails = (props) => {
                                                     {currencySymbolHendling(allConfigData, currencySymbolToUse, saleReturnDetails && saleReturnDetails.grand_total)}
                                                 </td>
                                             </tr>
+                                            {saleReturnDetails?.conversion_rate && (
+                                                <tr>
+                                                    <td className='py-3 text-muted'>Conversion Rate (to EUR)</td>
+                                                    <td className='py-3 text-muted'>{saleReturnDetails.conversion_rate}</td>
+                                                </tr>
+                                            )}
+                                            {saleReturnDetails?.selling_value_eur !== undefined && (
+                                                <tr>
+                                                    <td className='py-3 fw-bold text-success'>Return Value (EUR)</td>
+                                                    <td className='py-3 fw-bold text-success'>
+                                                        €{parseFloat(saleReturnDetails.selling_value_eur || 0).toFixed(2)}
+                                                    </td>
+                                                </tr>
+                                            )}
+                                            {saleReturnDetails?.selling_value_usd !== undefined && (
+                                                <tr>
+                                                    <td className='py-3 fw-bold text-info'>Return Value (USD)</td>
+                                                    <td className='py-3 fw-bold text-info'>
+                                                        ${parseFloat(saleReturnDetails.selling_value_usd || 0).toFixed(2)}
+                                                    </td>
+                                                </tr>
+                                            )}
                                             </tbody>
                                         </table>
                                     </div>

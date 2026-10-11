@@ -5,6 +5,7 @@ import {currencySymbolHendling, getFormattedMessage} from '../../../shared/share
 import {fetchSalesReturn} from '../../../store/action/salesReturnAction';
 import {fetchFrontSetting} from '../../../store/action/frontSettingAction';
 import {saleReturnExcelAction} from '../../../store/action/salesReturnExcelAction';
+import {countryOptions, getCurrencySymbol} from '../../../constants';
 
 const SaleReturnTab = (props) => {
     const {
@@ -18,6 +19,7 @@ const SaleReturnTab = (props) => {
     } = props;
     const currencySymbol = frontSetting && frontSetting.value && frontSetting.value.currency_symbol
     const [isWarehouseValue, setIsWarehouseValue] = useState(false);
+    const [displayCurrency, setDisplayCurrency] = useState('EUR');
 
     useEffect(() => {
         if(isWarehouseValue === true) {
@@ -28,6 +30,27 @@ const SaleReturnTab = (props) => {
     useEffect(() => {
         fetchFrontSetting();
     }, [warehouseValue]);
+
+    const itemsValue = currencySymbol && salesReturn.length >= 0 && salesReturn.map(sale => {
+        const country = countryOptions.find(country => country.code === sale.attributes?.country);
+        const currencySymbolToUse = country?.currencySymbol || getCurrencySymbol(sale.attributes?.currency) || currencySymbol;
+        return {
+            reference_code: sale.attributes.reference_code,
+            customer_name: sale.attributes.customer_name,
+            warehouse_name: sale.attributes.warehouse_name,
+            status: sale.attributes.status,
+            payment_status: sale.attributes.payment_status,
+            grand_total: sale.attributes.grand_total,
+            selling_value_eur: sale.attributes?.selling_value_eur,
+            selling_value_usd: sale.attributes?.selling_value_usd,
+            paid_amount: sale.attributes.paid_amount ? sale.attributes.paid_amount : 0.00.toFixed(2),
+            id: sale.id,
+            currency: currencySymbolToUse
+        };
+    });
+
+    const totalEur = (itemsValue || []).reduce((acc, curr) => acc + (parseFloat(curr.selling_value_eur) || 0), 0);
+    const totalUsd = (itemsValue || []).reduce((acc, curr) => acc + (parseFloat(curr.selling_value_usd) || 0), 0);
 
     const columns = [
         {
@@ -57,6 +80,20 @@ const SaleReturnTab = (props) => {
             selector: row => currencySymbolHendling(allConfigData, row.currency, row.grand_total),
             sortField: 'grand_total',
             sortable: true,
+        },
+        {
+            name: displayCurrency === 'USD' ? 'RETURN VALUE (USD)' : 'RETURN VALUE (EUR)',
+            sortField: displayCurrency === 'USD' ? 'selling_value_usd' : 'selling_value_eur',
+            sortable: false,
+            cell: row => {
+                const symbol = displayCurrency === 'USD' ? '$' : '€';
+                const val = displayCurrency === 'USD' ? row.selling_value_usd : row.selling_value_eur;
+                return (
+                    <span className={`fw-bold ${displayCurrency === 'USD' ? 'text-info' : 'text-success'}`}>
+                        {symbol}{parseFloat(val || 0).toFixed(2)}
+                    </span>
+                );
+            }
         },
         {
             name: getFormattedMessage('dashboard.recentSales.paid.label'),
@@ -93,18 +130,6 @@ const SaleReturnTab = (props) => {
         },
     ];
 
-    const itemsValue = currencySymbol && salesReturn.length >= 0 && salesReturn.map(sale => ({
-        reference_code: sale.attributes.reference_code,
-        customer_name: sale.attributes.customer_name,
-        warehouse_name: sale.attributes.warehouse_name,
-        status: sale.attributes.status,
-        payment_status: sale.attributes.payment_status,
-        grand_total: sale.attributes.grand_total,
-        paid_amount: sale.attributes.paid_amount ? sale.attributes.paid_amount : 0.00.toFixed(2),
-        id: sale.id,
-        currency: currencySymbol
-    }));
-
     const onChange = (filter) => {
         fetchSalesReturn(filter, true);
     };
@@ -114,9 +139,35 @@ const SaleReturnTab = (props) => {
     };
 
     return (
-        <ReactDataTable columns={columns} isEXCEL items={itemsValue} onChange={onChange}
-                        isLoading={isLoading} warehouseValue={warehouseValue} totalRows={totalRecord}
-                        onExcelClick={onExcelClick} isStatus isShowFilterField/>
+        <div className='warehouse_sale_return_report_table'>
+            <div className='d-flex align-items-center justify-content-between mb-3 px-1'>
+                <div className='d-flex align-items-center'>
+                    <span className='fw-bold me-2 text-gray-700'>Currency View:</span>
+                    <div className='btn-group' role='group' aria-label='Currency View Switcher'>
+                        <button
+                            type='button'
+                            className={`btn btn-sm ${displayCurrency === 'EUR' ? 'btn-primary' : 'btn-outline-primary'}`}
+                            onClick={() => setDisplayCurrency('EUR')}
+                        >
+                            💶 EURO (€)
+                        </button>
+                        <button
+                            type='button'
+                            className={`btn btn-sm ${displayCurrency === 'USD' ? 'btn-primary' : 'btn-outline-primary'}`}
+                            onClick={() => setDisplayCurrency('USD')}
+                        >
+                            💵 USD ($)
+                        </button>
+                    </div>
+                </div>
+                <span className='badge bg-light-info text-info fs-7'>
+                    Sum in {displayCurrency === 'EUR' ? 'EURO (€)' : 'USD ($)'}: {displayCurrency === 'EUR' ? `€${totalEur.toFixed(2)}` : `$${totalUsd.toFixed(2)}`}
+                </span>
+            </div>
+            <ReactDataTable columns={columns} isEXCEL items={itemsValue} onChange={onChange}
+                            isLoading={isLoading} warehouseValue={warehouseValue} totalRows={totalRecord}
+                            onExcelClick={onExcelClick} isStatus isShowFilterField/>
+        </div>
     )
 };
 

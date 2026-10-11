@@ -33,7 +33,7 @@
 <table width="100%" cellspacing="0" cellpadding="10" style="margin-top: 40px;">
     <thead>
     <tr style="background-color: dodgerblue; border: 5px solid black; font-weight: bold;">
-        <th style="text-align: center;" colspan="22">SALES RETURN REPORT.</th>
+        <th style="text-align: center;" colspan="23">SALES RETURN REPORT.</th>
     </tr>
     <tr style="background-color: dodgerblue; border: 5px solid black; font-weight: bold;">
         <th style=" text-align: center; ">{{ __('messages.sl_no') }}</th>
@@ -49,6 +49,7 @@
         <th style=" text-align: center; width: 200%">RETURN VALUE</th>
         <th style=" text-align: center; width: 200%">{{ __('messages.pdf.conversion_rate') }}</th>
         <th style=" text-align: center; width: 200%">RETURN VALUE (EUR)</th>
+        <th style=" text-align: center; width: 200%">RETURN VALUE (USD)</th>
         <th style=" text-align: center; width: 200%">{{ __('messages.pdf.vat') }}</th>
         <th style=" text-align: center; width: 200%">{{ __('messages.pdf.mp_comm') }}</th>
         
@@ -68,13 +69,20 @@
         @php
           $sum_grand_total = 0;
           $sum_selling_value_euro_total = 0;
+          $sum_selling_value_usd_total = 0;
         @endphp
     @foreach($saleReturns as $key => $saleReturn)
         @php
-            $sum_grand_total += $saleReturn->grand_total;
+            $sum_grand_total += (float)$saleReturn->grand_total;
             $conversionRate = $saleReturn->conversion_rate ?? (optional($saleReturn->sale)->conversion_rate ?? 1);
-            $sellingValueEur = $saleReturn->grand_total * $conversionRate;
+            $sellingValueEur = (float)($saleReturn->selling_value_eur ?? ($saleReturn->grand_total * $conversionRate));
+            $sellingValueUsd = (float)($saleReturn->selling_value_usd ?? 0);
+            if ($sellingValueUsd <= 0 && $sellingValueEur > 0) {
+                $usdRate = (float) \App\Models\Currency::getEffectiveRate('USD', $saleReturn->date);
+                $sellingValueUsd = $usdRate > 0 ? round($sellingValueEur / $usdRate, 2) : 0;
+            }
             $sum_selling_value_euro_total += $sellingValueEur;
+            $sum_selling_value_usd_total += $sellingValueUsd;
 
             $panStyles = $saleReturn->saleReturnItems
                 ->map(function($item) {
@@ -116,7 +124,8 @@
 
             <td style="text-align: center;">{{ (float) str_replace(',', '', $saleReturn->grand_total) }}</td>
             <td style="text-align: center;">{{$conversionRate}}</td>
-            <td style="text-align: center;">{{$sellingValueEur}}</td>
+            <td style="text-align: center;">{{ number_format($sellingValueEur, 2) }}</td>
+            <td style="text-align: center;">{{ number_format($sellingValueUsd, 2) }}</td>
             <td style="text-align: center;">{{$saleReturn->tax_amount}}</td>
             <td style="text-align: center;">{{optional($saleReturn->sale)->marketplace_commission}}</td>
             <td style="text-align: center;">{{$saleReturn->shipping}}</td>
@@ -156,9 +165,10 @@
     </tbody>
     <tfoot>
         <tr class="footer-row" style="background-color: #f2f2f2; font-weight: bold;">
-            <td colspan="10" style="text-align: right; font-weight: bold;">TOTAL (EUR):</td>
+            <td colspan="11" style="text-align: right; font-weight: bold;">TOTAL:</td>
             <td style="text-align: center; font-weight: bold;">€{{ number_format($sum_selling_value_euro_total, 2) }}</td>
-            <td colspan="11"></td>
+            <td style="text-align: center; font-weight: bold;">${{ number_format($sum_selling_value_usd_total, 2) }}</td>
+            <td colspan="10"></td>
         </tr>
     </tfoot>
 </table>

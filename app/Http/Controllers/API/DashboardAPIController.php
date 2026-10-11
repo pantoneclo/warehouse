@@ -62,7 +62,7 @@ class DashboardAPIController extends AppBaseController
      */
     public function getRecentSales(): SaleCollection
     {
-        $recentSales = Sale::latest()->take(5)->get();
+        $recentSales = Sale::with(['customer', 'warehouse'])->latest()->take(5)->get();
         SaleResource::usingWithCollection();
 
         return new SaleCollection($recentSales);
@@ -76,9 +76,10 @@ class DashboardAPIController extends AppBaseController
         $month = Carbon::now()->month;
         $year = Carbon::now()->year;
         $topSellings = Product::leftJoin('sale_items', 'products.id', '=', 'sale_items.product_id')
+            ->leftJoin('sales', 'sale_items.sale_id', '=', 'sales.id')
             ->whereMonth('sale_items.created_at', $month)
             ->whereYear('sale_items.created_at', $year)
-            ->selectRaw('products.*, COALESCE(sum(sale_items.sub_total),0) grand_total')
+            ->selectRaw('products.*, COALESCE(sum(sale_items.sub_total * COALESCE(sales.conversion_rate, 1)),0) grand_total')
             ->selectRaw('products.*, COALESCE(sum(sale_items.quantity),0) total_quantity')
             ->groupBy('products.id')
             ->orderBy('total_quantity', 'desc')
@@ -146,8 +147,9 @@ class DashboardAPIController extends AppBaseController
     {
         $year = Carbon::now()->year;
         $topSellings = Product::leftJoin('sale_items', 'products.id', '=', 'sale_items.product_id')
+            ->leftJoin('sales', 'sale_items.sale_id', '=', 'sales.id')
             ->whereYear('sale_items.created_at', $year)
-            ->selectRaw('products.*, COALESCE(sum(sale_items.sub_total),0) grand_total')
+            ->selectRaw('products.*, COALESCE(sum(sale_items.sub_total * COALESCE(sales.conversion_rate, 1)),0) grand_total')
             ->selectRaw('products.*, COALESCE(sum(sale_items.quantity),0) total_quantity')
             ->groupBy('products.id')
             ->orderBy('total_quantity', 'desc')
@@ -170,7 +172,7 @@ class DashboardAPIController extends AppBaseController
         $month = Carbon::now()->month;
         $topCustomers = Customer::leftJoin('sales', 'customers.id', '=', 'sales.customer_id')
             ->whereMonth('date', $month)
-            ->select('customers.*', DB::raw('sum(sales.grand_total) as grand_total'))
+            ->select('customers.*', DB::raw('sum(COALESCE(sales.selling_value_eur, sales.grand_total)) as grand_total'))
             ->groupBy('customers.id')
             ->orderBy('grand_total', 'desc')
             ->latest()

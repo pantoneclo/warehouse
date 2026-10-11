@@ -96,9 +96,13 @@ class SaleReturnRepository extends BaseRepository
                 'paid_amount', 'payment_type', 'note', 'date', 'status', 'sale_id',
             ]);
 
-            $saleReturnInputArray['currency'] = $sale->currency ?? 'EUR';
-            $saleReturnInputArray['conversion_rate'] = $sale->conversion_rate ?? \App\Models\Currency::getEffectiveRate($saleReturnInputArray['currency'], $input['date']);
-            $saleReturnInputArray['selling_value_eur'] = round((float)$saleReturnInputArray['grand_total'] * $saleReturnInputArray['conversion_rate'], 4);
+            $currency = $sale->currency ?? 'EUR';
+            $returnDate = $input['date'] ?? date('Y-m-d');
+            $converted = \App\Models\Currency::convertToEurAndUsd((float)$saleReturnInputArray['grand_total'], $currency, $returnDate);
+            $saleReturnInputArray['currency'] = $currency;
+            $saleReturnInputArray['conversion_rate'] = $converted['rate_eur'];
+            $saleReturnInputArray['selling_value_eur'] = $converted['eur'];
+            $saleReturnInputArray['selling_value_usd'] = $converted['usd'];
 
             /** @var Sale $sale */
             $saleReturn = SaleReturn::create($saleReturnInputArray);
@@ -671,6 +675,16 @@ class SaleReturnRepository extends BaseRepository
             'customer_id', 'warehouse_id', 'tax_rate', 'tax_amount', 'discount', 'shipping', 'grand_total',
             'received_amount', 'paid_amount', 'payment_type', 'note', 'date', 'status', 'payment_status',
         ]);
+
+        $currencyCode = $saleReturn->currency ?? (optional($saleReturn->sale)->currency ?? 'EUR');
+        $returnDate = $input['date'] ?? $saleReturn->date ?? date('Y-m-d');
+        $grandTotal = (float)$input['grand_total'];
+        $converted = \App\Models\Currency::convertToEurAndUsd($grandTotal, $currencyCode, $returnDate);
+        $saleReturnInputArray['currency'] = $currencyCode;
+        $saleReturnInputArray['conversion_rate'] = $converted['rate_eur'];
+        $saleReturnInputArray['selling_value_eur'] = $converted['eur'];
+        $saleReturnInputArray['selling_value_usd'] = $converted['usd'];
+
         $saleReturn->update($saleReturnInputArray);
 
         return $saleReturn;

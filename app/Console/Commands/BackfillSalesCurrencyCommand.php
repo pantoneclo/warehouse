@@ -106,6 +106,8 @@ class BackfillSalesCurrencyCommand extends Command
             $salesQuery->where(function ($q) {
                 $q->whereNull('selling_value_eur')
                     ->orWhere('selling_value_eur', 0)
+                    ->orWhereNull('selling_value_usd')
+                    ->orWhere('selling_value_usd', 0)
                     ->orWhereNull('conversion_rate')
                     ->orWhere('conversion_rate', 0);
             });
@@ -126,10 +128,13 @@ class BackfillSalesCurrencyCommand extends Command
             $rate = $this->getRateForDate($currencyCode, $saleDate);
 
             $sellingValueEur = round((float) $sale->grand_total * $rate, 4);
+            $usdRate = $this->getRateForDate('USD', $saleDate);
+            $sellingValueUsd = $usdRate > 0 ? round($sellingValueEur / $usdRate, 4) : 0.0;
 
             $sale->currency = $currencyCode;
             $sale->conversion_rate = $rate;
             $sale->selling_value_eur = $sellingValueEur;
+            $sale->selling_value_usd = $sellingValueUsd;
             $sale->saveQuietly();
 
             $fixedSalesCount++;
@@ -148,6 +153,8 @@ class BackfillSalesCurrencyCommand extends Command
             $returnsQuery->where(function ($q) {
                 $q->whereNull('selling_value_eur')
                     ->orWhere('selling_value_eur', 0)
+                    ->orWhereNull('selling_value_usd')
+                    ->orWhere('selling_value_usd', 0)
                     ->orWhereNull('conversion_rate')
                     ->orWhere('conversion_rate', 0);
             });
@@ -162,9 +169,14 @@ class BackfillSalesCurrencyCommand extends Command
             $returnDate = $return->date ? $return->date->toDateString() : now()->toDateString();
             $rate = $this->getRateForDate($currencyCode, $returnDate);
 
+            $sellingValueEur = round((float) $return->grand_total * $rate, 4);
+            $usdRate = $this->getRateForDate('USD', $returnDate);
+            $sellingValueUsd = $usdRate > 0 ? round($sellingValueEur / $usdRate, 4) : 0.0;
+
             $return->currency = $currencyCode;
             $return->conversion_rate = $rate;
-            $return->selling_value_eur = round((float) $return->grand_total * $rate, 4);
+            $return->selling_value_eur = $sellingValueEur;
+            $return->selling_value_usd = $sellingValueUsd;
             $return->saveQuietly();
 
             $fixedReturnsCount++;

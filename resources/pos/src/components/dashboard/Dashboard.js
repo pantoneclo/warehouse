@@ -12,7 +12,12 @@ import StockAlert from "./StockAlert";
 import TopProgressBar from "../../shared/components/loaders/TopProgressBar";
 
 const Dashboard = () => {
+    const dispatch = useDispatch();
     const {frontSetting} = useSelector(state => state);
+
+    useEffect(() => {
+        dispatch(fetchFrontSetting());
+    }, []);
 
     return (
         <MasterLayout>

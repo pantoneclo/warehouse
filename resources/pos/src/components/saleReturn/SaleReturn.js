@@ -29,6 +29,7 @@ const SaleReturn = (props) => {
     const [deleteModel, setDeleteModel] = useState(false);
     const [isDelete, setIsDelete] = useState(null);
     const [isShowPaymentModel, setIsShowPaymentModel] = useState(false);
+    const [displayCurrency, setDisplayCurrency] = useState('EUR');
 
     useEffect(() => {
         fetchFrontSetting();
@@ -82,6 +83,8 @@ const SaleReturn = (props) => {
             status: sale.attributes.status,
             payment_status: sale.attributes.payment_status,
             grand_total: sale.attributes.grand_total,
+            selling_value_eur: sale.attributes?.selling_value_eur,
+            selling_value_usd: sale.attributes?.selling_value_usd,
             paid_amount: sale.attributes.paid_amount ? sale.attributes.paid_amount : 0.00.toFixed(2),
             id: sale.id,
             currency: currencySymbolToUse,
@@ -91,6 +94,9 @@ const SaleReturn = (props) => {
             delete_permission: delete_permission,
         };
     });
+
+    const totalReturnEur = (itemsValue || []).reduce((acc, curr) => acc + (parseFloat(curr.selling_value_eur) || 0), 0);
+    const totalReturnUsd = (itemsValue || []).reduce((acc, curr) => acc + (parseFloat(curr.selling_value_usd) || 0), 0);
 
     const columns = [
         {
@@ -143,6 +149,20 @@ const SaleReturn = (props) => {
             sortable: true,
         },
         {
+            name: displayCurrency === 'USD' ? 'Return Value (USD)' : 'Return Value (EUR)',
+            sortField: displayCurrency === 'USD' ? 'selling_value_usd' : 'selling_value_eur',
+            sortable: false,
+            cell: row => {
+                const symbol = displayCurrency === 'USD' ? '$' : '€';
+                const val = displayCurrency === 'USD' ? row.selling_value_usd : row.selling_value_eur;
+                return (
+                    <span className={`fw-bold ${displayCurrency === 'USD' ? 'text-info' : 'text-success'}`}>
+                        {symbol}{parseFloat(val || 0).toFixed(2)}
+                    </span>
+                );
+            }
+        },
+        {
             name: getFormattedMessage('dashboard.recentSales.paid.label'),
             selector: row => currencySymbolHendling(allConfigData ,row.currency, row.paid_amount),
             sortField: 'paid_amount',
@@ -190,7 +210,6 @@ const SaleReturn = (props) => {
             title={getFormattedMessage('sale-return.title')}
             goToDetailScreen={goToDetailScreen}
             onShowPaymentClick={onShowPaymentClick} goToEditProduct={goToEdit}
-             // isPaymentShow={true}
             />
         }
     ]
@@ -199,9 +218,34 @@ const SaleReturn = (props) => {
         <MasterLayout>
             <TopProgressBar />
             <TabTitle title={placeholderText('sales-return.title')}/>
+            <div className='d-flex align-items-center justify-content-between mb-3 px-1'>
+                <div className='d-flex align-items-center'>
+                    <span className='fw-bold me-2 text-gray-700'>Currency View:</span>
+                    <div className='btn-group' role='group' aria-label='Currency View Switcher'>
+                        <button
+                            type='button'
+                            className={`btn btn-sm ${displayCurrency === 'EUR' ? 'btn-primary' : 'btn-outline-primary'}`}
+                            onClick={() => setDisplayCurrency('EUR')}
+                        >
+                            💶 EURO (€)
+                        </button>
+                        <button
+                            type='button'
+                            className={`btn btn-sm ${displayCurrency === 'USD' ? 'btn-primary' : 'btn-outline-primary'}`}
+                            onClick={() => setDisplayCurrency('USD')}
+                        >
+                            💵 USD ($)
+                        </button>
+                    </div>
+                </div>
+                <div>
+                    <span className='badge bg-light-primary text-primary px-3 py-2 fs-6'>
+                        Sum in {displayCurrency === 'EUR' ? 'EURO (€)' : 'USD ($)'}: {displayCurrency === 'EUR' ? `€${totalReturnEur.toFixed(2)}` : `$${totalReturnUsd.toFixed(2)}`}
+                    </span>
+                </div>
+            </div>
             <div className='sale_return_table'>
             <ReactDataTable columns={columns} items={itemsValue} to='#/app/sale-return/create' isShowDateRangeField
-                            // ButtonValue={getFormattedMessage('sale-return.create.title')}
                             onChange={onChange} totalRows={totalRecord} goToEdit={goToEdit} isLoading={isLoading}
                             isShowFilterField isStatus/>
             </div>

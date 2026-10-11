@@ -156,15 +156,16 @@ class StockManagementAPIController extends AppBaseController
             }
 
             $saleDate = $request->date ?? date('Y-m-d');
-            $conversion_rate = Currency::getEffectiveRate($request->currency ?? 'EUR', $saleDate);
-            $selling_value_eur = round((float) $request->grand_total * $conversion_rate, 4);
+            $currencyCode = $request->currency ?? 'EUR';
+            $converted = Currency::convertToEurAndUsd((float) $request->grand_total, $currencyCode, $saleDate);
 
             // Additional fields not directly available in the request
             $additionalFields = [
                 'customer_id' => $customer->id,
                 'warehouse_id' => $warehouse->id,
-                'selling_value_eur' => $selling_value_eur,
-                'conversion_rate' => $conversion_rate,
+                'selling_value_eur' => $converted['eur'],
+                'selling_value_usd' => $converted['usd'],
+                'conversion_rate' => $converted['rate_eur'],
             ];
             
             // Extract sale input data and merge additional fields
@@ -1360,8 +1361,7 @@ class StockManagementAPIController extends AppBaseController
         try {
             $returnDate = now()->format('Y-m-d');
             $currency = $order->currency ?? 'EUR';
-            $conversionRate = $order->conversion_rate ?? Currency::getEffectiveRate($currency, $order->date ?? $returnDate);
-            $sellingValueEur = round((float) $order->grand_total * $conversionRate, 4);
+            $converted = Currency::convertToEurAndUsd((float) $order->grand_total, $currency, $order->date ?? $returnDate);
 
             // Prepare sale return data
             $saleReturnData = [
@@ -1370,8 +1370,9 @@ class StockManagementAPIController extends AppBaseController
                 'warehouse_id' => $warehouse->id,
                 'sale_id' => $order->id,
                 'currency' => $currency,
-                'conversion_rate' => $conversionRate,
-                'selling_value_eur' => $sellingValueEur,
+                'conversion_rate' => $converted['rate_eur'],
+                'selling_value_eur' => $converted['eur'],
+                'selling_value_usd' => $converted['usd'],
                 'grand_total_original' => $order->grand_total,
                 'tax_rate' => $order->tax_rate ?? 0,
                 'tax_amount' => $order->tax_amount ?? 0,
@@ -1744,11 +1745,15 @@ class StockManagementAPIController extends AppBaseController
             }
 
             // Update total amounts
-            $conversionRate = $saleReturn->conversion_rate ?: 1.0000;
+            $currencyCode = $saleReturn->currency ?: 'EUR';
+            $returnDate = $saleReturn->date ?: date('Y-m-d');
+            $converted = Currency::convertToEurAndUsd((float)$totalAmount, $currencyCode, $returnDate);
             $saleReturn->update([
                 'grand_total' => $totalAmount,
                 'grand_total_original' => $totalAmount,
-                'selling_value_eur' => round($totalAmount * $conversionRate, 4),
+                'conversion_rate' => $converted['rate_eur'],
+                'selling_value_eur' => $converted['eur'],
+                'selling_value_usd' => $converted['usd'],
             ]);
 
             // Handle stock updates based on status

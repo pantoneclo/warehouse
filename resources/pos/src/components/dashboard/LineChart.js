@@ -28,7 +28,7 @@ const LineChart = (props) => {
         Legend
     );
 
-    const currency = frontSetting ? frontSetting.value && frontSetting.value.currency_symbol : ' $';
+    const currency = (frontSetting && frontSetting.value && frontSetting.value.currency_symbol) || '€';
     const valueFormatter = (tooltipItems) => {
         const value = (tooltipItems.dataset.data[tooltipItems.dataIndex])
         const label = tooltipItems.dataset.label
@@ -89,8 +89,8 @@ const LineChart = (props) => {
 }
 
 const mapStateToProps = (state) => {
-    const {weekSalePurchase, yearTopProduct} = state;
-    return {weekSalePurchase, yearTopProduct}
+    const {weekSalePurchase, yearTopProduct, frontSetting} = state;
+    return {weekSalePurchase, yearTopProduct, frontSetting}
 };
 
 export default connect(mapStateToProps, {weekSalePurchases, yearlyTopProduct})(LineChart);

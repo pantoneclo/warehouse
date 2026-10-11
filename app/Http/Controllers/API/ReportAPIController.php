@@ -57,6 +57,8 @@ class ReportAPIController extends AppBaseController
 
     private $supplierRepository;
 
+    private $customerRepository;
+
     /**
      * ReportAPIController constructor.
      *
@@ -614,36 +616,75 @@ class ReportAPIController extends AppBaseController
 
     public function getProfitLossReport(Request $request)
     {
-        $data = [];
-        $data['sales'] = Sale::whereBetween('date',
-            [$request->get('start_date'), $request->get('end_date')])->sum('selling_value_eur');
-        $data['purchases'] = Purchase::whereBetween('date',
-            [$request->get('start_date'), $request->get('end_date')])->sum('grand_total');
-        $data['sale_returns'] = SaleReturn::whereBetween('date',
-            [$request->get('start_date'), $request->get('end_date')])->sum('selling_value_eur');
-        $data['purchase_returns'] = PurchaseReturn::whereBetween('date',
-            [$request->get('start_date'), $request->get('end_date')])->sum('grand_total');
-        $data['expenses'] = Expense::whereBetween('date',
-            [$request->get('start_date'), $request->get('end_date')])->sum('amount');
-        $data['sales_payment_amount'] = SalesPayment::whereBetween('payment_date',
-            [$request->get('start_date'), $request->get('end_date')])->sum('amount');
-        $data['Revenue'] = $data['sales'] - $data['sale_returns'];
-        $data['payments_received'] = $data['sales_payment_amount'] + $data['purchase_returns'];
+        $startDate = $request->get('start_date');
+        $endDate = $request->get('end_date');
 
-        $productCost = 0;
+        $salesEur = (float) Sale::whereBetween('date', [$startDate, $endDate])->sum('selling_value_eur');
+        $salesUsd = (float) Sale::whereBetween('date', [$startDate, $endDate])->sum('selling_value_usd');
 
-        $sales = Sale::whereBetween('date',
-            [$request->get('start_date'), $request->get('end_date')])->with('saleItems')->get();
+        $purchasesEur = (float) Purchase::whereBetween('date', [$startDate, $endDate])->sum('grand_total');
 
-        foreach ($sales as $sale) {
-            foreach ($sale->saleItems as $saleItem) {
-                $productCost = $productCost + ($saleItem->product->product_cost * $saleItem->quantity);
-            }
+        $saleReturnsEur = (float) SaleReturn::whereBetween('date', [$startDate, $endDate])->sum('selling_value_eur');
+        $saleReturnsUsd = (float) SaleReturn::whereBetween('date', [$startDate, $endDate])->sum('selling_value_usd');
+
+        $purchaseReturnsEur = (float) PurchaseReturn::whereBetween('date', [$startDate, $endDate])->sum('grand_total');
+        $expensesEur = (float) Expense::whereBetween('date', [$startDate, $endDate])->sum('amount');
+        $salesPaymentAmountEur = (float) SalesPayment::whereBetween('payment_date', [$startDate, $endDate])->sum('amount');
+
+        $effectiveUsdRate = (float) \App\Models\Currency::getEffectiveRate('USD', $endDate ?? now()->toDateString());
+        if ($effectiveUsdRate <= 0) {
+            $effectiveUsdRate = 0.92;
         }
 
-        $data['product_cost'] = $productCost;
+        $purchasesUsd = round($purchasesEur / $effectiveUsdRate, 2);
+        $purchaseReturnsUsd = round($purchaseReturnsEur / $effectiveUsdRate, 2);
+        $expensesUsd = round($expensesEur / $effectiveUsdRate, 2);
+        $salesPaymentAmountUsd = round($salesPaymentAmountEur / $effectiveUsdRate, 2);
 
-        $data['gross_profit'] = $data['sales'] - $productCost;
+        $revenueEur = $salesEur - $saleReturnsEur;
+        $revenueUsd = $salesUsd - $saleReturnsUsd;
+
+        $paymentsReceivedEur = $salesPaymentAmountEur + $purchaseReturnsEur;
+        $paymentsReceivedUsd = $salesPaymentAmountUsd + $purchaseReturnsUsd;
+
+        $productCostEur = 0;
+        $sales = Sale::whereBetween('date', [$startDate, $endDate])->with('saleItems.product')->get();
+        foreach ($sales as $sale) {
+            foreach ($sale->saleItems as $saleItem) {
+                if ($saleItem->product) {
+                    $productCostEur += ($saleItem->product->product_cost * $saleItem->quantity);
+                }
+            }
+        }
+        $productCostUsd = round($productCostEur / $effectiveUsdRate, 2);
+
+        $grossProfitEur = $salesEur - $productCostEur;
+        $grossProfitUsd = $salesUsd - $productCostUsd;
+
+        $data = [
+            'sales' => $salesEur,
+            'purchases' => $purchasesEur,
+            'sale_returns' => $saleReturnsEur,
+            'purchase_returns' => $purchaseReturnsEur,
+            'expenses' => $expensesEur,
+            'sales_payment_amount' => $salesPaymentAmountEur,
+            'Revenue' => $revenueEur,
+            'payments_received' => $paymentsReceivedEur,
+            'product_cost' => $productCostEur,
+            'gross_profit' => $grossProfitEur,
+
+            'sales_usd' => $salesUsd,
+            'purchases_usd' => $purchasesUsd,
+            'sale_returns_usd' => $saleReturnsUsd,
+            'purchase_returns_usd' => $purchaseReturnsUsd,
+            'expenses_usd' => $expensesUsd,
+            'sales_payment_amount_usd' => $salesPaymentAmountUsd,
+            'Revenue_usd' => $revenueUsd,
+            'payments_received_usd' => $paymentsReceivedUsd,
+            'product_cost_usd' => $productCostUsd,
+            'gross_profit_usd' => $grossProfitUsd,
+            'usd_rate' => $effectiveUsdRate,
+        ];
 
         return $this->sendResponse($data, 'Profit loss report info retrieved successfully');
     }

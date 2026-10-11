@@ -42,6 +42,8 @@ const TopSellingProduct = (props) => {
         }
     }, [messages])
 
+    const currency = (frontSetting && frontSetting.value && frontSetting.value.currency_symbol) || '€';
+
     return (
         <div className='pt-6'>
             <Row className='g-4'>
@@ -63,7 +65,7 @@ const TopSellingProduct = (props) => {
                                 {topSelling && topSelling.map((top, index) => {
                                     const renderTooltip = (props) => (
                                         <Tooltip id="button-tooltip" {...props}>
-                                            {currencySymbolHendling(allConfigData, frontSetting.value && frontSetting.value.currency_symbol,top.grand_total)}
+                                            {currencySymbolHendling(allConfigData, currency, top.grand_total)}
                                         </Tooltip>
                                     );
                                     return (
@@ -80,7 +82,7 @@ const TopSellingProduct = (props) => {
                                                     overlay={renderTooltip}
                                                 >
                                                     <span>
-                                                    {currencySymbolHendling(allConfigData, frontSetting.value && frontSetting.value.currency_symbol,top.grand_total)}
+                                                    {currencySymbolHendling(allConfigData, currency, top.grand_total)}
                                                     </span>
                                                 </OverlayTrigger>
                                             </td>
@@ -100,8 +102,8 @@ const TopSellingProduct = (props) => {
 };
 
 const mapStateToProps = (state) => {
-    const {topSelling, topCustomers, allConfigData} = state;
-    return {topSelling, topCustomers, allConfigData}
+    const {topSelling, topCustomers, allConfigData, frontSetting} = state;
+    return {topSelling, topCustomers, allConfigData, frontSetting}
 };
 
 export default connect(mapStateToProps, {topSellingProduct, fetchTopCustomers})(TopSellingProduct);

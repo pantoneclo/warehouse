@@ -7,7 +7,7 @@ import ReactECharts from 'echarts-for-react';
 const TopCustomersChart = (props) => {
     const {frontSetting, topCustomers, allConfigData, languageCode} = props;
     const month = new Date();
-    const currency = frontSetting ? frontSetting.value && frontSetting.value.currency_symbol : ' $'
+    const currency = (frontSetting && frontSetting.value && frontSetting.value.currency_symbol) || '€';
     const allAopCustomersNames = topCustomers ? topCustomers.name : [];
     const allAopCustomers = topCustomers ? topCustomers.grand_total : [];
     const [allData, setAllData] = useState([])
@@ -46,7 +46,7 @@ const TopCustomersChart = (props) => {
     },
     tooltip: {
       trigger: 'item',
-      formatter: allConfigData.is_currency_right === 'true' ? `{b} : {c} ${currency} ({d}%)` : `{b} : ${currency} {c} ({d}%)`,
+      formatter: (allConfigData && allConfigData.is_currency_right === 'true') ? `{b} : {c} ${currency} ({d}%)` : `{b} : ${currency} {c} ({d}%)`,
     },
     legend: {
       orient: 'vertical',
